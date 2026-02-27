@@ -92,18 +92,19 @@ export default function App() {
 
   const handleUpgradeToPro = () => setIsPricingOpen(true);
 
-  // Gate: max 2 memories for free users
+  // Gate: max 2 memories for free users — use live memories.length, not stale limits count
   const handleOpenAdd = () => {
-    if (!isPro && !limits?.memories?.canAdd) {
+    if (!isPro && memories.length >= 2) {
       setIsPricingOpen(true);
       return;
     }
     form.openAdd();
   };
 
-  // Wrap save to refresh limits after
+  // Wrap save — no need to refreshLimits for memory count anymore (using live memories.length)
   const handleSaveEvent = async (e) => {
     await form.handleSaveEvent(e);
+    // still refresh for collaborator count
     await refreshLimits();
   };
 
@@ -120,6 +121,8 @@ export default function App() {
     memories.flatMap(m => (m.imageUrls || []).map(url => ({ id: m.id + url, url, title: m.title, date: m.date }))),
     [memories]
   );
+
+  const visibleMemories = isPro ? memories : memories.slice(0, 2);
 
   if (authLoading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-rose-50 text-rose-400 gap-3">
@@ -177,19 +180,19 @@ export default function App() {
             </div>
           ) : (
             <div>
-              {/* Memory usage bar for free users */}
-              {!isPro && (
+              {/* Memory usage bar — use memories.length for instant updates */}
+              {!isPro && !isSharedAccess && (
                 <div className="mb-6 bg-white/70 rounded-2xl p-3 border border-gray-100 max-w-xs mx-auto text-center">
                   <p className="text-[11px] text-gray-400 mb-1 font-semibold">
-                    Memories: <span className={`font-bold ${(limits?.memories?.count ?? memories.length) >= 2 ? 'text-red-500' : 'text-gray-600'}`}>
-                      {limits?.memories?.count ?? memories.length} / 2
+                    Memories: <span className={`font-bold ${memories.length >= 2 ? 'text-red-500' : 'text-gray-600'}`}>
+                      {memories.length} / 2
                     </span>
                   </p>
                   <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
                     <div className="h-full rounded-full bg-gradient-to-r from-rose-400 to-pink-500 transition-all"
-                      style={{ width: `${Math.min(((limits?.memories?.count ?? memories.length) / 2) * 100, 100)}%` }}/>
+                      style={{ width: `${Math.min((memories.length / 2) * 100, 100)}%` }}/>
                   </div>
-                  {!limits?.memories?.canAdd && (
+                  {memories.length >= 2 && (
                     <button onClick={handleUpgradeToPro} className="text-[10px] text-amber-600 underline mt-1.5 block mx-auto">
                       Upgrade for unlimited memories →
                     </button>
@@ -201,7 +204,21 @@ export default function App() {
                   <Heart size={12} fill="currentColor"/> To be continued...
                 </span>
               </div>
-              {memories.map(ev => <EventCard key={ev.id} event={ev} onDelete={form.handleDelete} onEdit={form.openEdit} theme={theme}/>)}
+
+              {/* ✅ Show only 2 for free users */}
+              {visibleMemories.map(ev => <EventCard key={ev.id} event={ev} onDelete={form.handleDelete} onEdit={form.openEdit} theme={theme}/>)}
+
+              {/* ✅ Show locked card if user has more memories than allowed */}
+              {!isPro && memories.length > 2 && (
+                <div onClick={handleUpgradeToPro}
+                  className="cursor-pointer mt-4 p-5 rounded-2xl border-2 border-dashed border-amber-200 bg-amber-50/50 text-center hover:bg-amber-50 transition-colors">
+                  <Crown size={20} className="text-amber-400 mx-auto mb-2"/>
+                  <p className="text-sm font-bold text-amber-700">
+                    {memories.length - 2} more {memories.length - 2 === 1 ? 'memory' : 'memories'} hidden
+                  </p>
+                  <p className="text-xs text-amber-500 mt-1">Upgrade to Pro to view all your memories →</p>
+                </div>
+              )}
             </div>
           )
         )}
@@ -228,6 +245,7 @@ export default function App() {
         )}
       </main>
 
+      {/* FAB — always same color, gate inside handleOpenAdd */}
       <button onClick={handleOpenAdd}
         className={`fixed bottom-6 right-5 sm:bottom-8 sm:right-8 bg-gradient-to-r ${theme.fab} text-white p-3.5 sm:p-4 rounded-full shadow-xl shadow-rose-300/50 transition-transform hover:scale-110 active:scale-95 z-40`}>
         <Plus size={24} strokeWidth={2.5}/>
@@ -268,7 +286,10 @@ export default function App() {
 
       <PricingModal
         isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)}
-        user={user} theme={theme} onSuccess={() => refreshLimits()}
+        user={user} theme={theme}
+        onSuccess={async () => {
+          await refreshLimits();
+        }}
       />
     </div>
   );

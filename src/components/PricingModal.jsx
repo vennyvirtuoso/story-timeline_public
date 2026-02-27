@@ -9,15 +9,14 @@ const FEATURES_PRO  = ['Unlimited timelines', 'Unlimited collaborators', 'All th
 
 const loadRazorpay = () => new Promise((resolve, reject) => {
   if (window.Razorpay) return resolve();
-  const s   = document.createElement('script');
-  s.src     = 'https://checkout.razorpay.com/v1/checkout.js';
-  s.onload  = resolve;
-  s.onerror = reject;
+  const s = document.createElement('script');
+  s.src = 'https://checkout.razorpay.com/v1/checkout.js';
+  s.onload = resolve; s.onerror = reject;
   document.head.appendChild(s);
 });
 
 const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
-  const [loading, setLoading] = useState(null); // 'monthly' | 'yearly' | null
+  const [loading, setLoading] = useState(null);
   const [error, setError]     = useState('');
 
   const t            = theme || {};
@@ -29,88 +28,31 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
 
   const handleSubscribe = async (planType) => {
     if (!user) return;
-    setLoading(planType);
-    setError('');
+    setLoading(planType); setError('');
     try {
-      // 1. Create order on backend
+      // 1. Create order
       const res = await fetch(`${BACKEND_URL}/api/razorpay/create-order`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId:    user.uid,
-          planType,
-          userEmail: user.email        || '',
-          userName:  user.displayName  || '',
-        }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.uid, planType, userEmail: user.email || '', userName: user.displayName || '' }),
       });
       const order = await res.json();
       if (!order.success) throw new Error(order.error);
 
-      // 2. Load Razorpay script
+      // 2. Load Razorpay
       await loadRazorpay();
 
-      // 3. Open Razorpay Standard Checkout
+      // 3. Open checkout
       const rzp = new window.Razorpay({
-        key:         order.keyId,
-        amount:      order.amount,
-        currency:    'INR',
-        name:        'My Timeline',
-        description: order.planLabel,
-        order_id:    order.orderId,
-        prefill: {
-          name:  order.userName,
-          email: order.userEmail,
-        },
-        notes: {
-          userId:   user.uid,
-          planType: planType,
-        },
+        key: order.keyId, amount: order.amount, currency: 'INR',
+        name: 'My Timeline', description: order.planLabel, order_id: order.orderId,
+        prefill: { name: order.userName, email: order.userEmail },
         theme: { color: '#f43f5e' },
-
-        // ✅ Show UPI first, then cards, then netbanking, then wallets
-        config: {
-          display: {
-            blocks: {
-              upi: {
-                name: 'Pay via UPI',
-                instruments: [
-                  { method: 'upi', flows: ['qr'] },           // QR code
-                  { method: 'upi', flows: ['intent'],
-                    apps: ['google_pay', 'phonepe', 'paytm'] }, // GPay, PhonePe, Paytm
-                  { method: 'upi', flows: ['collect'] },        // Enter UPI ID
-                ],
-              },
-              cards: {
-                name: 'Cards',
-                instruments: [
-                  { method: 'card' },
-                ],
-              },
-              netbanking: {
-                name: 'Net Banking',
-                instruments: [
-                  { method: 'netbanking' },
-                ],
-              },
-              other: {
-                name: 'Other Methods',
-                instruments: [
-                  { method: 'wallet' },
-                  { method: 'emi' },
-                ],
-              },
-            },
-            sequence: ['block.upi', 'block.cards', 'block.netbanking', 'block.other'],
-            preferences: {
-              show_default_blocks: false, // hide default layout, use ours above
-            },
-          },
-        },
-
         modal: { ondismiss: () => setLoading(null) },
+        // 4. On payment success
         handler: async (response) => {
+          console.log('✅ Razorpay payment success, response:', response);
           try {
-            // 5. Verify signature on backend + upgrade plan in Firestore
+            console.log('Calling verify-payment at:', `${BACKEND_URL}/api/razorpay/verify-payment`);
             const vRes = await fetch(`${BACKEND_URL}/api/razorpay/verify-payment`, {
               method:  'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -118,15 +60,22 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_order_id:   response.razorpay_order_id,
                 razorpay_signature:  response.razorpay_signature,
-                userId:              user.uid,
+                userId:   user.uid,
+                planType,
               }),
             });
             const vData = await vRes.json();
+            console.log('verify-payment response:', vData);
             if (!vData.success) throw new Error(vData.error);
+            // ✅ Wait for Firestore onSnapshot to fire — 3s is safer than 1.5s
+            await new Promise(r => setTimeout(r, 3000));
             onSuccess?.(vData);
             onClose();
           } catch (e) {
-            setError('Payment verification failed: ' + e.message);
+            console.error('verify-payment error:', e);
+            // ✅ Show alert so error is always visible even if modal state is broken
+            alert('Payment received but verification failed: ' + e.message + '\n\nPlease contact support with payment ID: ' + response.razorpay_payment_id);
+            setError('Verification failed: ' + e.message);
             setLoading(null);
           }
         },
@@ -141,9 +90,7 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Upgrade to Pro ✨" theme={theme}>
       <div className="space-y-4">
-        {error && (
-          <p className="text-red-500 text-xs bg-red-50 p-2.5 rounded-xl border border-red-100">{error}</p>
-        )}
+        {error && <p className="text-red-500 text-xs bg-red-50 p-2.5 rounded-xl border border-red-100">{error}</p>}
 
         {/* Free tier */}
         <div className="border border-gray-200 rounded-2xl p-4">
@@ -168,39 +115,28 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
           <div className={`absolute -top-3 left-4 ${badge} px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1`}>
             <Crown size={10}/> PRO
           </div>
-
           <div className="flex items-start gap-2 mb-4 mt-1">
             {/* Monthly */}
             <div className="flex-1 text-center bg-gray-50 rounded-xl p-3 border border-gray-100">
               <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Monthly</p>
               <p className={`text-2xl font-black ${accentText}`}>₹99</p>
               <p className="text-[10px] text-gray-400 mb-3">per month</p>
-              <button
-                onClick={() => handleSubscribe('monthly')}
-                disabled={!!loading}
+              <button onClick={() => handleSubscribe('monthly')} disabled={!!loading}
                 className={`w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-gradient-to-r ${btnPrimary} text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 disabled:opacity-50`}>
-                {loading === 'monthly'
-                  ? <><Loader2 size={12} className="animate-spin"/>Opening...</>
-                  : <><Zap size={12}/>Subscribe</>}
+                {loading === 'monthly' ? <><Loader2 size={12} className="animate-spin"/>Opening...</> : <><Zap size={12}/>Subscribe</>}
               </button>
             </div>
-
             {/* Yearly */}
             <div className={`flex-1 text-center ${accentBg} rounded-xl p-3 border ${accentBorder}`}>
               <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Yearly</p>
-              <p className={`text-2xl font-black ${accentText}`}>₹799</p>  {/* ← match backend 79900 paise */}
-              <p className="text-[10px] text-green-500 font-bold mb-3">Save 33%</p>  {/* ← updated savings */}
-              <button
-                onClick={() => handleSubscribe('yearly')}
-                disabled={!!loading}
+              <p className={`text-2xl font-black ${accentText}`}>₹799</p>
+              <p className="text-[10px] text-green-500 font-bold mb-3">Save 33%</p>
+              <button onClick={() => handleSubscribe('yearly')} disabled={!!loading}
                 className={`w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-gradient-to-r ${btnPrimary} text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 disabled:opacity-50`}>
-                {loading === 'yearly'
-                  ? <><Loader2 size={12} className="animate-spin"/>Opening...</>
-                  : <><Zap size={12}/>Subscribe</>}
+                {loading === 'yearly' ? <><Loader2 size={12} className="animate-spin"/>Opening...</> : <><Zap size={12}/>Subscribe</>}
               </button>
             </div>
           </div>
-
           <ul className="space-y-1.5">
             {FEATURES_PRO.map(f => (
               <li key={f} className={`flex items-center gap-2 text-xs ${accentText} font-medium`}>
@@ -209,10 +145,7 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
             ))}
           </ul>
         </div>
-
-        <p className="text-[10px] text-gray-400 text-center">
-          Secured by Razorpay · One-time payment · No auto-renewal
-        </p>
+        <p className="text-[10px] text-gray-400 text-center">Secured by Razorpay · One-time payment · No auto-renewal</p>
       </div>
     </Modal>
   );
