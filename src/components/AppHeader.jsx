@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image as ImageIcon, Clock, Settings, Share2, LogOut, Heart, Users, User, Home } from 'lucide-react';
+import { Image as ImageIcon, Clock, Settings, Share2, LogOut, Heart, Users, User, Home, Crown } from 'lucide-react';
 import { getTheme } from '../utils/themes';
 
 const memberIcon = { duo: Heart, solo: User, family: Home, group: Users };
@@ -22,11 +22,11 @@ const getSubtitle = (config) => {
   return null;
 };
 
-const AppHeader = ({ config, duration, activeTab, setActiveTab, galleryCount, isSharedAccess, onShare, onSettings, onSignOut }) => {
-  const theme = getTheme(config.theme || 'love');
-  const MemberIcon = memberIcon[config.memberType || 'duo'] || Heart;
+const AppHeader = ({ config, duration, activeTab, setActiveTab, galleryCount, isSharedAccess, onShare, onSettings, onSignOut, isPro }) => {
+  const theme        = getTheme(config.theme || 'love');
+  const MemberIcon   = memberIcon[config.memberType || 'duo'] || Heart;
   const displayTitle = getDisplayTitle(config);
-  const subtitle = getSubtitle(config);
+  const subtitle     = getSubtitle(config);
 
   return (
     <header className="sticky top-0 z-30 bg-white/85 backdrop-blur-md border-b border-gray-100/50 shadow-sm">
@@ -35,12 +35,17 @@ const AppHeader = ({ config, duration, activeTab, setActiveTab, galleryCount, is
           <div className="flex items-center gap-2 min-w-0">
             <MemberIcon fill="currentColor" className={`${theme.heart} shrink-0 animate-bounce-slow`} size={20}/>
             <div className="min-w-0">
-              <h1 className={`text-lg sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${theme.header} leading-tight truncate`}>
-                {displayTitle}
-              </h1>
-              {subtitle && (
-                <p className="text-[10px] sm:text-xs text-gray-500 font-medium truncate">{subtitle}</p>
-              )}
+              <div className="flex items-center gap-1.5">
+                <h1 className={`text-lg sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r ${theme.header} leading-tight truncate`}>
+                  {displayTitle}
+                </h1>
+                {isPro && (
+                  <span className="shrink-0 inline-flex items-center gap-0.5 text-[9px] font-bold bg-amber-100 text-amber-600 px-1.5 py-0.5 rounded-full">
+                    <Crown size={8}/>PRO
+                  </span>
+                )}
+              </div>
+              {subtitle && <p className="text-[10px] sm:text-xs text-gray-500 font-medium truncate">{subtitle}</p>}
               <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">
                 Since {config.startDate ? new Date(config.startDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
               </p>

@@ -16,7 +16,7 @@ const DriveSetupScreen = ({ user, onSetupComplete, onSkip }) => {
       const accessToken = await requestDriveToken(clientId);
       const fr = await fetch('https://www.googleapis.com/drive/v3/files', {
         method:'POST', headers:{'Authorization':`Bearer ${accessToken}`,'Content-Type':'application/json'},
-        body: JSON.stringify({name:'Love Story 💕', mimeType:'application/vnd.google-apps.folder'})
+        body: JSON.stringify({name:'My Timeline 📖', mimeType:'application/vnd.google-apps.folder'})  // ✏️ Change folder name here
       });
       if (!fr.ok) { const e=await fr.json(); throw new Error(e?.error?.message||'Folder creation failed'); }
       const { id: folderId } = await fr.json();
@@ -52,7 +52,9 @@ const DriveSetupScreen = ({ user, onSetupComplete, onSkip }) => {
           </svg>
         </div>
         <h2 className="text-xl font-bold text-gray-800 mb-2">Connect Google Drive</h2>
-        <p className="text-gray-400 text-sm mb-4 leading-relaxed">We'll create a <strong className="text-gray-600">Love Story 💕</strong> folder in your Drive for photos and videos.</p>
+        <p className="text-gray-400 text-sm mb-4 leading-relaxed">
+          We'll create a <strong className="text-gray-600">My Timeline 📖</strong> folder in your Drive for photos and videos.  {/* ✏️ Change display name here too */}
+        </p>
         <ul className="text-left space-y-1.5 mb-5 text-sm text-gray-500 bg-gray-50 rounded-xl p-3.5">
           <li className="flex items-center gap-2">✅ Google's own secure auth popup</li>
           <li className="flex items-center gap-2">✅ Files saved to your personal Drive</li>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Heart, Plus, Camera } from 'lucide-react';
+import { Heart, Plus, Camera, Crown } from 'lucide-react';
 import { doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase/config';
 import styles from './utils/styles';
@@ -17,6 +17,8 @@ import FloatingElements from './components/FloatingElements';
 import { Btn } from './components/ui';
 import { EventCard } from './components/MediaComponents';
 import { getTheme } from './utils/themes';
+import { usePlan } from './hooks/usePlan';
+import PricingModal from './components/PricingModal';
 
 export default function App() {
   const auth = useAuth();
@@ -29,16 +31,15 @@ export default function App() {
 
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isShareModalOpen,  setIsShareModalOpen]  = useState(false);
-  const [activeTab, setActiveTab] = useState('timeline');
+  const [activeTab,  setActiveTab]  = useState('timeline');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isPricingOpen, setIsPricingOpen] = useState(false);
 
   const fileRef  = useRef(null);
   const videoRef = useRef(null);
 
-  // Timer
   useEffect(() => { const t = setInterval(() => setCurrentTime(new Date()), 1000); return () => clearInterval(t); }, []);
 
-  // URL token check
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     const t = p.get('token');
@@ -46,12 +47,10 @@ export default function App() {
   }, []);
 
   const { memories, config, setConfig, isLoading } = useMemories(ownerId, isSharedAccess, () => setIsConfigModalOpen(true));
-
   const theme = getTheme(config?.theme || 'love');
-
   const { isUploading, handleDriveSetupComplete, handleUpload: _handleUpload } = useDrive(user, folderId, setFolderId, setDriveSetupNeeded);
-
   const form = useEventForm(ownerId);
+  const { isPro, limits, refreshLimits } = usePlan(ownerId, isSharedAccess);
 
   const handleUpload = (e, mediaType) => _handleUpload(e, mediaType, form.setNewEvent, fileRef, videoRef);
 
@@ -66,6 +65,12 @@ export default function App() {
 
   const generateShareToken = async () => {
     if (!user) return;
+    // Gate: max 2 share tokens for free users
+    if (!isPro && !limits?.collaborators?.canAdd) {
+      setIsShareModalOpen(false);
+      setIsPricingOpen(true);
+      return;
+    }
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     const token = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
     try {
@@ -73,9 +78,33 @@ export default function App() {
       await setDoc(doc(db, 'shareTokens', token), { userId: user.uid, createdAt: serverTimestamp() });
       await setDoc(doc(db, 'users', user.uid), { shareToken: token }, { merge: true });
       setShareToken(token);
-    } catch (e) {
-      alert('Failed to generate share code: ' + e.message);
+      await refreshLimits();
+    } catch (e) { alert('Failed to generate share code: ' + e.message); }
+  };
+
+  const handleShareClick = () => {
+    if (!isPro && !limits?.collaborators?.canAdd) {
+      setIsPricingOpen(true);
+    } else {
+      setIsShareModalOpen(true);
     }
+  };
+
+  const handleUpgradeToPro = () => setIsPricingOpen(true);
+
+  // Gate: max 2 memories for free users
+  const handleOpenAdd = () => {
+    if (!isPro && !limits?.memories?.canAdd) {
+      setIsPricingOpen(true);
+      return;
+    }
+    form.openAdd();
+  };
+
+  // Wrap save to refresh limits after
+  const handleSaveEvent = async (e) => {
+    await form.handleSaveEvent(e);
+    await refreshLimits();
   };
 
   const duration = useMemo(() => {
@@ -92,7 +121,6 @@ export default function App() {
     [memories]
   );
 
-  // --- Render guards ---
   if (authLoading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-rose-50 text-rose-400 gap-3">
       <style>{styles}</style><Heart className="animate-pulse" size={40}/><p className="text-sm">Loading...</p>
@@ -110,6 +138,16 @@ export default function App() {
     <div className={`min-h-screen w-full bg-gradient-to-br ${theme.gradient} text-gray-800 font-sans relative overflow-x-hidden`}>
       <FloatingElements theme={theme}/>
 
+      {!isPro && !isSharedAccess && (
+        <div className="relative z-30 bg-amber-50 border-b border-amber-100 text-center py-1.5 px-4 text-xs text-amber-700 flex items-center justify-center gap-2">
+          <Crown size={11} className="text-amber-500"/>
+          Free plan: 2 memories, 2 collaborators
+          <button onClick={handleUpgradeToPro} className="underline font-bold text-amber-600 hover:text-amber-700 ml-1">
+            Upgrade to Pro →
+          </button>
+        </div>
+      )}
+
       {isSharedAccess && (
         <div className={`relative z-40 bg-gradient-to-r ${theme.banner} text-white text-center py-2 px-4 text-xs flex items-center justify-center gap-2`}>
           <Heart size={12} fill="white"/> Viewing a shared love story
@@ -122,9 +160,10 @@ export default function App() {
         activeTab={activeTab} setActiveTab={setActiveTab}
         galleryCount={galleryImages.length}
         isSharedAccess={isSharedAccess}
-        onShare={() => setIsShareModalOpen(true)}
+        onShare={handleShareClick}
         onSettings={() => setIsConfigModalOpen(true)}
         onSignOut={handleSignOut}
+        isPro={isPro}
       />
 
       <main className="max-w-5xl mx-auto px-4 py-8 pb-28 relative z-10">
@@ -134,10 +173,29 @@ export default function App() {
               <div className={`w-16 h-16 ${theme.eventBg} rounded-full flex items-center justify-center mx-auto mb-4 ${theme.heart}`}><Heart size={32}/></div>
               <h3 className="text-xl font-bold text-gray-700 mb-2">Your story starts here</h3>
               <p className="text-gray-400 text-sm mb-6">Add your first memory together</p>
-              <Btn onClick={form.openAdd}>Add First Memory</Btn>
+              <Btn onClick={handleOpenAdd}>Add First Memory</Btn>
             </div>
           ) : (
             <div>
+              {/* Memory usage bar for free users */}
+              {!isPro && (
+                <div className="mb-6 bg-white/70 rounded-2xl p-3 border border-gray-100 max-w-xs mx-auto text-center">
+                  <p className="text-[11px] text-gray-400 mb-1 font-semibold">
+                    Memories: <span className={`font-bold ${(limits?.memories?.count ?? memories.length) >= 2 ? 'text-red-500' : 'text-gray-600'}`}>
+                      {limits?.memories?.count ?? memories.length} / 2
+                    </span>
+                  </p>
+                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-rose-400 to-pink-500 transition-all"
+                      style={{ width: `${Math.min(((limits?.memories?.count ?? memories.length) / 2) * 100, 100)}%` }}/>
+                  </div>
+                  {!limits?.memories?.canAdd && (
+                    <button onClick={handleUpgradeToPro} className="text-[10px] text-amber-600 underline mt-1.5 block mx-auto">
+                      Upgrade for unlimited memories →
+                    </button>
+                  )}
+                </div>
+              )}
               <div className="flex justify-center mb-10">
                 <span className={`${theme.badge} px-5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5`}>
                   <Heart size={12} fill="currentColor"/> To be continued...
@@ -170,7 +228,7 @@ export default function App() {
         )}
       </main>
 
-      <button onClick={form.openAdd}
+      <button onClick={handleOpenAdd}
         className={`fixed bottom-6 right-5 sm:bottom-8 sm:right-8 bg-gradient-to-r ${theme.fab} text-white p-3.5 sm:p-4 rounded-full shadow-xl shadow-rose-300/50 transition-transform hover:scale-110 active:scale-95 z-40`}>
         <Plus size={24} strokeWidth={2.5}/>
       </button>
@@ -183,7 +241,7 @@ export default function App() {
         tempVideoLink={form.tempVideoLink} setTempVideoLink={form.setTempVideoLink}
         addImageLink={form.addImageLink} removeImage={form.removeImage}
         addVideoLink={form.addVideoLink} removeVideo={form.removeVideo}
-        handleUpload={handleUpload} handleSaveEvent={form.handleSaveEvent}
+        handleUpload={handleUpload} handleSaveEvent={handleSaveEvent}
         isSaving={form.isSaving} isUploading={isUploading}
         folderId={folderId} fileRef={fileRef} videoRef={videoRef}
         theme={theme}
@@ -201,8 +259,17 @@ export default function App() {
       )}
 
       {!isSharedAccess && (
-        <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} shareToken={shareToken} onGenerateToken={generateShareToken} theme={theme}/>
+        <ShareModal
+          isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)}
+          shareToken={shareToken} onGenerateToken={generateShareToken}
+          theme={theme} isPro={isPro} limits={limits}
+        />
       )}
+
+      <PricingModal
+        isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)}
+        user={user} theme={theme} onSuccess={() => refreshLimits()}
+      />
     </div>
   );
 }

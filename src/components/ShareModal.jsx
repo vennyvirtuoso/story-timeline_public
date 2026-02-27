@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
-import { Share2, Copy, Check, Loader2 } from 'lucide-react';
+import { Share2, Copy, Check, Loader2, Lock } from 'lucide-react';
 import { Modal } from './ui';
 
-const ShareModal = ({ isOpen, onClose, shareToken, onGenerateToken, theme }) => {
+const ShareModal = ({ isOpen, onClose, shareToken, onGenerateToken, theme, isPro, limits }) => {
   const [copied, setCopied] = useState('');
   const [generating, setGenerating] = useState(false);
 
-  const t = theme || {};
+  const t            = theme || {};
   const accentText   = t.accentText   || 'text-rose-500';
   const accentBorder = t.accentBorder || 'border-rose-100';
   const accentHover  = t.accentHover  || 'hover:bg-rose-50';
   const eventBg      = t.eventBg      || 'bg-rose-50';
   const gradient     = t.gradient     || 'from-rose-50 via-white to-pink-50';
   const btnPrimary   = t.btnPrimary   || 'from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 shadow-rose-200';
+
+  const collabCount = limits?.collaborators?.count ?? 0;
+  const collabLimit = limits?.collaborators?.limit ?? 2;
+  const canAdd      = limits?.collaborators?.canAdd ?? true;
 
   const copy = (text, key) => {
     navigator.clipboard.writeText(text);
@@ -29,6 +33,30 @@ const ShareModal = ({ isOpen, onClose, shareToken, onGenerateToken, theme }) => 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Share Your Timeline 🔗" theme={theme}>
       <div className="space-y-4">
+
+        {/* Collaborator usage bar — free users only */}
+        {!isPro && (
+          <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-[11px] text-gray-500 font-semibold">Collaborators used</span>
+              <span className={`text-[11px] font-bold ${collabCount >= collabLimit ? 'text-red-500' : accentText}`}>
+                {collabCount} / {collabLimit}
+              </span>
+            </div>
+            <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${collabCount >= collabLimit ? 'bg-red-400' : 'bg-gradient-to-r ' + (t.btnPrimary?.split(' ')[0] || 'from-rose-400') + ' to-pink-500'}`}
+                style={{ width: `${Math.min((collabCount / collabLimit) * 100, 100)}%` }}
+              />
+            </div>
+            {!canAdd && (
+              <p className="text-[10px] text-red-500 mt-1.5 flex items-center gap-1">
+                <Lock size={10}/> Limit reached — upgrade to Pro for unlimited collaborators
+              </p>
+            )}
+          </div>
+        )}
+
         <p className="text-sm text-gray-500">Give someone this code — they can view and add memories without signing in.</p>
 
         {shareToken ? (
@@ -38,9 +66,7 @@ const ShareModal = ({ isOpen, onClose, shareToken, onGenerateToken, theme }) => 
               <p className={`text-5xl font-black tracking-[0.3em] ${accentText} my-3`}>{shareToken}</p>
               <button onClick={() => copy(shareToken, 'code')}
                 className={`inline-flex items-center gap-1.5 mx-auto px-4 py-2 bg-white border ${accentBorder} rounded-xl text-sm font-medium text-gray-600 ${accentHover} transition-colors`}>
-                {copied === 'code'
-                  ? <><Check size={14} className="text-green-500"/>Copied!</>
-                  : <><Copy size={14}/>Copy Code</>}
+                {copied === 'code' ? <><Check size={14} className="text-green-500"/>Copied!</> : <><Copy size={14}/>Copy Code</>}
               </button>
             </div>
 
@@ -63,9 +89,7 @@ const ShareModal = ({ isOpen, onClose, shareToken, onGenerateToken, theme }) => 
 
             <button onClick={generate} disabled={generating}
               className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-medium transition-all disabled:opacity-50">
-              {generating
-                ? <><Loader2 size={14} className="animate-spin"/>Regenerating...</>
-                : 'Regenerate Code'}
+              {generating ? <><Loader2 size={14} className="animate-spin"/>Regenerating...</> : 'Regenerate Code'}
             </button>
           </>
         ) : (
@@ -74,12 +98,19 @@ const ShareModal = ({ isOpen, onClose, shareToken, onGenerateToken, theme }) => 
               <Share2 size={24} className={accentText}/>
             </div>
             <p className="text-gray-400 text-sm mb-4">No share code yet</p>
-            <button onClick={generate} disabled={generating}
-              className={`inline-flex items-center gap-1.5 mx-auto px-4 py-2.5 bg-gradient-to-r ${btnPrimary} text-white rounded-xl text-sm font-medium shadow-md transition-all disabled:opacity-50`}>
-              {generating
-                ? <><Loader2 size={14} className="animate-spin"/>Generating...</>
-                : <><Share2 size={14}/>Generate Code</>}
-            </button>
+            {canAdd ? (
+              <button onClick={generate} disabled={generating}
+                className={`inline-flex items-center gap-1.5 mx-auto px-4 py-2.5 bg-gradient-to-r ${btnPrimary} text-white rounded-xl text-sm font-medium shadow-md transition-all disabled:opacity-50`}>
+                {generating ? <><Loader2 size={14} className="animate-spin"/>Generating...</> : <><Share2 size={14}/>Generate Code</>}
+              </button>
+            ) : (
+              <div className="text-center">
+                <div className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-sm font-medium cursor-not-allowed mb-2">
+                  <Lock size={14}/> Limit Reached
+                </div>
+                <p className="text-[11px] text-gray-400">Upgrade to Pro to add more collaborators</p>
+              </div>
+            )}
           </div>
         )}
       </div>
