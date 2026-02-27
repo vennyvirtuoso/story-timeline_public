@@ -1,29 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import styles from '../utils/styles';
 
-export const FloatingHearts = () => {
-  const [hearts, setHearts] = useState([]);
-  const mk = (id) => ({ id, left: Math.random()*100, size: Math.random()*28+12, duration: Math.random()*6+6, delay: Math.random()*5, color: Math.random()>0.5?'text-rose-300':'text-pink-300' });
-  useEffect(() => {
-    setHearts(Array.from({length:12}).map((_,i)=>mk(i)));
-    const t = setInterval(() => setHearts(p=>[...p.slice(-38), mk(Date.now())]), 700);
-    return ()=>clearInterval(t);
-  }, []);
-  return (
-    <>
-      <style>{styles}</style>
-      <div className="fixed inset-0 overflow-hidden pointer-events-none select-none">
-        {hearts.map(h=>(
-          <div key={h.id} className={`floating-heart ${h.color}`}
-            style={{left:`${h.left}%`,fontSize:`${h.size}px`,animationDuration:`${h.duration}s`,animationDelay:`-${h.delay}s`,opacity:0.35}}>
-            <Heart fill="currentColor"/>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-};
+// FloatingHearts removed — use FloatingElements from ./FloatingElements instead
 
 export const Btn = ({ children, onClick, variant='primary', className='', type='button', disabled=false }) => {
   const base = "inline-flex items-center justify-center gap-1.5 font-medium rounded-xl transition-all duration-150 active:scale-95 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
@@ -60,12 +39,13 @@ export const TA = ({ label, value, onChange, placeholder }) => (
   </div>
 );
 
-export const Modal = ({ isOpen, onClose, title, children }) => {
+export const Modal = ({ isOpen, onClose, title, children, theme }) => {
   if (!isOpen) return null;
+  const headerGradient = theme ? `from-${theme.id === 'monochrome' ? 'gray' : theme.id === 'love' ? 'rose' : theme.id === 'ocean' ? 'sky' : theme.id === 'forest' ? 'emerald' : theme.id === 'sunset' ? 'orange' : 'violet'}-50 to-${theme.id === 'love' ? 'pink' : theme.id === 'ocean' ? 'cyan' : theme.id === 'forest' ? 'green' : theme.id === 'sunset' ? 'amber' : theme.id === 'galaxy' ? 'purple' : 'slate'}-50` : 'from-rose-50 to-pink-50';
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm animate-fadeIn" onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[88vh]">
-        <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-rose-50 to-pink-50 rounded-t-3xl sm:rounded-t-3xl shrink-0">
+        <div className={`px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r ${headerGradient} rounded-t-3xl sm:rounded-t-3xl shrink-0`}>
           <h3 className="text-base font-bold text-gray-800">{title}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-white rounded-full transition-colors"><X size={18}/></button>
         </div>

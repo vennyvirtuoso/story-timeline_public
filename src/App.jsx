@@ -13,8 +13,10 @@ import SettingsModal from './components/SettingsModal';
 import LoginScreen from './components/LoginScreen';
 import ShareModal from './components/ShareModal';
 import DriveSetupScreen from './components/DriveSetupScreen';
-import { FloatingHearts, Btn } from './components/ui';
+import FloatingElements from './components/FloatingElements';
+import { Btn } from './components/ui';
 import { EventCard } from './components/MediaComponents';
+import { getTheme } from './utils/themes';
 
 export default function App() {
   const auth = useAuth();
@@ -44,6 +46,8 @@ export default function App() {
   }, []);
 
   const { memories, config, setConfig, isLoading } = useMemories(ownerId, isSharedAccess, () => setIsConfigModalOpen(true));
+
+  const theme = getTheme(config?.theme || 'love');
 
   const { isUploading, handleDriveSetupComplete, handleUpload: _handleUpload } = useDrive(user, folderId, setFolderId, setDriveSetupNeeded);
 
@@ -103,11 +107,11 @@ export default function App() {
   );
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-rose-50 via-white to-pink-50 text-gray-800 font-sans relative overflow-x-hidden">
-      <FloatingHearts/>
+    <div className={`min-h-screen w-full bg-gradient-to-br ${theme.gradient} text-gray-800 font-sans relative overflow-x-hidden`}>
+      <FloatingElements theme={theme}/>
 
       {isSharedAccess && (
-        <div className="relative z-40 bg-gradient-to-r from-rose-400 to-pink-500 text-white text-center py-2 px-4 text-xs flex items-center justify-center gap-2">
+        <div className={`relative z-40 bg-gradient-to-r ${theme.banner} text-white text-center py-2 px-4 text-xs flex items-center justify-center gap-2`}>
           <Heart size={12} fill="white"/> Viewing a shared love story
           <button onClick={handleSignOut} className="underline text-white/80 ml-2">Leave</button>
         </div>
@@ -127,7 +131,7 @@ export default function App() {
         {activeTab === 'timeline' && (
           memories.length === 0 ? (
             <div className="text-center py-20 px-6 bg-white/60 rounded-3xl border-2 border-dashed border-rose-200 max-w-sm mx-auto mt-4">
-              <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 text-rose-400"><Heart size={32}/></div>
+              <div className={`w-16 h-16 ${theme.eventBg} rounded-full flex items-center justify-center mx-auto mb-4 ${theme.heart}`}><Heart size={32}/></div>
               <h3 className="text-xl font-bold text-gray-700 mb-2">Your story starts here</h3>
               <p className="text-gray-400 text-sm mb-6">Add your first memory together</p>
               <Btn onClick={form.openAdd}>Add First Memory</Btn>
@@ -135,11 +139,11 @@ export default function App() {
           ) : (
             <div>
               <div className="flex justify-center mb-10">
-                <span className="bg-rose-100 text-rose-500 px-5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5">
+                <span className={`${theme.badge} px-5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5`}>
                   <Heart size={12} fill="currentColor"/> To be continued...
                 </span>
               </div>
-              {memories.map(ev => <EventCard key={ev.id} event={ev} onDelete={form.handleDelete} onEdit={form.openEdit}/>)}
+              {memories.map(ev => <EventCard key={ev.id} event={ev} onDelete={form.handleDelete} onEdit={form.openEdit} theme={theme}/>)}
             </div>
           )
         )}
@@ -167,7 +171,7 @@ export default function App() {
       </main>
 
       <button onClick={form.openAdd}
-        className="fixed bottom-6 right-5 sm:bottom-8 sm:right-8 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white p-3.5 sm:p-4 rounded-full shadow-xl shadow-rose-300/50 transition-transform hover:scale-110 active:scale-95 z-40">
+        className={`fixed bottom-6 right-5 sm:bottom-8 sm:right-8 bg-gradient-to-r ${theme.fab} text-white p-3.5 sm:p-4 rounded-full shadow-xl shadow-rose-300/50 transition-transform hover:scale-110 active:scale-95 z-40`}>
         <Plus size={24} strokeWidth={2.5}/>
       </button>
 
@@ -182,6 +186,8 @@ export default function App() {
         handleUpload={handleUpload} handleSaveEvent={form.handleSaveEvent}
         isSaving={form.isSaving} isUploading={isUploading}
         folderId={folderId} fileRef={fileRef} videoRef={videoRef}
+        theme={theme}
+        memberType={config?.memberType || 'duo'}
       />
 
       {!isSharedAccess && (
@@ -190,11 +196,12 @@ export default function App() {
           config={config} setConfig={setConfig}
           onSave={handleSaveConfig} folderId={folderId}
           onConnectDrive={() => { setIsConfigModalOpen(false); setDriveSetupNeeded(true); }}
+          theme={theme}
         />
       )}
 
       {!isSharedAccess && (
-        <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} shareToken={shareToken} onGenerateToken={generateShareToken}/>
+        <ShareModal isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} shareToken={shareToken} onGenerateToken={generateShareToken} theme={theme}/>
       )}
     </div>
   );

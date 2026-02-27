@@ -37,7 +37,8 @@ export const VideoGallery = ({ videos }) => {
   );
 };
 
-export const EventCard = ({ event, onDelete, onEdit }) => {
+export const EventCard = ({ event, onDelete, onEdit, theme }) => {
+  const t = theme || {};
   const icons = {
     milestone: <Star className="text-amber-400" size={16} fill="currentColor"/>,
     trip: <MapPin className="text-emerald-500" size={16}/>,
@@ -49,10 +50,10 @@ export const EventCard = ({ event, onDelete, onEdit }) => {
   const videos = Array.isArray(event.videoUrls)?event.videoUrls:[];
   return (
     <div className="relative pl-6 md:pl-0 md:grid md:grid-cols-12 md:gap-8 group mb-10 last:mb-0">
-      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-rose-200 to-pink-100 md:left-1/2 md:-translate-x-px"/>
-      <div className="absolute left-[-5px] top-5 w-3 h-3 rounded-full bg-rose-400 border-2 border-white shadow md:left-1/2 md:-translate-x-1/2 z-10"/>
+      <div className={`absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b ${t.timeline||'from-rose-200 to-pink-100'} md:left-1/2 md:-translate-x-px`}/>
+      <div className={`absolute left-[-5px] top-5 w-3 h-3 rounded-full ${t.dot||'bg-rose-400'} border-2 border-white shadow md:left-1/2 md:-translate-x-1/2 z-10`}/>
       <div className="md:col-span-5 md:text-right md:pr-8 mb-1 md:mb-0 md:pt-3 order-1">
-        <span className="text-xs font-bold text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-100 inline-block">
+        <span className={`text-xs font-bold px-2.5 py-1 rounded-full border inline-block ${t.dateBadge||'text-rose-500 bg-rose-50 border-rose-100'}`}>
           {d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})}
         </span>
         {event.time&&<p className="text-[10px] text-gray-400 mt-0.5 flex items-center md:justify-end gap-1"><Clock size={9}/>{d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}</p>}
@@ -62,7 +63,7 @@ export const EventCard = ({ event, onDelete, onEdit }) => {
         <div className="bg-white/80 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white/60 hover:shadow-md transition-all">
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-full bg-rose-50">{icons[event.type]||icons.general}</div>
+              <div className={`p-1.5 rounded-full ${t.eventBg||'bg-rose-50'}`}>{icons[event.type]||icons.general}</div>
               <h4 className="font-bold text-gray-800 text-sm sm:text-base leading-tight">{event.title}</h4>
             </div>
             <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-all ml-2 shrink-0">

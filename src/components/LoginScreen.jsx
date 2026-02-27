@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Loader2, Key } from 'lucide-react';
-import { FloatingHearts, Btn } from './ui';
+import { BookOpen, Loader2, Key } from 'lucide-react';
+import FloatingElements from './FloatingElements';
+import { getTheme } from '../utils/themes';
 
 const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
   const [token, setToken] = useState('');
   const [showInput, setShowInput] = useState(false);
   const [err, setErr] = useState('');
+  const defaultTheme = getTheme('love');
 
   const submit = async (e) => {
     e.preventDefault();
@@ -23,17 +25,18 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-rose-50 via-white to-pink-50 flex flex-col items-center justify-center p-5 relative overflow-hidden">
-      <FloatingHearts/>
+      <FloatingElements theme={defaultTheme}/>
       <div className="relative z-10 w-full max-w-xs">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-rose-200">
-            <Heart fill="white" size={30}/>
+            <BookOpen fill="white" size={28} className="text-white"/>
           </div>
-          <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-pink-600 mb-1">Love Story</h1>
-          <p className="text-gray-400 text-sm">Your memories, forever</p>
+          <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-pink-600 mb-1">My Timeline</h1>
+          <p className="text-gray-400 text-sm">Your memories, your story</p>
         </div>
         <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl border border-white/50 p-6 space-y-3">
-          <Btn variant="google" onClick={onGoogleLogin} disabled={isLoading} className="w-full py-3 text-sm">
+          <button onClick={onGoogleLogin} disabled={isLoading}
+            className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow rounded-xl text-sm font-medium transition-all disabled:opacity-50">
             {isLoading ? <Loader2 className="animate-spin" size={18}/> : (
               <svg width="18" height="18" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -43,27 +46,34 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
               </svg>
             )}
             Sign in with Google
-          </Btn>
-          <div className="flex items-center gap-2"><div className="flex-1 border-t border-gray-200"/><span className="text-[11px] text-gray-400 font-medium">OR</span><div className="flex-1 border-t border-gray-200"/></div>
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="flex-1 border-t border-gray-200"/>
+            <span className="text-[11px] text-gray-400 font-medium">OR</span>
+            <div className="flex-1 border-t border-gray-200"/>
+          </div>
           {!showInput ? (
-            <button onClick={()=>setShowInput(true)} className="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-rose-200 rounded-xl text-rose-400 hover:bg-rose-50 text-sm transition-colors">
+            <button onClick={() => setShowInput(true)}
+              className="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-rose-200 rounded-xl text-rose-400 hover:bg-rose-50 text-sm transition-colors">
               <Key size={14}/> I have a share code
             </button>
           ) : (
             <form onSubmit={submit} className="space-y-2">
-              <input value={token} onChange={e=>setToken(e.target.value)} placeholder="e.g. ABC123" maxLength={8}
+              <input value={token} onChange={e => setToken(e.target.value)} placeholder="e.g. ABC123" maxLength={8}
                 className="w-full px-4 py-3 border border-rose-200 rounded-xl text-center text-xl font-black tracking-widest uppercase focus:ring-2 focus:ring-rose-200 outline-none bg-white text-rose-500 placeholder-rose-200"/>
               {err && <p className="text-red-500 text-xs text-center">{err}</p>}
               <div className="flex gap-2">
-                <button type="button" onClick={()=>{setShowInput(false);setErr('');}} className="flex-1 py-2 border border-gray-200 rounded-xl text-gray-400 text-sm hover:bg-gray-50">Back</button>
-                <button type="submit" disabled={isLoading} className="flex-1 py-2 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-1">
-                  {isLoading&&<Loader2 size={14} className="animate-spin"/>} Enter
+                <button type="button" onClick={() => { setShowInput(false); setErr(''); }}
+                  className="flex-1 py-2 border border-gray-200 rounded-xl text-gray-400 text-sm hover:bg-gray-50">Back</button>
+                <button type="submit" disabled={isLoading}
+                  className="flex-1 py-2 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-1">
+                  {isLoading && <Loader2 size={14} className="animate-spin"/>} Enter
                 </button>
               </div>
             </form>
           )}
         </div>
-        <p className="text-center text-xs text-gray-400 mt-4 px-4">Sign in to create your story or enter a share code from your partner</p>
+        <p className="text-center text-xs text-gray-400 mt-4 px-4">Sign in to create your timeline or enter a share code</p>
       </div>
     </div>
   );
