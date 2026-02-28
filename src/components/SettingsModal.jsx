@@ -4,7 +4,7 @@ import { Modal, Btn, Field } from './ui';
 import ThemePicker from './ThemePicker';
 
 const MEMBER_TYPES = [
-  { id: 'duo',    label: 'Couple / Duo',  icon: Heart, placeholder1: 'Partner 1',   placeholder2: 'Partner 2', showTwo: true  },
+  { id: 'duo',    label: 'Couple',  icon: Heart, placeholder1: 'Partner 1',   placeholder2: 'Partner 2', showTwo: true  },
   { id: 'solo',   label: 'Solo Journey',  icon: User,  placeholder1: 'Your Name',   placeholder2: '',          showTwo: false },
   { id: 'family', label: 'Family',        icon: Home,  placeholder1: 'Family Name', placeholder2: '',          showTwo: false },
   { id: 'group',  label: 'Friend Group',  icon: Users, placeholder1: 'Group Name',  placeholder2: '',          showTwo: false },

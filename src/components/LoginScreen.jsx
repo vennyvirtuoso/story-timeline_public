@@ -31,7 +31,13 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
           <div className="w-16 h-16 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-rose-200">
             <BookOpen fill="white" size={28} className="text-white"/>
           </div>
-          <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-pink-600 mb-1">My Timeline</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-wide 
+                        text-transparent bg-clip-text 
+                        bg-gradient-to-r from-amber-400 via-rose-500 to-pink-500 
+                        drop-shadow-[0_2px_10px_rgba(255,105,135,0.35)]
+                        mb-2">
+                        Safarnama
+                      </h1>
           <p className="text-gray-400 text-sm">Your memories, your story</p>
         </div>
         <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl border border-white/50 p-6 space-y-3">
