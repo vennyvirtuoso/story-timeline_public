@@ -403,8 +403,8 @@ export default function App() {
         onSuccess={async () => { await refreshLimits(); }}
       />
 
-      {/* Legal footer */}
-      <footer className="relative z-10 text-center py-4 text-[11px] text-gray-400 space-x-3 mt-auto">
+      {/* Legal footer — hidden on very small screens to save space */}
+      <footer className="relative z-10 text-center py-3 text-[11px] text-gray-400 space-x-2 mt-auto px-4">
         <span>© 2026 Safarnama</span>
         <span>·</span>
         <Link to="/privacy"    className="hover:text-rose-400 transition-colors">Privacy</Link>
@@ -412,6 +412,8 @@ export default function App() {
         <Link to="/terms"      className="hover:text-rose-400 transition-colors">Terms</Link>
         <span>·</span>
         <Link to="/google-api" className="hover:text-rose-400 transition-colors">Google API</Link>
+        <span>·</span>
+        <Link to="/about"      className="hover:text-rose-400 transition-colors">About</Link>
       </footer>
     </div>
   );

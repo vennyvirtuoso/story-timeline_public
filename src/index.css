@@ -15,8 +15,58 @@ html, body, #root {
   color: inherit;
 }
 
+/* ✅ Prevent iOS font size inflation */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* ✅ Smooth scrolling */
+html, body {
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
+}
+
 body {
   display: block;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
+
+/* ✅ Better tap targets on mobile — removed touch-action:manipulation as it can interfere with scroll */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ✅ Fix date/time inputs on iOS — they can appear too small */
+input[type="date"],
+input[type="time"] {
+  min-height: 40px;
+  font-size: 16px; /* prevents iOS zoom on focus */
+}
+
+/* ✅ Prevent iOS zoom on any input focus */
+input, select, textarea {
+  font-size: 16px;
+}
+
+/* ✅ Safe area for notched iPhones */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* ✅ Use dynamic viewport height — fixes iOS Safari 100vh bug */
+.h-dvh { height: 100dvh; }
+.min-h-dvh { min-height: 100dvh; }
+
+/* ✅ Custom scrollbar for desktop */
+.scrollbar-thin::-webkit-scrollbar        { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track  { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb  { background: #e5e7eb; border-radius: 99px; }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
+
+/* ✅ Hide scrollbar on image sliders — arrows handle navigation */
+.hide-scrollbar::-webkit-scrollbar { display: none; }

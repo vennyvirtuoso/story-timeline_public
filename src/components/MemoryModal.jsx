@@ -86,7 +86,8 @@ const MemoryModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={editingId ? 'Edit Memory' : 'New Memory ✨'} theme={theme}>
       <form onSubmit={handleSaveEvent}>
-        <div className="grid grid-cols-2 gap-3">
+        {/* ✅ Stack date/time vertically on small screens */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Date" type="date" value={newEvent.date} onChange={v => setNewEvent({ ...newEvent, date: v })} required icon={Calendar}/>
           <Field label="Time" type="time" value={newEvent.time} onChange={v => setNewEvent({ ...newEvent, time: v })} icon={Clock}/>
         </div>
@@ -127,7 +128,7 @@ const MemoryModal = ({
             </div>
             <button type="button" onClick={addImageLink} className={`${accentBg} ${accentText} px-3 rounded-xl text-xs font-semibold ${accentHoverBtn}`}>Add</button>
           </div>
-          <div className="mt-2 space-y-1.5 max-h-28 overflow-y-auto">
+          <div className="mt-2 space-y-1.5 max-h-28 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
             {newEvent.imageUrls.map((url, i) => (
               <div key={i} className="flex items-center gap-2 bg-white p-1.5 rounded-lg border border-gray-100">
                 <div className="w-8 h-8 rounded bg-gray-100 overflow-hidden shrink-0"><img src={url} alt="" className="w-full h-full object-cover"/></div>
@@ -161,7 +162,7 @@ const MemoryModal = ({
             </div>
             <button type="button" onClick={addVideoLink} className={`${accentBg} ${accentText} px-3 rounded-xl text-xs font-semibold ${accentHoverBtn}`}>Add</button>
           </div>
-          <div className="mt-2 space-y-1.5 max-h-28 overflow-y-auto">
+          <div className="mt-2 space-y-1.5 max-h-28 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
             {newEvent.videoUrls.map((url, i) => (
               <div key={i} className="flex items-center gap-2 bg-white p-1.5 rounded-lg border border-gray-100">
                 <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center shrink-0"><PlayCircle size={14} className="text-gray-300"/></div>

@@ -5,6 +5,7 @@ import App from './App';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Refund from './pages/Refund';
+import About from './pages/About';
 import GoogleApiDisclosure from './pages/GoogleApiDisclosure';
 import './index.css';
 
@@ -17,6 +18,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/refund"     element={<Refund />} />
         <Route path="/google-api" element={<GoogleApiDisclosure />} />
         <Route path="/*"          element={<App />} />
+        <Route path="/about"      element={<About />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
