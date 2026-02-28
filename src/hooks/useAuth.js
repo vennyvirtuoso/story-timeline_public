@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase/config';
@@ -15,6 +15,13 @@ export function useAuth() {
   const [loginLoading,     setLoginLoading]     = useState(false);
   const [folderId,         setFolderId]         = useState(null);
   const [driveSetupNeeded, setDriveSetupNeeded] = useState(false);
+
+  // ✅ Use ref so onAuthStateChanged always sees latest value without re-subscribing
+  const isSharedAccessRef = useRef(false);
+  const setIsSharedAccessBoth = (val) => {
+    isSharedAccessRef.current = val;
+    setIsSharedAccess(val);
+  };
 
   const loadUserData = async (uid) => {
     try {
@@ -47,11 +54,12 @@ export function useAuth() {
       const res  = await fetch(`${getBackendUrl()}/api/resolve-viewer-token?token=${token.toUpperCase()}`);
       const data = await res.json();
       if (!data.success) { setLoginLoading(false); return { success: false, error: data.error }; }
-      setTimelineId(data.timelineId);
+      // ✅ Set ownerId/timelineId before isSharedAccess
       setOwnerId(data.ownerId);
+      setTimelineId(data.timelineId);
       setRole('viewer');
-      setIsSharedAccess(true);
       setIsCollaborator(false);
+      setIsSharedAccessBoth(true);   // ✅ updates ref too
       const ud = await getDoc(doc(db, 'users', data.ownerId));
       if (ud.exists()) setFolderId(ud.data().folderId || null);
       setLoginLoading(false);
@@ -62,34 +70,38 @@ export function useAuth() {
   const handleCollabTokenLogin = async (token) => {
     setLoginLoading(true);
     try {
-      if (auth.currentUser) {
-        const idToken = await auth.currentUser.getIdToken();
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const idToken = await currentUser.getIdToken(true);
         const res     = await fetch(`${getBackendUrl()}/api/join-collaboration`, {
           method:  'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
           body:    JSON.stringify({ token }),
         });
         const data = await res.json();
+        console.log('join-collaboration response:', data);
         if (!data.success) { setLoginLoading(false); return { success: false, error: data.error }; }
-        setTimelineId(data.timelineId);
+
+        // ✅ Set ownerId BEFORE timelineId so useMemories gets correct configOwnerId
         setOwnerId(data.ownerId);
-        setIsSharedAccess(true); setIsCollaborator(true); setRole('collaborator');
+        setTimelineId(data.timelineId);
+        setRole('collaborator');
+        setIsSharedAccessBoth(true);  // ✅ updates ref too
+        setIsCollaborator(true);
+
         const ud = await getDoc(doc(db, 'users', data.ownerId));
         if (ud.exists()) setFolderId(ud.data().folderId || null);
         setLoginLoading(false);
         return { success: true };
       }
-      // Fallback: unauthenticated direct Firestore read
-      const snap = await getDoc(doc(db, 'collaborationTokens', token));
-      if (!snap.exists()) { setLoginLoading(false); return { success: false, error: 'Invalid or expired code' }; }
-      const { timelineId: tid, ownerId: oid } = snap.data();
-      setTimelineId(tid); setOwnerId(oid);
-      setIsSharedAccess(true); setIsCollaborator(true); setRole('collaborator');
-      const ud = await getDoc(doc(db, 'users', oid));
-      if (ud.exists()) setFolderId(ud.data().folderId || null);
+      // Not logged in — can't join collaboration without Google sign-in
       setLoginLoading(false);
-      return { success: true };
-    } catch (e) { setLoginLoading(false); return { success: false, error: e.message }; }
+      return { success: false, error: 'Please sign in with Google to collaborate' };
+    } catch (e) {
+      console.error('handleCollabTokenLogin error:', e);
+      setLoginLoading(false);
+      return { success: false, error: e.message };
+    }
   };
 
   const handleShareTokenLogin = async (token) => {
@@ -99,25 +111,29 @@ export function useAuth() {
   };
 
   useEffect(() => {
+    // ✅ Use ref instead of state to avoid re-subscribing
     const unsub = onAuthStateChanged(auth, async (u) => {
-      if (u && !isSharedAccess) { setUser(u); await loadUserData(u.uid); }
+      if (u && !isSharedAccessRef.current) {
+        setUser(u);
+        await loadUserData(u.uid);
+      }
       setAuthLoading(false);
     });
     return () => unsub();
-  }, [isSharedAccess]);
+  }, []); // ✅ empty deps — ref handles the shared access check
 
   useEffect(() => {
     const params      = new URLSearchParams(window.location.search);
-    const viewToken   = params.get('view');
+    const viewToken   = params.get('view') || params.get('token');  // ✅ also handle ?token=
     const collabToken = params.get('collab');
-    if (viewToken) handleViewToken(viewToken);
-    // ✅ For collab tokens: only process if already logged in.
-    // If not logged in, store the token and process after login.
+    if (viewToken) {
+      setAuthLoading(true);   // ✅ keep loading until resolved
+      handleViewToken(viewToken).finally(() => setAuthLoading(false));
+    }
     if (collabToken) {
       if (auth.currentUser) {
         handleCollabTokenLogin(collabToken);
       } else {
-        // Store in sessionStorage — process after Google login
         sessionStorage.setItem('pendingCollabToken', collabToken);
       }
     }
@@ -141,8 +157,8 @@ export function useAuth() {
   };
 
   const handleSignOut = async () => {
-    if (isSharedAccess) {
-      setIsSharedAccess(false); setIsCollaborator(false);
+    if (isSharedAccessRef.current) {
+      setIsSharedAccessBoth(false); setIsCollaborator(false);
       setRole('owner'); setOwnerId(null); setTimelineId(null); setUser(null);
       window.history.replaceState({}, '', window.location.pathname);
       return;
@@ -158,6 +174,8 @@ export function useAuth() {
     folderId, setFolderId,
     driveSetupNeeded, setDriveSetupNeeded,
     handleGoogleLogin, handleShareTokenLogin, handleSignOut, loadUserData,
-    setTimelineId, setOwnerId, setRole, setIsSharedAccess, setIsCollaborator,
+    setTimelineId, setOwnerId, setRole,
+    setIsSharedAccess: setIsSharedAccessBoth,
+    setIsCollaborator,
   };
 }

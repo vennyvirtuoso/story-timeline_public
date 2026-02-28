@@ -20,9 +20,9 @@ import { EventCard } from './components/MediaComponents';
 import { getTheme } from './utils/themes';
 import { usePlan } from './hooks/usePlan';
 import PricingModal from './components/PricingModal';
+import CollaborateButton from './components/CollaborateButton';
 
 export default function App() {
-  const authHook = useAuth();
   const {
     user, ownerId, timelineId, role,
     isSharedAccess, isCollaborator,
@@ -31,7 +31,7 @@ export default function App() {
     driveSetupNeeded, setDriveSetupNeeded,
     handleGoogleLogin, handleShareTokenLogin, handleSignOut,
     setTimelineId, setOwnerId, setRole, setIsSharedAccess, setIsCollaborator,
-  } = authHook;
+  } = useAuth();
 
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isShareModalOpen,  setIsShareModalOpen]  = useState(false);
@@ -42,22 +42,35 @@ export default function App() {
   const [collabToken,       setCollabToken]       = useState(null);
   const [collabShareUrl,    setCollabShareUrl]    = useState(null);
   const [collabLinkCopied,  setCollabLinkCopied]  = useState(false);
+  const [collabPopoverOpen, setCollabPopoverOpen] = useState(false);
 
   const fileRef  = useRef(null);
   const videoRef = useRef(null);
 
+  // Clock ticker
   useEffect(() => {
     const t = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
+  // Handle share token from URL — supports ?token=, ?view=, ?collab=
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
-    const t = p.get('token');
+    const t = p.get('token') || p.get('view');
     if (t) handleShareTokenLogin(t.toUpperCase());
+    // ?collab= is already handled in useAuth's own useEffect
   }, []);
 
-  // Load existing tokens from user doc on mount
+  // ✅ Reset all token state when user changes (sign out / sign in as different user)
+  useEffect(() => {
+    setCollabToken(null);
+    setCollabShareUrl(null);
+    setCollabPopoverOpen(false);
+    setCollabLinkCopied(false);
+    setViewerToken(null);
+  }, [user?.uid]);
+
+  // Load existing tokens from Firestore for current user
   useEffect(() => {
     if (!user) return;
     getDoc(doc(db, 'users', user.uid)).then(snap => {
@@ -67,14 +80,14 @@ export default function App() {
         if (d.collabToken) setCollabToken(d.collabToken);
       }
     });
-  }, [user]);
+  }, [user?.uid]);
 
   const isViewer     = role === 'viewer';
   const isOwner      = role === 'owner';
   const isCollabRole = role === 'collaborator';
   const canEdit      = isOwner || isCollabRole;
 
-  const { memories, config, setConfig, isLoading } = useMemories(timelineId, role, () => setIsConfigModalOpen(true));
+  const { memories, config, setConfig, isLoading } = useMemories(timelineId, role, () => setIsConfigModalOpen(true), ownerId);
   const theme = getTheme(config?.theme || 'love');
   const { isUploading, handleDriveSetupComplete, handleUpload: _handleUpload } = useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timelineId);
   const form = useEventForm(timelineId, user?.uid);
@@ -91,63 +104,68 @@ export default function App() {
     } catch (err) { alert('Error saving settings: ' + err.message); }
   };
 
-  // Generate viewer token only (reuse if exists)
   const generateTokens = async () => {
     if (!user || !timelineId) return;
     try {
       const currentUser = auth.currentUser;
       if (!currentUser) { alert('Please sign in again.'); return; }
-      const idToken = await currentUser.getIdToken(true); // force refresh
+      const idToken = await currentUser.getIdToken(true);
       let vToken = viewerToken;
-
       if (!vToken) {
-        const vRes  = await fetch(`${getBackendUrl()}/api/create-viewer-token`, {
-          method: 'POST',
+        const res  = await fetch(`${getBackendUrl()}/api/create-viewer-token`, {
+          method:  'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-          body:   JSON.stringify({ timelineId }),
+          body:    JSON.stringify({ timelineId }),
         });
-        const vData = await vRes.json();
-        console.log('create-viewer-token response:', vData);
-        if (!vData.success) throw new Error(vData.error);
-        vToken = vData.token;
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+        vToken = data.token;
         setViewerToken(vToken);
         await setDoc(doc(db, 'users', user.uid), { viewerToken: vToken }, { merge: true });
       }
       await refreshLimits();
-    } catch (err) {
-      console.error('generateTokens error:', err);
-      alert('Failed to generate share code: ' + err.message);
-    }
+    } catch (err) { alert('Failed to generate share code: ' + err.message); }
   };
 
-  // Collaborate button — no Drive check needed, reuse existing collab token or create new
   const handleCollaborateClick = async () => {
     if (!user || !timelineId) return;
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) { alert('Please sign in again.'); return; }
-      const idToken = await currentUser.getIdToken(true); // force refresh
-
-      let cToken = collabToken;
-      if (!cToken) {
+    if (!collabToken) {
+      try {
+        const currentUser = auth.currentUser;
+        if (!currentUser) { alert('Please sign in again.'); return; }
+        const idToken = await currentUser.getIdToken(true);
         const res  = await fetch(`${getBackendUrl()}/api/create-collaboration-token`, {
-          method: 'POST',
+          method:  'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-          body:   JSON.stringify({ timelineId }),
+          body:    JSON.stringify({ timelineId }),
         });
         const data = await res.json();
         if (!data.success) {
           if (data.limitReached) { setIsPricingOpen(true); return; }
           throw new Error(data.error);
         }
-        cToken = data.token;
+        const cToken = data.token;
         setCollabToken(cToken);
         await setDoc(doc(db, 'users', user.uid), { collabToken: cToken }, { merge: true });
-      }
-      const url = `${window.location.origin}/?collab=${cToken}`;
-      setCollabShareUrl(collabShareUrl === url ? null : url);
-      await navigator.clipboard.writeText(url).catch(() => {});
-    } catch (err) { alert('Failed: ' + err.message); }
+        setCollabShareUrl(`${window.location.origin}/?collab=${cToken}`);
+      } catch (err) { alert('Failed: ' + err.message); return; }
+    } else {
+      setCollabShareUrl(`${window.location.origin}/?collab=${collabToken}`);
+    }
+    setCollabPopoverOpen(prev => !prev);
+  };
+
+  const handleJoinCollab = async (input) => {
+    const match = input.match(/[?&]collab=([A-Za-z0-9]+)/);
+    const token = match ? match[1] : input;
+    return await handleShareTokenLogin(token.toUpperCase());
+  };
+
+  const copyCollabLink = () => {
+    if (!collabShareUrl) return;
+    navigator.clipboard.writeText(collabShareUrl).catch(() => {});
+    setCollabLinkCopied(true);
+    setTimeout(() => setCollabLinkCopied(false), 2000);
   };
 
   const handleExitCollaboration = () => {
@@ -157,15 +175,31 @@ export default function App() {
     setRole('owner');
     setIsSharedAccess(false);
     setIsCollaborator(false);
+    // ✅ Reload own tokens
+    setCollabToken(null); setCollabShareUrl(null);
+    setCollabPopoverOpen(false); setViewerToken(null);
+    getDoc(doc(db, 'users', user.uid)).then(snap => {
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d.viewerToken) setViewerToken(d.viewerToken);
+        if (d.collabToken) setCollabToken(d.collabToken);
+      }
+    });
     window.history.replaceState({}, '', window.location.pathname);
   };
 
-  const handleShareClick   = () => setIsShareModalOpen(true);
   const handleUpgradeToPro = () => setIsPricingOpen(true);
 
   const handleOpenAdd = () => {
     if (isViewer) return;
-    if (!isPro && memories.length >= 2) { setIsPricingOpen(true); return; }
+    if (!isPro && memories.length >= 2) {
+      if (isCollabRole) {
+        alert("This timeline has reached its memory limit. Ask the timeline owner to upgrade to Pro.");
+        return;
+      }
+      setIsPricingOpen(true);
+      return;
+    }
     form.openAdd();
   };
 
@@ -210,28 +244,19 @@ export default function App() {
     <div className={`min-h-screen w-full bg-gradient-to-br ${theme.gradient} text-gray-800 font-sans relative overflow-x-hidden`}>
       <FloatingElements theme={theme}/>
 
-      {/* Free plan banner */}
       {!isPro && !isSharedAccess && !isCollabRole && (
         <div className="relative z-30 bg-amber-50 border-b border-amber-100 text-center py-1.5 px-4 text-xs text-amber-700 flex items-center justify-center gap-2">
           <Crown size={11} className="text-amber-500"/>
           Free plan: 2 memories, 2 collaborators
-          <button onClick={handleUpgradeToPro} className="underline font-bold text-amber-600 hover:text-amber-700 ml-1">
-            Upgrade to Pro →
-          </button>
+          <button onClick={handleUpgradeToPro} className="underline font-bold text-amber-600 hover:text-amber-700 ml-1">Upgrade to Pro →</button>
         </div>
       )}
-
-      {/* Collaborator banner */}
       {isCollabRole && (
         <div className="relative z-40 bg-gradient-to-r from-violet-500 to-purple-600 text-white text-center py-2 px-4 text-xs flex items-center justify-center gap-3">
           <span>✏️ You are collaborating on this timeline</span>
-          <button onClick={handleExitCollaboration} className="underline text-white/80 font-semibold hover:text-white ml-2">
-            Exit Collaboration
-          </button>
+          <button onClick={handleExitCollaboration} className="underline text-white/80 font-semibold hover:text-white ml-2">Exit Collaboration</button>
         </div>
       )}
-
-      {/* Viewer banner */}
       {isViewer && (
         <div className={`relative z-40 bg-gradient-to-r ${theme.banner} text-white text-center py-2 px-4 text-xs flex items-center justify-center gap-2`}>
           <Heart size={12} fill="white"/> Viewing a shared love story
@@ -244,7 +269,7 @@ export default function App() {
         activeTab={activeTab} setActiveTab={setActiveTab}
         galleryCount={galleryImages.length}
         isSharedAccess={isSharedAccess}
-        onShare={handleShareClick}
+        onShare={() => setIsShareModalOpen(true)}
         onSettings={() => setIsConfigModalOpen(true)}
         onSignOut={handleSignOut}
         isPro={isPro}
@@ -264,9 +289,7 @@ export default function App() {
               {!isPro && isOwner && (
                 <div className="mb-6 bg-white/70 rounded-2xl p-3 border border-gray-100 max-w-xs mx-auto text-center">
                   <p className="text-[11px] text-gray-400 mb-1 font-semibold">
-                    Memories: <span className={`font-bold ${memories.length >= 2 ? 'text-red-500' : 'text-gray-600'}`}>
-                      {memories.length} / 2
-                    </span>
+                    Memories: <span className={`font-bold ${memories.length >= 2 ? 'text-red-500' : 'text-gray-600'}`}>{memories.length} / 2</span>
                   </p>
                   <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
                     <div className="h-full rounded-full bg-gradient-to-r from-rose-400 to-pink-500 transition-all"
@@ -284,29 +307,23 @@ export default function App() {
                   <Heart size={12} fill="currentColor"/> To be continued...
                 </span>
               </div>
-
               {visibleMemories.map(ev => (
-                <EventCard
-                  key={ev.id} event={ev} theme={theme}
+                <EventCard key={ev.id} event={ev} theme={theme}
                   onDelete={canEdit ? form.handleDelete : null}
                   onEdit={canEdit ? form.openEdit : null}
                 />
               ))}
-
               {!isPro && isOwner && memories.length > 2 && (
                 <div onClick={handleUpgradeToPro}
                   className="cursor-pointer mt-4 p-5 rounded-2xl border-2 border-dashed border-amber-200 bg-amber-50/50 text-center hover:bg-amber-50 transition-colors">
                   <Crown size={20} className="text-amber-400 mx-auto mb-2"/>
-                  <p className="text-sm font-bold text-amber-700">
-                    {memories.length - 2} more {memories.length - 2 === 1 ? 'memory' : 'memories'} hidden
-                  </p>
+                  <p className="text-sm font-bold text-amber-700">{memories.length - 2} more {memories.length - 2 === 1 ? 'memory' : 'memories'} hidden</p>
                   <p className="text-xs text-amber-500 mt-1">Upgrade to Pro to view all your memories →</p>
                 </div>
               )}
             </div>
           )
         )}
-
         {activeTab === 'gallery' && (
           galleryImages.length === 0 ? (
             <div className="text-center py-20">
@@ -329,49 +346,16 @@ export default function App() {
         )}
       </main>
 
-      {/* Collaborate button — owner only */}
       {isOwner && !isSharedAccess && (
-        <div className="fixed bottom-6 left-5 sm:bottom-8 sm:left-8 z-40 flex flex-col items-start gap-2">
-          <button onClick={handleCollaborateClick}
-            className="flex items-center gap-1.5 text-xs bg-white border border-violet-200 text-violet-600 px-3 py-2 rounded-full shadow-md hover:bg-violet-50 transition-colors font-semibold">
-            <Users size={12}/> Collaborate
-            {limits?.collaborators?.count > 0 && (
-              <span className="ml-1 bg-violet-100 text-violet-600 rounded-full px-1.5 py-0.5 text-[9px] font-bold">
-                {limits.collaborators.count}/{limits.collaborators.limit ?? '∞'}
-              </span>
-            )}
-          </button>
-          {collabShareUrl && (
-            <div className="bg-white rounded-xl shadow-lg border border-violet-100 p-3 max-w-[240px]">
-              <p className="text-[10px] text-gray-500 font-bold mb-0.5">Collaboration link</p>
-              <p className="text-[10px] text-gray-400 mb-2">
-                Share with someone who <strong>signs in with Google</strong> — they can view and add memories to your timeline.
-              </p>
-              <p className="text-[10px] text-violet-600 break-all font-mono bg-violet-50 rounded-lg px-2 py-1.5 mb-2">{collabShareUrl}</p>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(collabShareUrl).catch(() => {});
-                  setCollabLinkCopied(true);
-                  setTimeout(() => setCollabLinkCopied(false), 2000);
-                }}
-                className="w-full text-[10px] border border-violet-200 rounded-lg py-1 hover:bg-violet-50 mb-1 flex items-center justify-center gap-1 transition-colors"
-                style={{ color: collabLinkCopied ? '#22c55e' : '#8b5cf6' }}>
-                {collabLinkCopied
-                  ? <><Check size={10}/> Copied!</>
-                  : <><Copy size={10}/> Copy link</>}
-              </button>
-              {limits?.collaborators && (
-                <p className="text-[9px] text-gray-400 text-center mt-1">
-                  Collaborators: <strong>{limits.collaborators.count ?? 0}</strong> / {limits.collaborators.limit ?? '∞'}
-                </p>
-              )}
-              <button onClick={() => setCollabShareUrl(null)} className="text-[9px] text-gray-400 underline block mx-auto mt-1">Dismiss</button>
-            </div>
-          )}
-        </div>
+        <CollaborateButton
+          onCollaborate={handleCollaborateClick}
+          collabShareUrl={collabShareUrl} setCollabShareUrl={setCollabShareUrl}
+          collabLinkCopied={collabLinkCopied} onCopyLink={copyCollabLink}
+          limits={limits} onJoinCollab={handleJoinCollab}
+          isOpen={collabPopoverOpen} setIsOpen={setCollabPopoverOpen}
+        />
       )}
 
-      {/* FAB — owner + collaborator only */}
       {canEdit && (
         <button onClick={handleOpenAdd}
           className={`fixed bottom-6 right-5 sm:bottom-8 sm:right-8 bg-gradient-to-r ${theme.fab} text-white p-3.5 sm:p-4 rounded-full shadow-xl shadow-rose-300/50 transition-transform hover:scale-110 active:scale-95 z-40`}>
@@ -390,10 +374,8 @@ export default function App() {
         handleUpload={handleUpload} handleSaveEvent={handleSaveEvent}
         isSaving={form.isSaving} isUploading={isUploading}
         folderId={folderId} fileRef={fileRef} videoRef={videoRef}
-        theme={theme}
-        memberType={config?.memberType || 'duo'}
+        theme={theme} memberType={config?.memberType || 'duo'}
       />
-
       {isOwner && (
         <SettingsModal
           isOpen={isConfigModalOpen} onClose={() => setIsConfigModalOpen(false)}
@@ -403,17 +385,13 @@ export default function App() {
           theme={theme}
         />
       )}
-
       {isOwner && (
         <ShareModal
-          isOpen={isShareModalOpen}
-          onClose={() => setIsShareModalOpen(false)}
-          viewerToken={viewerToken}
-          onGenerateTokens={generateTokens}
+          isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)}
+          shareToken={viewerToken} onGenerateToken={generateTokens}
           theme={theme}
         />
       )}
-
       <PricingModal
         isOpen={isPricingOpen} onClose={() => setIsPricingOpen(false)}
         user={user} theme={theme}

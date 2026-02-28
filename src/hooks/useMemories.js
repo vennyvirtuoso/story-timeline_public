@@ -1,55 +1,43 @@
 import { useState, useEffect } from 'react';
-import { collection, doc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, doc, orderBy, query } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
-/**
- * useMemories(activeTimelineId, role)
- * role: 'owner' | 'collaborator' | 'viewer'
- *
- * Reads from: timelines/{activeTimelineId}/memories
- * Config from: users/{ownerId}/config/main
- *   — ownerId is always = activeTimelineId (timelineId = userId by design)
- */
-export function useMemories(activeTimelineId, role, onNoConfig) {
+// ✅ ownerId is passed explicitly — config always lives under users/{ownerId}
+export function useMemories(timelineId, role, onNoConfig, ownerId) {
   const [memories,  setMemories]  = useState([]);
   const [config,    setConfig]    = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ Config lives at users/{ownerId}/config/main
-  // Since timelineId = userId, ownerId = activeTimelineId
-  useEffect(() => {
-    if (!activeTimelineId) return;
-    const unsub = onSnapshot(
-      doc(db, 'users', activeTimelineId, 'config', 'main'),
-      snap => {
-        if (snap.exists()) setConfig(snap.data());
-        else if (onNoConfig) onNoConfig();
-      },
-      err => console.error('useMemories config snapshot error:', err.code)
-    );
-    return () => unsub();
-  }, [activeTimelineId]);
+  // Config from owner's doc — use ownerId if provided, fallback to timelineId
+  const configOwnerId = ownerId || timelineId;
 
-  // ✅ Memories from new path: timelines/{activeTimelineId}/memories
   useEffect(() => {
-    if (!activeTimelineId) { setIsLoading(false); return; }
-    const q = query(
-      collection(db, 'timelines', activeTimelineId, 'memories'),
-      orderBy('date', 'desc')
-    );
-    const unsub = onSnapshot(
-      q,
-      snap => {
-        setMemories(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-        setIsLoading(false);
-      },
-      err => {
-        console.error('useMemories memories snapshot error:', err.code);
-        setIsLoading(false);
+    if (!configOwnerId) return;
+    console.log('📖 Loading config for ownerId:', configOwnerId, 'role:', role);
+    const configRef = doc(db, 'users', configOwnerId, 'config', 'main');
+    const unsub = onSnapshot(configRef, snap => {
+      if (snap.exists()) {
+        console.log('✅ Config loaded:', snap.data());
+        setConfig(snap.data());
+      } else {
+        console.warn('⚠️ No config found for ownerId:', configOwnerId);
+        setConfig({});
+        if (role === 'owner') onNoConfig?.();
       }
-    );
+    });
     return () => unsub();
-  }, [activeTimelineId]);
+  }, [configOwnerId, role]);
+
+  useEffect(() => {
+    if (!timelineId) return;
+    setIsLoading(true);
+    const q     = query(collection(db, 'timelines', timelineId, 'memories'), orderBy('date', 'desc'));
+    const unsub = onSnapshot(q, snap => {
+      setMemories(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setIsLoading(false);
+    }, () => setIsLoading(false));
+    return () => unsub();
+  }, [timelineId]);
 
   return { memories, config, setConfig, isLoading };
 }

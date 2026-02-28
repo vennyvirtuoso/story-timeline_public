@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { doc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { getBackendUrl } from '../gis';
 
 export function usePlan(ownerId, timelineId, isSharedAccess) {
-  const [plan, setPlan]             = useState('free');
-  const [planExpiry, setPlanExpiry] = useState(null);
-  const [planType, setPlanType]     = useState(null);
-  const [limits, setLimits]         = useState({ memories: { canAdd: true }, collaborators: { canAdd: true } });
+  const [plan,        setPlan]        = useState('free');
+  const [planExpiry,  setPlanExpiry]  = useState(null);
+  const [planType,    setPlanType]    = useState(null);
+  const [limits,      setLimits]      = useState({ memories: { canAdd: true }, collaborators: { canAdd: true } });
   const [planLoading, setPlanLoading] = useState(true);
 
+  // ✅ Always listen to OWNER's plan doc
   useEffect(() => {
     if (!ownerId) { setPlanLoading(false); return; }
     const unsub = onSnapshot(doc(db, 'users', ownerId), snap => {
@@ -32,15 +32,14 @@ export function usePlan(ownerId, timelineId, isSharedAccess) {
   const refreshLimits = useCallback(async () => {
     if (!ownerId) return;
     try {
-      // ✅ Use Firestore directly — avoids needing auth token for check-limits
-      const memSnap    = timelineId ? await getDocs(collection(db, 'timelines', timelineId, 'memories'))     : { size: 0 };
-      const collabSnap = timelineId ? await getDocs(collection(db, 'timelines', timelineId, 'collaborators')): { size: 0 };
+      const memSnap    = timelineId ? await getDocs(collection(db, 'timelines', timelineId, 'memories'))      : { size: 0 };
+      const collabSnap = timelineId ? await getDocs(collection(db, 'timelines', timelineId, 'collaborators')) : { size: 0 };
       const memoryCount = memSnap.size;
       const collabCount = collabSnap.size;
       const isPro = plan === 'pro';
       setLimits({
         memories:      { count: memoryCount, limit: isPro ? null : 2, canAdd: isPro || memoryCount < 2 },
-        collaborators: { count: collabCount,  limit: isPro ? null : 2, canAdd: isPro || collabCount  < 2 },
+        collaborators: { count: collabCount,  limit: isPro ? 20   : 2, canAdd: isPro || collabCount  < 2 },
       });
     } catch (e) { console.error('refreshLimits error:', e); }
   }, [ownerId, timelineId, plan]);
