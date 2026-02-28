@@ -1,56 +1,49 @@
 import { useState, useEffect, useCallback } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { getBackendUrl } from '../gis';
 
-export function usePlan(ownerId, isSharedAccess) {
+export function usePlan(ownerId, timelineId, isSharedAccess) {
   const [plan, setPlan]             = useState('free');
   const [planExpiry, setPlanExpiry] = useState(null);
   const [planType, setPlanType]     = useState(null);
-  const [limits, setLimits]         = useState({ timelines: { canAdd: true }, collaborators: { canAdd: true } });
+  const [limits, setLimits]         = useState({ memories: { canAdd: true }, collaborators: { canAdd: true } });
   const [planLoading, setPlanLoading] = useState(true);
 
-  // ✅ Always listen regardless of isSharedAccess — owner's plan drives isPro
   useEffect(() => {
     if (!ownerId) { setPlanLoading(false); return; }
-    console.log('🔥 usePlan: setting up onSnapshot for', ownerId);
     const unsub = onSnapshot(doc(db, 'users', ownerId), snap => {
-      const data = snap.data();
-      console.log('🔥 usePlan snapshot fired:', { plan: data?.plan, planExpiry: data?.planExpiry, exists: snap.exists() });
-      if (snap.exists()) {
-        const d = data;
-        const p = d.plan || 'free';
-        if (p === 'pro' && d.planExpiry) {
-          // ✅ CRITICAL FIX: always compare as UTC — Firestore Timestamp.toDate() returns local Date
-          // which is fine since new Date() is also local — comparison is valid
-          const exp = d.planExpiry.toDate ? d.planExpiry.toDate() : new Date(d.planExpiry);
-          console.log('🔥 expiry check:', exp.toISOString(), 'expired:', exp < new Date());
-          if (exp < new Date()) {
-            setPlan('free'); setPlanExpiry(null); setPlanType(null);
-            setPlanLoading(false); return;
-          }
+      if (!snap.exists()) { setPlanLoading(false); return; }
+      const d = snap.data();
+      const p = d.plan || 'free';
+      if (p === 'pro' && d.planExpiry) {
+        const exp = d.planExpiry.toDate ? d.planExpiry.toDate() : new Date(d.planExpiry);
+        if (exp < new Date()) {
+          setPlan('free'); setPlanExpiry(null); setPlanType(null);
+          setPlanLoading(false); return;
         }
-        setPlan(p);
-        setPlanExpiry(d.planExpiry || null);
-        setPlanType(d.planType || null);
       }
+      setPlan(p); setPlanExpiry(d.planExpiry || null); setPlanType(d.planType || null);
       setPlanLoading(false);
-    });
+    }, err => { console.error('usePlan snapshot error:', err.code); setPlanLoading(false); });
     return () => unsub();
   }, [ownerId]);
 
-  // ✅ useCallback so reference is stable — prevents infinite re-renders
   const refreshLimits = useCallback(async () => {
     if (!ownerId) return;
     try {
-      const url = `${getBackendUrl()}/api/check-limits?userId=${ownerId}`;
-      console.log('[usePlan] refreshLimits URL:', url);
-      const res  = await fetch(url);
-      const data = await res.json();
-      console.log('[usePlan] limits:', data);
-      if (data.success) setLimits(data);
-    } catch (e) { console.error('[usePlan] limits fetch error:', e); }
-  }, [ownerId]);
+      // ✅ Use Firestore directly — avoids needing auth token for check-limits
+      const memSnap    = timelineId ? await getDocs(collection(db, 'timelines', timelineId, 'memories'))     : { size: 0 };
+      const collabSnap = timelineId ? await getDocs(collection(db, 'timelines', timelineId, 'collaborators')): { size: 0 };
+      const memoryCount = memSnap.size;
+      const collabCount = collabSnap.size;
+      const isPro = plan === 'pro';
+      setLimits({
+        memories:      { count: memoryCount, limit: isPro ? null : 2, canAdd: isPro || memoryCount < 2 },
+        collaborators: { count: collabCount,  limit: isPro ? null : 2, canAdd: isPro || collabCount  < 2 },
+      });
+    } catch (e) { console.error('refreshLimits error:', e); }
+  }, [ownerId, timelineId, plan]);
 
   useEffect(() => {
     if (ownerId) refreshLimits();

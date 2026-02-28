@@ -1,118 +1,81 @@
 import React, { useState } from 'react';
-import { Share2, Copy, Check, Loader2, Lock } from 'lucide-react';
+import { Share2, Copy, Check, Loader2, Eye, RefreshCw } from 'lucide-react';
 import { Modal } from './ui';
 
-const ShareModal = ({ isOpen, onClose, shareToken, onGenerateToken, theme, isPro, limits }) => {
-  const [copied, setCopied] = useState('');
+const ShareModal = ({ isOpen, onClose, viewerToken, onGenerateTokens, theme }) => {
+  const [copied,     setCopied]     = useState(false);
   const [generating, setGenerating] = useState(false);
 
-  const t            = theme || {};
-  const accentText   = t.accentText   || 'text-rose-500';
-  const accentBorder = t.accentBorder || 'border-rose-100';
-  const accentHover  = t.accentHover  || 'hover:bg-rose-50';
-  const eventBg      = t.eventBg      || 'bg-rose-50';
-  const gradient     = t.gradient     || 'from-rose-50 via-white to-pink-50';
-  const btnPrimary   = t.btnPrimary   || 'from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 shadow-rose-200';
+  const t          = theme || {};
+  const accentText = t.accentText || 'text-rose-500';
+  const accentBg   = t.eventBg    || 'bg-rose-50';
+  const btnPrimary = t.btnPrimary  || 'from-rose-400 to-pink-500';
 
-  const collabCount = limits?.collaborators?.count ?? 0;
-  const collabLimit = limits?.collaborators?.limit ?? 2;
-  const canAdd      = limits?.collaborators?.canAdd ?? true;
-
-  const copy = (text, key) => {
-    navigator.clipboard.writeText(text);
-    setCopied(key);
-    setTimeout(() => setCopied(''), 2000);
+  const copy = () => {
+    navigator.clipboard.writeText(viewerToken).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const generate = async () => {
     setGenerating(true);
-    await onGenerateToken();
+    try { await onGenerateTokens(); } catch (e) { console.error(e); }
     setGenerating(false);
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Share Your Timeline 🔗" theme={theme}>
+    <Modal isOpen={isOpen} onClose={onClose} title="Share Your Timeline" theme={theme}>
       <div className="space-y-4">
 
-        {/* Collaborator usage bar — free users only */}
-        {!isPro && (
-          <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-            <div className="flex justify-between items-center mb-1.5">
-              <span className="text-[11px] text-gray-500 font-semibold">Collaborators used</span>
-              <span className={`text-[11px] font-bold ${collabCount >= collabLimit ? 'text-red-500' : accentText}`}>
-                {collabCount} / {collabLimit}
-              </span>
-            </div>
-            <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${collabCount >= collabLimit ? 'bg-red-400' : 'bg-gradient-to-r ' + (t.btnPrimary?.split(' ')[0] || 'from-rose-400') + ' to-pink-500'}`}
-                style={{ width: `${Math.min((collabCount / collabLimit) * 100, 100)}%` }}
-              />
-            </div>
-            {!canAdd && (
-              <p className="text-[10px] text-red-500 mt-1.5 flex items-center gap-1">
-                <Lock size={10}/> Limit reached — upgrade to Pro for unlimited collaborators
-              </p>
-            )}
+        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+          <div className="flex items-center gap-2 mb-1">
+            <Eye size={14} className={accentText} />
+            <p className="text-xs font-bold text-gray-700">View-Only Share Code</p>
           </div>
-        )}
+          <p className="text-[11px] text-gray-400 mb-3">
+            Share this 6-character code with anyone — they can <strong>view</strong> your
+            timeline without signing in. They <strong>cannot</strong> add or edit memories.
+          </p>
 
-        <p className="text-sm text-gray-500">Give someone this code — they can view and add memories without signing in.</p>
-
-        {shareToken ? (
-          <>
-            <div className={`bg-gradient-to-br ${gradient} rounded-2xl p-5 text-center border ${accentBorder}`}>
-              <p className="text-[11px] text-gray-400 mb-1 uppercase tracking-widest font-semibold">Share Code</p>
-              <p className={`text-5xl font-black tracking-[0.3em] ${accentText} my-3`}>{shareToken}</p>
-              <button onClick={() => copy(shareToken, 'code')}
-                className={`inline-flex items-center gap-1.5 mx-auto px-4 py-2 bg-white border ${accentBorder} rounded-xl text-sm font-medium text-gray-600 ${accentHover} transition-colors`}>
-                {copied === 'code' ? <><Check size={14} className="text-green-500"/>Copied!</> : <><Copy size={14}/>Copy Code</>}
-              </button>
-            </div>
-
-            <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-              <p className="text-[11px] text-gray-400 mb-1.5 font-semibold">Share Link</p>
-              <div className="flex gap-2 items-center">
-                <code className="text-[11px] text-gray-600 flex-1 truncate bg-white border border-gray-200 rounded-lg px-2.5 py-1.5">
-                  {window.location.origin}?token={shareToken}
-                </code>
-                <button onClick={() => copy(`${window.location.origin}?token=${shareToken}`, 'link')}
-                  className={`p-1.5 text-gray-400 ${accentHover} ${accentText} rounded-lg transition-colors shrink-0`}>
-                  {copied === 'link' ? <Check size={13} className="text-green-500"/> : <Copy size={13}/>}
+          {viewerToken ? (
+            <>
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`flex-1 ${accentBg} border border-gray-100 rounded-xl px-4 py-2.5 text-center`}>
+                  <span className={`text-2xl font-black tracking-widest ${accentText} font-mono`}>
+                    {viewerToken}
+                  </span>
+                </div>
+                <button onClick={copy}
+                  className="p-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-500 rounded-xl transition-colors">
+                  {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
                 </button>
               </div>
-            </div>
-
-            <p className="text-[11px] text-amber-600 text-center bg-amber-50 rounded-lg p-2">
-              ⚠️ Anyone with this code can add memories to your page
-            </p>
-
-            <button onClick={generate} disabled={generating}
-              className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl text-sm font-medium transition-all disabled:opacity-50">
-              {generating ? <><Loader2 size={14} className="animate-spin"/>Regenerating...</> : 'Regenerate Code'}
-            </button>
-          </>
-        ) : (
-          <div className="text-center py-6">
-            <div className={`w-14 h-14 ${eventBg} rounded-full flex items-center justify-center mx-auto mb-3`}>
-              <Share2 size={24} className={accentText}/>
-            </div>
-            <p className="text-gray-400 text-sm mb-4">No share code yet</p>
-            {canAdd ? (
               <button onClick={generate} disabled={generating}
-                className={`inline-flex items-center gap-1.5 mx-auto px-4 py-2.5 bg-gradient-to-r ${btnPrimary} text-white rounded-xl text-sm font-medium shadow-md transition-all disabled:opacity-50`}>
-                {generating ? <><Loader2 size={14} className="animate-spin"/>Generating...</> : <><Share2 size={14}/>Generate Code</>}
+                className="w-full flex items-center justify-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 py-1.5 transition-colors disabled:opacity-50">
+                {generating
+                  ? <><Loader2 size={11} className="animate-spin" />Regenerating...</>
+                  : <><RefreshCw size={11} />Regenerate code</>}
               </button>
-            ) : (
-              <div className="text-center">
-                <div className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-gray-100 text-gray-400 rounded-xl text-sm font-medium cursor-not-allowed mb-2">
-                  <Lock size={14}/> Limit Reached
-                </div>
-                <p className="text-[11px] text-gray-400">Upgrade to Pro to add more collaborators</p>
+            </>
+          ) : (
+            <div className="text-center py-2">
+              <div className={`w-12 h-12 ${accentBg} rounded-full flex items-center justify-center mx-auto mb-3`}>
+                <Share2 size={20} className={accentText} />
               </div>
-            )}
-          </div>
-        )}
+              <p className="text-gray-400 text-xs mb-3">No share code yet</p>
+              <button onClick={generate} disabled={generating}
+                className={`inline-flex items-center gap-1.5 px-5 py-2.5 bg-gradient-to-r ${btnPrimary} text-white rounded-xl text-sm font-semibold shadow-md hover:opacity-90 transition-opacity disabled:opacity-50`}>
+                {generating
+                  ? <><Loader2 size={14} className="animate-spin" />Generating...</>
+                  : <><Share2 size={14} />Generate Share Code</>}
+              </button>
+            </div>
+          )}
+        </div>
+
+        <p className="text-[10px] text-gray-400 text-center">
+          Want someone to <strong>add memories</strong>? Use the <strong>Collaborate</strong> button on your timeline.
+        </p>
       </div>
     </Modal>
   );

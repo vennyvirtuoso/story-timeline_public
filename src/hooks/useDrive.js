@@ -29,11 +29,39 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded) {
   };
 
   const handleUpload = async (e, mediaType, setNewEvent, fileRef, videoRef) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (!folderId) { alert('Connect Google Drive first to upload files.'); return; }
+    const file = e.target.files?.[0];
+    if (!file || !folderId) return;
     setIsUploading(true);
     try {
+      // ✅ Get ID token for secure upload
+      const { auth } = await import('../firebase/config');
+      const idToken   = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+
+      // ✅ Prefer backend upload (authenticated) if idToken available
+      if (idToken && timelineId) {
+        const formData = new FormData();
+        formData.append('file',       file);
+        formData.append('timelineId', timelineId);
+
+        const res  = await fetch(`${getBackendUrl()}/api/upload`, {
+          method:  'POST',
+          headers: { 'Authorization': `Bearer ${idToken}` },
+          body:    formData,
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error);
+
+        const url = `https://drive.google.com/uc?id=${data.fileId}`;
+        setNewEvent(prev => ({
+          ...prev,
+          ...(mediaType === 'image'
+            ? { imageUrls: [...(prev.imageUrls || []), url] }
+            : { videoUrls: [...(prev.videoUrls || []), url] }),
+        }));
+        return;
+      }
+
+      // Fallback: direct GIS upload (owner only, no auth check)
       const token  = await ensureDriveToken();
       const fileId = await uploadFileToDrive(file, folderId, token);
       if (mediaType === 'image') {
@@ -41,8 +69,9 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded) {
       } else {
         setNewEvent(p => ({ ...p, videoUrls: [...p.videoUrls, `https://drive.google.com/file/d/${fileId}/preview`] }));
       }
-    } catch (e) { alert('Upload failed: ' + e.message); }
-    finally {
+    } catch (e) {
+      alert('Upload failed: ' + e.message);
+    } finally {
       setIsUploading(false);
       if (fileRef?.current)  fileRef.current.value  = '';
       if (videoRef?.current) videoRef.current.value = '';
