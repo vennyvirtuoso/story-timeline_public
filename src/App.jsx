@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Heart, Plus, Camera, Crown, Users, Copy, Check } from 'lucide-react';
+import { Heart, Plus, Camera, Crown } from 'lucide-react';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from './firebase/config';
 import { getBackendUrl } from './gis';
@@ -43,6 +43,7 @@ export default function App() {
   const [collabShareUrl,    setCollabShareUrl]    = useState(null);
   const [collabLinkCopied,  setCollabLinkCopied]  = useState(false);
   const [collabPopoverOpen, setCollabPopoverOpen] = useState(false);
+  const [collabGenerating,  setCollabGenerating]  = useState(false);
 
   const fileRef  = useRef(null);
   const videoRef = useRef(null);
@@ -129,7 +130,9 @@ export default function App() {
 
   const handleCollaborateClick = async () => {
     if (!user || !timelineId) return;
+    if (collabGenerating) return;  // ✅ guard against double-click
     if (!collabToken) {
+      setCollabGenerating(true);
       try {
         const currentUser = auth.currentUser;
         if (!currentUser) { alert('Please sign in again.'); return; }
@@ -149,6 +152,7 @@ export default function App() {
         await setDoc(doc(db, 'users', user.uid), { collabToken: cToken }, { merge: true });
         setCollabShareUrl(`${window.location.origin}/?collab=${cToken}`);
       } catch (err) { alert('Failed: ' + err.message); return; }
+      finally { setCollabGenerating(false); }
     } else {
       setCollabShareUrl(`${window.location.origin}/?collab=${collabToken}`);
     }
@@ -353,6 +357,7 @@ export default function App() {
           collabLinkCopied={collabLinkCopied} onCopyLink={copyCollabLink}
           limits={limits} onJoinCollab={handleJoinCollab}
           isOpen={collabPopoverOpen} setIsOpen={setCollabPopoverOpen}
+          isGenerating={collabGenerating}
         />
       )}
 

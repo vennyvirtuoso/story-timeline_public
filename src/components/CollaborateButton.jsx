@@ -4,7 +4,7 @@ import { Users, Copy, Check, LogIn, Loader2 } from 'lucide-react';
 const CollaborateButton = ({
   onCollaborate, collabShareUrl, setCollabShareUrl,
   collabLinkCopied, onCopyLink, limits, onJoinCollab,
-  isOpen, setIsOpen,
+  isOpen, setIsOpen, isGenerating,
 }) => {
   const [pasteMode,  setPasteMode]  = useState(false);
   const [pasteInput, setPasteInput] = useState('');
@@ -22,14 +22,19 @@ const CollaborateButton = ({
 
   return (
     <div className="fixed bottom-6 left-5 sm:bottom-8 sm:left-8 z-40 flex flex-col items-start gap-2">
-      <button onClick={onCollaborate}
-        className="flex items-center gap-1.5 text-xs bg-white border border-violet-200 text-violet-600 px-3 py-2 rounded-full shadow-md hover:bg-violet-50 transition-colors font-semibold">
-        <Users size={12}/> Collaborate
-        {limits?.collaborators?.count > 0 && (
-          <span className="ml-1 bg-violet-100 text-violet-600 rounded-full px-1.5 py-0.5 text-[9px] font-bold">
-            {limits.collaborators.count}/{limits.collaborators.limit ?? '∞'}
-          </span>
-        )}
+      <button onClick={onCollaborate} disabled={isGenerating}
+        className="flex items-center gap-1.5 text-xs bg-white border border-violet-200 text-violet-600 px-3 py-2 rounded-full shadow-md hover:bg-violet-50 transition-colors font-semibold disabled:opacity-60">
+        {isGenerating
+          ? <><Loader2 size={12} className="animate-spin"/> Generating...</>
+          : <>
+              <Users size={12}/> Collaborate
+              {limits?.collaborators?.count > 0 && (
+                <span className="ml-1 bg-violet-100 text-violet-600 rounded-full px-1.5 py-0.5 text-[9px] font-bold">
+                  {limits.collaborators.count}/{limits.collaborators.limit ?? '∞'}
+                </span>
+              )}
+            </>
+        }
       </button>
 
       {/* ✅ Always show popover when isOpen, regardless of whether collabShareUrl exists */}

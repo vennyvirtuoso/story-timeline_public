@@ -13,14 +13,11 @@ export function useMemories(timelineId, role, onNoConfig, ownerId) {
 
   useEffect(() => {
     if (!configOwnerId) return;
-    console.log('📖 Loading config for ownerId:', configOwnerId, 'role:', role);
     const configRef = doc(db, 'users', configOwnerId, 'config', 'main');
     const unsub = onSnapshot(configRef, snap => {
       if (snap.exists()) {
-        console.log('✅ Config loaded:', snap.data());
         setConfig(snap.data());
       } else {
-        console.warn('⚠️ No config found for ownerId:', configOwnerId);
         setConfig({});
         if (role === 'owner') onNoConfig?.();
       }
