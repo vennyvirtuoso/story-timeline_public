@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { doc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
@@ -29,6 +29,10 @@ export function usePlan(ownerId, timelineId, isSharedAccess) {
     return () => unsub();
   }, [ownerId]);
 
+  // ✅ Keep a ref so refreshLimits always reads latest plan without stale closure
+  const planRef = useRef(plan);
+  useEffect(() => { planRef.current = plan; }, [plan]);
+
   const refreshLimits = useCallback(async () => {
     if (!ownerId) return;
     try {
@@ -36,17 +40,18 @@ export function usePlan(ownerId, timelineId, isSharedAccess) {
       const collabSnap = timelineId ? await getDocs(collection(db, 'timelines', timelineId, 'collaborators')) : { size: 0 };
       const memoryCount = memSnap.size;
       const collabCount = collabSnap.size;
-      const isPro = plan === 'pro';
+      const isPro = planRef.current === 'pro';  // ✅ always reads latest plan
       setLimits({
         memories:      { count: memoryCount, limit: isPro ? null : 2, canAdd: isPro || memoryCount < 2 },
         collaborators: { count: collabCount,  limit: isPro ? 20   : 2, canAdd: isPro || collabCount  < 2 },
       });
     } catch (e) { console.error('refreshLimits error:', e); }
-  }, [ownerId, timelineId, plan]);
+  }, [ownerId, timelineId]); // ✅ removed `plan` from deps — uses ref instead
 
+  // ✅ Re-run limits whenever plan changes (e.g. after upgrade)
   useEffect(() => {
     if (ownerId) refreshLimits();
-  }, [ownerId, refreshLimits]);
+  }, [ownerId, timelineId, plan, refreshLimits]); // ✅ added plan here
 
   const isPro = plan === 'pro';
   return { plan, isPro, planExpiry, planType, limits, planLoading, refreshLimits };

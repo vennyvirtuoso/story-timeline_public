@@ -79,7 +79,6 @@ export function useAuth() {
           body:    JSON.stringify({ token }),
         });
         const data = await res.json();
-        console.log('join-collaboration response:', data);
         if (!data.success) { setLoginLoading(false); return { success: false, error: data.error }; }
 
         // ✅ Set ownerId BEFORE timelineId so useMemories gets correct configOwnerId
@@ -98,7 +97,6 @@ export function useAuth() {
       setLoginLoading(false);
       return { success: false, error: 'Please sign in with Google to collaborate' };
     } catch (e) {
-      console.error('handleCollabTokenLogin error:', e);
       setLoginLoading(false);
       return { success: false, error: e.message };
     }
@@ -137,7 +135,7 @@ export function useAuth() {
         sessionStorage.setItem('pendingCollabToken', collabToken);
       }
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleGoogleLogin = async () => {
     setLoginLoading(true);

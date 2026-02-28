@@ -54,25 +54,20 @@ export default function App() {
     return () => clearInterval(t);
   }, []);
 
-  // Handle share token from URL — supports ?token=, ?view=, ?collab=
+  // Handle share token from URL — runs once on mount
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     const t = p.get('token') || p.get('view');
     if (t) handleShareTokenLogin(t.toUpperCase());
-    // ?collab= is already handled in useAuth's own useEffect
-  }, []);
+  }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
 
-  // ✅ Reset all token state when user changes (sign out / sign in as different user)
+  // ✅ Merged: reset tokens then load from Firestore in one effect
   useEffect(() => {
     setCollabToken(null);
     setCollabShareUrl(null);
     setCollabPopoverOpen(false);
     setCollabLinkCopied(false);
     setViewerToken(null);
-  }, [user?.uid]);
-
-  // Load existing tokens from Firestore for current user
-  useEffect(() => {
     if (!user) return;
     getDoc(doc(db, 'users', user.uid)).then(snap => {
       if (snap.exists()) {
@@ -98,7 +93,7 @@ export default function App() {
 
   const handleSaveConfig = async (e) => {
     e.preventDefault();
-    if (!ownerId) return;
+    if (!ownerId || !config) return;  // ✅ guard config undefined
     try {
       await setDoc(doc(db, 'users', ownerId, 'config', 'main'), { ...config, updatedAt: serverTimestamp() });
       setIsConfigModalOpen(false);
@@ -213,18 +208,22 @@ export default function App() {
   };
 
   const duration = useMemo(() => {
-    if (!config.startDate) return { years:0, months:0, days:0, hours:0, minutes:0, seconds:0 };
+    if (!config?.startDate) return { years:0, months:0, days:0, hours:0, minutes:0, seconds:0 };  // ✅ optional chaining
     const s = new Date(config.startDate), n = currentTime;
     if (n < s) return { years:0, months:0, days:0, hours:0, minutes:0, seconds:0 };
     let [yr,mo,dy,hr,mi,se] = [n.getFullYear()-s.getFullYear(),n.getMonth()-s.getMonth(),n.getDate()-s.getDate(),n.getHours()-s.getHours(),n.getMinutes()-s.getMinutes(),n.getSeconds()-s.getSeconds()];
     if(se<0){se+=60;mi--;} if(mi<0){mi+=60;hr--;} if(hr<0){hr+=24;dy--;} if(dy<0){dy+=new Date(n.getFullYear(),n.getMonth(),0).getDate();mo--;} if(mo<0){mo+=12;yr--;}
     return { years:yr, months:mo, days:dy, hours:hr, minutes:mi, seconds:se };
-  }, [config.startDate, currentTime]);
+  }, [config?.startDate, currentTime]);
 
-  const galleryImages   = useMemo(() =>
-    memories.flatMap(m => (m.imageUrls || []).map(url => ({ id: m.id + url, url, title: m.title, date: m.date }))),
+  const galleryImages = useMemo(() =>
+    memories.flatMap(m => (m.imageUrls || []).map(url => ({
+      id: `${m.id}__${url}`,  // ✅ separator prevents key collisions
+      url, title: m.title, date: m.date
+    }))),
     [memories]
   );
+
   const visibleMemories = isPro ? memories : memories.slice(0, 2);
 
   if (authLoading) return (
@@ -336,8 +335,8 @@ export default function App() {
             </div>
           ) : (
             <div className="columns-2 sm:columns-3 md:columns-4 gap-3 space-y-3">
-              {galleryImages.map((img, i) => (
-                <div key={i} className="break-inside-avoid rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all group relative bg-white border border-gray-100">
+              {galleryImages.map((img) => (
+                <div key={img.id} className="break-inside-avoid rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all group relative bg-white border border-gray-100">
                   <img src={img.url} alt={img.title} className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" referrerPolicy="no-referrer"/>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
                     <p className="text-white font-semibold text-xs">{img.title}</p>

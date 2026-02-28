@@ -99,8 +99,8 @@ const MemoryModal = ({
             ))}
           </select>
         </div>
-        <Field label="Title" placeholder="e.g., Our First Coffee" value={newEvent.title} onChange={v => setNewEvent({ ...newEvent, title: v })} required/>
-        <TA label="Story" placeholder="What happened? How did you feel?" value={newEvent.description} onChange={v => setNewEvent({ ...newEvent, description: v })}/>
+        <Field label="Title" placeholder="e.g., One of My Favorite Moments" value={newEvent.title} onChange={v => setNewEvent({ ...newEvent, title: v })} required/>
+        <TA label="Story" placeholder="What happened? What made this moment special?" value={newEvent.description} onChange={v => setNewEvent({ ...newEvent, description: v })}/>
 
         {/* Photos */}
         <div className="mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
