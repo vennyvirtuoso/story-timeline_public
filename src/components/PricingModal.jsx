@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Loader2, Check, Zap, Crown } from 'lucide-react';
 import { Modal } from './ui';
+import { Link } from 'react-router-dom';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8069';
 
@@ -50,9 +51,7 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
         modal: { ondismiss: () => setLoading(null) },
         // 4. On payment success
         handler: async (response) => {
-          console.log('✅ Razorpay payment success, response:', response);
           try {
-            console.log('Calling verify-payment at:', `${BACKEND_URL}/api/razorpay/verify-payment`);
             const vRes = await fetch(`${BACKEND_URL}/api/razorpay/verify-payment`, {
               method:  'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -65,15 +64,11 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
               }),
             });
             const vData = await vRes.json();
-            console.log('verify-payment response:', vData);
             if (!vData.success) throw new Error(vData.error);
-            // ✅ Wait for Firestore onSnapshot to fire — 3s is safer than 1.5s
             await new Promise(r => setTimeout(r, 3000));
             onSuccess?.(vData);
             onClose();
           } catch (e) {
-            console.error('verify-payment error:', e);
-            // ✅ Show alert so error is always visible even if modal state is broken
             alert('Payment received but verification failed: ' + e.message + '\n\nPlease contact support with payment ID: ' + response.razorpay_payment_id);
             setError('Verification failed: ' + e.message);
             setLoading(null);
@@ -144,6 +139,12 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
               </li>
             ))}
           </ul>
+          <p className="text-center text-[11px] text-gray-400 mt-3">
+            Payments are governed by our{' '}
+            <Link to="/refund" className="underline hover:text-rose-400 transition-colors">
+              Refund Policy
+            </Link>
+          </p>
         </div>
         <p className="text-[10px] text-gray-400 text-center">Secured by Razorpay · One-time payment · No auto-renewal</p>
       </div>

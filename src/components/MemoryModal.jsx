@@ -132,7 +132,7 @@ const MemoryModal = ({
               <div key={i} className="flex items-center gap-2 bg-white p-1.5 rounded-lg border border-gray-100">
                 <div className="w-8 h-8 rounded bg-gray-100 overflow-hidden shrink-0"><img src={url} alt="" className="w-full h-full object-cover"/></div>
                 <p className="text-[10px] text-gray-400 truncate flex-1">{url}</p>
-                <button type="button" onClick={() => removeImage(i)} className="text-gray-300 hover:text-red-400 shrink-0"><Trash2 size={12}/></button>
+                <button type="button" onClick={() => removeImage(url)} className="text-gray-300 hover:text-red-400 shrink-0"><Trash2 size={12}/></button>
               </div>
             ))}
           </div>
@@ -142,6 +142,7 @@ const MemoryModal = ({
         <div className="mb-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Videos</span>
+            {isUploading && <Loader2 size={13} className={`animate-spin ${accentText}`}/>}  {/* ✅ added spinner */}
           </div>
           {folderId && (
             <label className={`flex items-center justify-center gap-2 w-full px-3 py-2 bg-white border ${accentBorder} rounded-xl cursor-pointer ${accentHover} transition-colors text-xs ${accentText} font-semibold mb-2`}>
@@ -165,7 +166,7 @@ const MemoryModal = ({
               <div key={i} className="flex items-center gap-2 bg-white p-1.5 rounded-lg border border-gray-100">
                 <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center shrink-0"><PlayCircle size={14} className="text-gray-300"/></div>
                 <p className="text-[10px] text-gray-400 truncate flex-1">{url}</p>
-                <button type="button" onClick={() => removeVideo(i)} className="text-gray-300 hover:text-red-400 shrink-0"><Trash2 size={12}/></button>
+                <button type="button" onClick={() => removeVideo(url)} className="text-gray-300 hover:text-red-400 shrink-0"><Trash2 size={12}/></button>
               </div>
             ))}
           </div>

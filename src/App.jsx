@@ -21,6 +21,7 @@ import { getTheme } from './utils/themes';
 import { usePlan } from './hooks/usePlan';
 import PricingModal from './components/PricingModal';
 import CollaborateButton from './components/CollaborateButton';
+import { Link } from 'react-router-dom';
 
 export default function App() {
   const {
@@ -401,6 +402,17 @@ export default function App() {
         user={user} theme={theme}
         onSuccess={async () => { await refreshLimits(); }}
       />
+
+      {/* Legal footer */}
+      <footer className="relative z-10 text-center py-4 text-[11px] text-gray-400 space-x-3">
+        <span>© 2026 Safarnama</span>
+        <span>·</span>
+        <Link to="/privacy"    className="hover:text-rose-400 transition-colors">Privacy</Link>
+        <span>·</span>
+        <Link to="/terms"      className="hover:text-rose-400 transition-colors">Terms</Link>
+        <span>·</span>
+        <Link to="/google-api" className="hover:text-rose-400 transition-colors">Google API</Link>
+      </footer>
     </div>
   );
 }

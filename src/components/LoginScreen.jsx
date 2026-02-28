@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Loader2, Key } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import FloatingElements from './FloatingElements';
 import { getTheme } from '../utils/themes';
 
@@ -80,6 +81,12 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
           )}
         </div>
         <p className="text-center text-xs text-gray-400 mt-4 px-4">Sign in to create your timeline or enter a share code</p>
+        <p className="text-center text-[11px] text-gray-300 mt-2 px-4">
+          By continuing, you agree to our{' '}
+          <Link to="/terms" className="hover:text-rose-400 transition-colors underline">Terms</Link>
+          {' '}&amp;{' '}
+          <Link to="/privacy" className="hover:text-rose-400 transition-colors underline">Privacy Policy</Link>
+        </p>
       </div>
     </div>
   );

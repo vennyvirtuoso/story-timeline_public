@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { gisAccessToken, setGisAccessToken, getEnv, loadGIS, requestDriveToken, uploadFileToDrive } from '../gis';
+import { gisAccessToken, setGisAccessToken, getEnv, loadGIS, requestDriveToken, uploadFileToDrive, getBackendUrl } from '../gis';
 
-export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded) {
+export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timelineId) {
   const [isUploading, setIsUploading]         = useState(false);
   const [driveAccessToken, setDriveAccessToken] = useState(null);
 
@@ -18,7 +18,11 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded) {
 
   const handleDriveSetupComplete = async (newFolderId, accessToken) => {
     try {
-      await setDoc(doc(db, 'users', user.uid), { folderId: newFolderId, updatedAt: serverTimestamp() }, { merge: true });
+      await setDoc(doc(db, 'users', user.uid), {
+        folderId:   newFolderId,
+        driveToken: JSON.stringify({ token: accessToken }),  // ✅ persist token to Firestore
+        updatedAt:  serverTimestamp(),
+      }, { merge: true });
       setFolderId(newFolderId);
       setDriveAccessToken(accessToken);
       setGisAccessToken(accessToken);
@@ -51,7 +55,10 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded) {
         const data = await res.json();
         if (!data.success) throw new Error(data.error);
 
-        const url = `https://drive.google.com/uc?id=${data.fileId}`;
+        const fileId = data.fileId;
+        const url = mediaType === 'image'
+          ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`       // ✅ images
+          : `https://drive.google.com/file/d/${fileId}/preview`;              // ✅ videos
         setNewEvent(prev => ({
           ...prev,
           ...(mediaType === 'image'

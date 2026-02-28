@@ -19,8 +19,25 @@ export function useEventForm(timelineId, userId) {
     if (tempImageLink.trim()) { setNewEvent(p => ({ ...p, imageUrls: [...p.imageUrls, tempImageLink.trim()] })); setTempImageLink(''); }
   };
   const removeImage = (url) => setNewEvent(p => ({ ...p, imageUrls: p.imageUrls.filter(u => u !== url) }));
+
+  const normalizeVideoUrl = (url) => {
+    // YouTube: convert watch/short URLs to embed
+    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+
+    // Google Drive: convert /view or /edit to /preview
+    const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (driveMatch) return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+
+    return url; // return as-is if unrecognized
+  };
+
   const addVideoLink = () => {
-    if (tempVideoLink.trim()) { setNewEvent(p => ({ ...p, videoUrls: [...p.videoUrls, tempVideoLink.trim()] })); setTempVideoLink(''); }
+    if (tempVideoLink.trim()) {
+      const normalized = normalizeVideoUrl(tempVideoLink.trim());
+      setNewEvent(p => ({ ...p, videoUrls: [...p.videoUrls, normalized] }));
+      setTempVideoLink('');
+    }
   };
   const removeVideo = (url) => setNewEvent(p => ({ ...p, videoUrls: p.videoUrls.filter(u => u !== url) }));
 

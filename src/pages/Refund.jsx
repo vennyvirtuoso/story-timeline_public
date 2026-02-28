@@ -1,0 +1,53 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { BookOpen } from 'lucide-react';
+
+export default function Refund() {
+  return (
+    <div className="min-h-screen bg-white px-4 py-12">
+      <div className="max-w-[700px] mx-auto">
+        <Link to="/" className="inline-flex items-center gap-2 text-rose-400 text-sm mb-8 hover:text-rose-500 transition-colors">
+          <BookOpen size={14}/> Safarnama
+        </Link>
+        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-rose-500 to-pink-500 mb-2">Refund Policy</h1>
+        <p className="text-gray-400 text-sm mb-10">Last Updated: January 2026</p>
+
+        <div className="text-gray-600 leading-relaxed space-y-8">
+          <section>
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">Subscription Payments</h2>
+            <p>All payments are processed securely via Razorpay.</p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">Refund Eligibility</h2>
+            <p>Refund requests may be considered if:</p>
+            <ul className="list-disc list-inside mt-2 space-y-1 text-gray-500">
+              <li>Duplicate charges occurred</li>
+              <li>A technical issue prevented access</li>
+              <li>The request is made within 7 days of payment</li>
+            </ul>
+            <p className="mt-3">Refunds are reviewed case-by-case and are not guaranteed unless required by law.</p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">Cancellation</h2>
+            <p>Users may cancel subscription renewal at any time. Paid features remain active until the current billing period expires.</p>
+            <p className="mt-2">No partial refunds are provided for unused time unless legally required.</p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">Contact</h2>
+            <p>For refund requests, contact us at: <a href="mailto:support@safarnama.app" className="underline hover:text-rose-400">support@safarnama.app</a></p>
+          </section>
+        </div>
+
+        <div className="mt-12 pt-6 border-t border-gray-100 flex gap-4 text-xs text-gray-400">
+          <Link to="/privacy"    className="hover:text-rose-400">Privacy</Link>
+          <Link to="/terms"      className="hover:text-rose-400">Terms</Link>
+          <Link to="/google-api" className="hover:text-rose-400">Google API</Link>
+          <Link to="/"           className="hover:text-rose-400 ml-auto">← Back to app</Link>
+        </div>
+      </div>
+    </div>
+  );
+}
