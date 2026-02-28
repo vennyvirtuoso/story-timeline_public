@@ -245,7 +245,7 @@ export default function App() {
   );
 
   return (
-    <div className={`min-h-screen w-full bg-gradient-to-br ${theme.gradient} text-gray-800 font-sans relative overflow-x-hidden`}>
+    <div className={`min-h-screen w-full bg-gradient-to-br ${theme.gradient} text-gray-800 font-sans relative overflow-x-hidden flex flex-col`}>
       <FloatingElements theme={theme}/>
 
       {!isPro && !isSharedAccess && !isCollabRole && (
@@ -279,7 +279,7 @@ export default function App() {
         isPro={isPro}
       />
 
-      <main className="max-w-5xl mx-auto px-4 py-8 pb-28 relative z-10">
+      <main className="max-w-5xl mx-auto w-full px-4 py-8 pb-32 relative z-10 flex-1">
         {activeTab === 'timeline' && (
           memories.length === 0 ? (
             <div className="text-center py-20 px-6 bg-white/60 rounded-3xl border-2 border-dashed border-rose-200 max-w-sm mx-auto mt-4">
@@ -404,7 +404,7 @@ export default function App() {
       />
 
       {/* Legal footer */}
-      <footer className="relative z-10 text-center py-4 text-[11px] text-gray-400 space-x-3">
+      <footer className="relative z-10 text-center py-4 text-[11px] text-gray-400 space-x-3 mt-auto">
         <span>© 2026 Safarnama</span>
         <span>·</span>
         <Link to="/privacy"    className="hover:text-rose-400 transition-colors">Privacy</Link>
