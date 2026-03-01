@@ -1,4 +1,3 @@
-
 // GIS module-level vars (in-memory only, never persisted)
 export let gisTokenClient = null;
 export let gisAccessToken = null;
@@ -56,7 +55,8 @@ export const requestDriveToken = (clientId) => new Promise((resolve, reject) => 
       resolve(res.access_token);
     }
   });
-  gisTokenClient.requestAccessToken({ prompt: 'consent' });
+  // ✅ Use '' so Google reuses existing session silently after first consent
+  gisTokenClient.requestAccessToken({ prompt: '' });
 });
 
 export const setGisAccessToken = (token) => { gisAccessToken = token; };

@@ -53,6 +53,11 @@ export function usePlan(ownerId, timelineId, isSharedAccess) {
     if (ownerId) refreshLimits();
   }, [ownerId, timelineId, plan, refreshLimits]); // ✅ added plan here
 
+  useEffect(() => {
+    if (!ownerId) return;
+    refreshLimits();
+  }, [ownerId, timelineId]); // ✅ re-fetch whenever owner or timeline changes (catches expiry on revisit)
+
   const isPro = plan === 'pro';
   return { plan, isPro, planExpiry, planType, limits, planLoading, refreshLimits };
 }
