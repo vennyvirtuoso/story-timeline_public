@@ -24,7 +24,6 @@ import CollaborateButton    from './components/CollaborateButton';
 import FreePlanBanner       from './components/FreePlanBanner';
 import { CollabBanner, ViewerBanner } from './components/CollabBanner';
 import MemoryLimitBar       from './components/MemoryLimitBar';
-import HiddenMemoriesTeaser from './components/HiddenMemoriesTeaser';
 import EmptyTimeline        from './components/EmptyTimeline';
 import GalleryTab           from './components/GalleryTab';
 import { EventCard }        from './components/MediaComponents';
@@ -139,7 +138,8 @@ export default function App() {
     [memories]
   );
 
-  const visibleMemories = isPro ? memories : memories.slice(0, 2);
+  // ✅ Always show ALL memories — no hiding on downgrade
+  const visibleMemories = memories;
 
   // --- Loading / auth guards ---
   if (authLoading) return (
@@ -200,9 +200,7 @@ export default function App() {
                       onEdit={canEdit ? form.openEdit : null}
                     />
                   ))}
-                  {!isPro && isOwner && memories.length > 2 &&
-                    <HiddenMemoriesTeaser count={memories.length - 2} onUpgrade={() => setIsPricingOpen(true)}/>
-                  }
+                  {/* ✅ Removed HiddenMemoriesTeaser — memories never hidden */}
                 </div>
               )
           )}
