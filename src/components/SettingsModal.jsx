@@ -11,7 +11,10 @@ const MEMBER_TYPES = [
 ];
 
 const SettingsModal = ({ isOpen, onClose, config, setConfig, onSave, folderId, onConnectDrive, theme }) => {
-  const memberType = MEMBER_TYPES.find(m => m.id === (config.memberType || 'duo')) || MEMBER_TYPES[0];
+  // ✅ Ensure memberType always has a default when config loads
+  const memberType = config.memberType || 'duo';
+  const memberTypeDetails = MEMBER_TYPES.find(m => m.id === memberType) || MEMBER_TYPES[0];
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Timeline Settings ✨" theme={theme}>
       <form onSubmit={onSave}>
@@ -27,7 +30,7 @@ const SettingsModal = ({ isOpen, onClose, config, setConfig, onSave, folderId, o
           <div className="grid grid-cols-2 gap-2">
             {MEMBER_TYPES.map(m => {
               const Icon = m.icon;
-              const active = (config.memberType || 'duo') === m.id;
+              const active = memberType === m.id;
               return (
                 <button key={m.id} type="button"
                   onClick={() => setConfig({ ...config, memberType: m.id, partner2: m.showTwo ? (config.partner2 || '') : '' })}
@@ -40,17 +43,17 @@ const SettingsModal = ({ isOpen, onClose, config, setConfig, onSave, folderId, o
         </div>
 
         <Field
-          label={memberType.id === 'duo' ? 'Person 1 Name' : 'Name'}
+          label={memberType === 'duo' ? 'Person 1 Name' : 'Name'}
           value={config.partner1 || ''}
           onChange={v => setConfig({ ...config, partner1: v })}
-          placeholder={memberType.placeholder1}
+          placeholder={memberTypeDetails.placeholder1}
         />
-        {memberType.showTwo && (
+        {memberType === 'duo' && (
           <Field
             label="Person 2 Name"
             value={config.partner2 || ''}
             onChange={v => setConfig({ ...config, partner2: v })}
-            placeholder={memberType.placeholder2}
+            placeholder={memberTypeDetails.placeholder2}
           />
         )}
 

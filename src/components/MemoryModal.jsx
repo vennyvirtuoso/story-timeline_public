@@ -94,7 +94,8 @@ const MemoryModal = ({
         <div className="mb-3">
           <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Type</label>
           <select value={newEvent.type} onChange={e => setNewEvent({ ...newEvent, type: e.target.value })}
-            className={`w-full px-3 py-2.5 border ${accentBorder} rounded-xl text-sm text-gray-700 bg-white outline-none focus:ring-2 focus:border-opacity-60`}>
+            style={{ fontSize: '16px' }}  /* ✅ prevents iOS zoom + makes text readable */
+            className={`w-full px-3 py-3 border ${accentBorder} rounded-xl text-gray-700 bg-white outline-none focus:ring-2 focus:border-opacity-60`}>
             {typeOptions.map(o => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}

@@ -2,7 +2,13 @@ import { useState } from 'react';
 import { collection, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
-const blank = () => ({ title:'', description:'', date: new Date().toISOString().split('T')[0], imageUrls:[], videoUrls:[], emoji:'❤️' });
+const blank = () => ({
+  title: '', description: '',
+  date: new Date().toISOString().split('T')[0],
+  imageUrls: [], videoUrls: [],
+  emoji: '❤️',
+  type: 'general',  // ✅ include type in blank
+});
 
 export function useEventForm(timelineId, userId) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -56,6 +62,7 @@ export function useEventForm(timelineId, userId) {
         imageUrls:   newEvent.imageUrls || [],
         videoUrls:   newEvent.videoUrls || [],
         emoji:       newEvent.emoji || '❤️',
+        type:        newEvent.type || 'general',  // ✅ persist type
         createdBy:   userId || null,
         ...(editingId ? {} : { createdAt: serverTimestamp() }),
         updatedAt:   serverTimestamp(),

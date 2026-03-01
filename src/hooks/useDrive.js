@@ -4,7 +4,7 @@ import { db } from '../firebase/config';
 import { gisAccessToken, setGisAccessToken, getEnv, loadGIS, requestDriveToken, uploadFileToDrive, getBackendUrl } from '../gis';
 
 export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timelineId) {
-  const [isUploading, setIsUploading]         = useState(false);
+  const [isUploading, setIsUploading]           = useState(false);
   const [driveAccessToken, setDriveAccessToken] = useState(null);
 
   const ensureDriveToken = async () => {
@@ -13,6 +13,7 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
     await loadGIS();
     const t = await requestDriveToken(clientId);
     setDriveAccessToken(t);
+    setGisAccessToken(t);
     return t;
   };
 
@@ -20,7 +21,7 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
     try {
       await setDoc(doc(db, 'users', user.uid), {
         folderId:   newFolderId,
-        driveToken: JSON.stringify({ token: accessToken }),  // ✅ persist token to Firestore
+        driveToken: JSON.stringify({ token: accessToken }),
         updatedAt:  serverTimestamp(),
       }, { merge: true });
       setFolderId(newFolderId);
@@ -28,7 +29,7 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
       setGisAccessToken(accessToken);
       setDriveSetupNeeded(false);
     } catch (e) {
-      alert('Failed to save Drive setup: ' + e.message + '\nPlease try again.');
+      alert('Failed to save Drive setup: ' + e.message);
     }
   };
 
@@ -37,15 +38,18 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
     if (!file || !folderId) return;
     setIsUploading(true);
     try {
-      // ✅ Get ID token for secure upload
-      const { auth } = await import('../firebase/config');
-      const idToken   = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+      // ✅ Always get a fresh GIS token first — works for both owner and collaborator
+      const gisToken = await ensureDriveToken();
 
-      // ✅ Prefer backend upload (authenticated) if idToken available
-      if (idToken && timelineId) {
+      const { auth } = await import('../firebase/config');
+      const idToken  = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+
+      if (idToken && timelineId && gisToken) {
+        // ✅ Send gisToken so backend uses it directly instead of stored driveToken
         const formData = new FormData();
-        formData.append('file',       file);
-        formData.append('timelineId', timelineId);
+        formData.append('file',        file);
+        formData.append('timelineId',  timelineId);
+        formData.append('accessToken', gisToken);
 
         const res  = await fetch(`${getBackendUrl()}/api/upload`, {
           method:  'POST',
@@ -57,8 +61,9 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
 
         const fileId = data.fileId;
         const url = mediaType === 'image'
-          ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`       // ✅ images
-          : `https://drive.google.com/file/d/${fileId}/preview`;              // ✅ videos
+          ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`
+          : `https://drive.google.com/file/d/${fileId}/preview`;
+
         setNewEvent(prev => ({
           ...prev,
           ...(mediaType === 'image'
@@ -68,11 +73,10 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
         return;
       }
 
-      // Fallback: direct GIS upload (owner only, no auth check)
-      const token  = await ensureDriveToken();
-      const fileId = await uploadFileToDrive(file, folderId, token);
+      // Fallback: direct GIS upload
+      const fileId = await uploadFileToDrive(file, folderId, gisToken);
       if (mediaType === 'image') {
-        setNewEvent(p => ({ ...p, imageUrls: [...p.imageUrls, `https://lh3.googleusercontent.com/d/${fileId}=w1000?authuser=0`] }));
+        setNewEvent(p => ({ ...p, imageUrls: [...p.imageUrls, `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`] }));
       } else {
         setNewEvent(p => ({ ...p, videoUrls: [...p.videoUrls, `https://drive.google.com/file/d/${fileId}/preview`] }));
       }

@@ -1,21 +1,25 @@
 import React from 'react';
 import { Image as ImageIcon, Clock, Settings, Share2, LogOut, Heart, Users, User, Home, Crown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { getTheme } from '../utils/themes';
 
 const memberIcon = { duo: Heart, solo: User, family: Home, group: Users };
 
 const getDisplayTitle = (config) => {
   if (config.timelineName) return config.timelineName;
-  if (config.memberType === 'duo' && config.partner1 && config.partner2)
+  // ✅ treat undefined memberType as 'duo'
+  const type = config.memberType || 'duo';
+  if (type === 'duo' && config.partner1 && config.partner2)
     return `${config.partner1} & ${config.partner2}`;
   if (config.partner1) return config.partner1;
   return 'Your Timeline';
 };
 
 const getSubtitle = (config) => {
-  // If there's a timeline name, show member names as subtitle
+  const type = config.memberType || 'duo';
   if (config.timelineName) {
-    if (config.memberType === 'duo' && config.partner1 && config.partner2)
+    // ✅ show member names as subtitle under custom timeline name
+    if (type === 'duo' && config.partner1 && config.partner2)
       return `${config.partner1} & ${config.partner2}`;
     if (config.partner1) return config.partner1;
   }
@@ -75,15 +79,26 @@ const AppHeader = ({ config, duration, activeTab, setActiveTab, galleryCount, is
           ))}
         </div>
 
-        <div className="flex gap-2">
-          {[['timeline','Timeline',<Clock size={13}/>],['gallery','Gallery',<ImageIcon size={13}/>]].map(([tab,label,icon])=>(
-            <button key={tab} onClick={() => setActiveTab(tab)}
-              className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all ${activeTab===tab ? `bg-gradient-to-r ${theme.tabActive} text-white shadow-sm` : 'text-gray-500 hover:bg-white/70 hover:text-gray-700'}`}>
-              {icon}<span>{label}</span>
-              {tab==='gallery' && galleryCount>0 && <span className="bg-white/30 text-[10px] px-1.5 rounded-full">{galleryCount}</span>}
-            </button>
-          ))}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex gap-2">
+            {[['timeline','Timeline',<Clock size={13}/>],['gallery','Gallery',<ImageIcon size={13}/>]].map(([tab,label,icon])=>(
+              <button key={tab} onClick={() => setActiveTab(tab)}
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all ${activeTab===tab ? `bg-gradient-to-r ${theme.tabActive} text-white shadow-sm` : 'text-gray-500 hover:bg-white/70 hover:text-gray-700'}`}>
+                {icon}<span>{label}</span>
+                {tab==='gallery' && galleryCount>0 && <span className="bg-white/30 text-[10px] px-1.5 rounded-full">{galleryCount}</span>}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex sm:hidden items-center gap-2 text-[10px] text-gray-400">
+            <Link to="/about"   className="hover:text-rose-400 transition-colors">About</Link>
+            <span>·</span>
+            <Link to="/privacy" className="hover:text-rose-400 transition-colors">Privacy</Link>
+            <span>·</span>
+            <Link to="/terms"   className="hover:text-rose-400 transition-colors">Terms</Link>
+          </div>
         </div>
+
       </div>
     </header>
   );

@@ -90,7 +90,7 @@ export default function About() {
             className="inline-flex items-center gap-1.5 text-[12px] text-gray-400 hover:text-rose-400 transition-colors"
           >
             <Heart size={11} className="text-rose-300" fill="currentColor"/>
-            Made with love
+            Made with love by 👨🏻‍🎓
           </a>
         </div>
 
