@@ -38,6 +38,16 @@ const DriveSetupScreen = ({ user, onSetupComplete, onSkip }) => {
     } finally { setBusy(false); }
   };
 
+  const handleSkip = async () => {
+    // ✅ Mark as skipped in Firestore so loadUserData never re-triggers setup
+    try {
+      const { db } = await import('../firebase/config');
+      const { doc, setDoc } = await import('firebase/firestore');
+      await setDoc(doc(db, 'users', user.uid), { driveSetupSkipped: true }, { merge: true });
+    } catch {}
+    onSkip();
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-rose-50 via-white to-pink-50 p-5">
       <div className="bg-white rounded-3xl shadow-xl p-7 max-w-sm w-full text-center">
@@ -64,7 +74,7 @@ const DriveSetupScreen = ({ user, onSetupComplete, onSkip }) => {
         <Btn onClick={connect} disabled={busy} className="w-full py-3 mb-3">
           {busy?<><Loader2 size={16} className="animate-spin"/>Connecting...</>:'Connect Google Drive'}
         </Btn>
-        <button onClick={onSkip} className="text-xs text-gray-400 hover:text-gray-500 transition-colors">Skip — paste links manually</button>
+        <button onClick={handleSkip} className="text-xs text-gray-400 hover:text-gray-500 transition-colors">Skip — paste links manually</button>
       </div>
     </div>
   );

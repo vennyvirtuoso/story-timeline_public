@@ -1,33 +1,40 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Heart, Plus, Camera, Crown } from 'lucide-react';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
-import { db, auth } from './firebase/config';
-import { getBackendUrl } from './gis';
+import { Heart, Plus } from 'lucide-react';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from './firebase/config';
 import styles from './utils/styles';
-import { useAuth } from './hooks/useAuth';
-import { useMemories } from './hooks/useMemories';
-import { useDrive } from './hooks/useDrive';
-import { useEventForm } from './hooks/useEventForm';
-import AppHeader from './components/AppHeader';
-import MemoryModal from './components/MemoryModal';
-import SettingsModal from './components/SettingsModal';
-import LoginScreen from './components/LoginScreen';
-import ShareModal from './components/ShareModal';
-import DriveSetupScreen from './components/DriveSetupScreen';
-import FloatingElements from './components/FloatingElements';
-import { Btn } from './components/ui';
-import { EventCard } from './components/MediaComponents';
-import { getTheme } from './utils/themes';
-import { usePlan } from './hooks/usePlan';
-import PricingModal from './components/PricingModal';
-import CollaborateButton from './components/CollaborateButton';
-import { Link } from 'react-router-dom';
+import { useAuth }          from './hooks/useAuth';
+import { useMemories }      from './hooks/useMemories';
+import { useDrive }         from './hooks/useDrive';
+import { useEventForm }     from './hooks/useEventForm';
+import { usePlan }          from './hooks/usePlan';
+import { useDuration }      from './hooks/useDuration';
+import { useCollaboration } from './hooks/useCollaboration';
+import { useViewerToken }   from './hooks/useViewerToken';
+import { useOwnerFolderId } from './hooks/useOwnerFolderId';
+import AppHeader            from './components/AppHeader';
+import MemoryModal          from './components/MemoryModal';
+import SettingsModal        from './components/SettingsModal';
+import LoginScreen          from './components/LoginScreen';
+import ShareModal           from './components/ShareModal';
+import DriveSetupScreen     from './components/DriveSetupScreen';
+import FloatingElements     from './components/FloatingElements';
+import PricingModal         from './components/PricingModal';
+import CollaborateButton    from './components/CollaborateButton';
+import FreePlanBanner       from './components/FreePlanBanner';
+import { CollabBanner, ViewerBanner } from './components/CollabBanner';
+import MemoryLimitBar       from './components/MemoryLimitBar';
+import HiddenMemoriesTeaser from './components/HiddenMemoriesTeaser';
+import EmptyTimeline        from './components/EmptyTimeline';
+import GalleryTab           from './components/GalleryTab';
+import { EventCard }        from './components/MediaComponents';
+import { getTheme }         from './utils/themes';
+import { Link }             from 'react-router-dom';
 
 export default function App() {
   const {
     user, ownerId, timelineId, role,
-    isSharedAccess, isCollaborator,
-    authLoading, loginLoading,
+    isSharedAccess, authLoading, loginLoading,
     folderId, setFolderId,
     driveSetupNeeded, setDriveSetupNeeded,
     handleGoogleLogin, handleShareTokenLogin, handleSignOut,
@@ -37,45 +44,10 @@ export default function App() {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [isShareModalOpen,  setIsShareModalOpen]  = useState(false);
   const [activeTab,         setActiveTab]         = useState('timeline');
-  const [currentTime,       setCurrentTime]       = useState(new Date());
   const [isPricingOpen,     setIsPricingOpen]     = useState(false);
-  const [viewerToken,       setViewerToken]       = useState(null);
-  const [collabToken,       setCollabToken]       = useState(null);
-  const [collabShareUrl,    setCollabShareUrl]    = useState(null);
-  const [collabLinkCopied,  setCollabLinkCopied]  = useState(false);
-  const [collabPopoverOpen, setCollabPopoverOpen] = useState(false);
-  const [collabGenerating,  setCollabGenerating]  = useState(false);
-  const [ownerFolderId,     setOwnerFolderId]     = useState(null);
 
   const fileRef  = useRef(null);
   const videoRef = useRef(null);
-
-  useEffect(() => {
-    const t = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    const t = p.get('token') || p.get('view');
-    if (t) handleShareTokenLogin(t.toUpperCase());
-  }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    setCollabToken(null);
-    setCollabShareUrl(null);
-    setCollabPopoverOpen(false);
-    setCollabLinkCopied(false);
-    setViewerToken(null);
-    if (!user) return;
-    getDoc(doc(db, 'users', user.uid)).then(snap => {
-      if (snap.exists()) {
-        const d = snap.data();
-        if (d.viewerToken) setViewerToken(d.viewerToken);
-        if (d.collabToken) setCollabToken(d.collabToken);
-      }
-    });
-  }, [user?.uid]);
 
   const isViewer     = role === 'viewer';
   const isOwner      = role === 'owner';
@@ -83,20 +55,39 @@ export default function App() {
   const canEdit      = isOwner || isCollabRole;
 
   const { memories, config, setConfig, isLoading } = useMemories(timelineId, role, () => setIsConfigModalOpen(true), ownerId);
-  const theme = getTheme(config?.theme || 'love');
-  const { isUploadingImage, isUploadingVideo, resetDriveToken, handleDriveSetupComplete, handleUpload: _handleUpload } = useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timelineId);
-  const form = useEventForm(timelineId, user?.uid);
+  const theme    = getTheme(config?.theme || 'love');
+  const duration = useDuration(config?.startDate);
   const { isPro, limits, refreshLimits } = usePlan(ownerId, timelineId, isSharedAccess);
 
-  useEffect(() => {
-    if (!isCollabRole || !ownerId) { setOwnerFolderId(null); return; }
-    getDoc(doc(db, 'users', ownerId)).then(snap => {
-      if (snap.exists()) setOwnerFolderId(snap.data().folderId || null);
-    });
-  }, [isCollabRole, ownerId]);
+  const { isUploadingImage, isUploadingVideo, resetDriveToken, handleDriveSetupComplete, handleUpload: _handleUpload } =
+    useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timelineId);
+
+  const form          = useEventForm(timelineId, user?.uid);
+  const ownerFolderId = useOwnerFolderId(isCollabRole, ownerId);
+  const collab        = useCollaboration(user, timelineId);
+  const viewer        = useViewerToken(user, timelineId, refreshLimits);
 
   const effectiveFolderId = isCollabRole ? ownerFolderId : folderId;
   const handleUpload = (e, mediaType) => _handleUpload(e, mediaType, form.setNewEvent, fileRef, videoRef, isCollabRole);
+
+  // Load saved tokens when user changes — skip reset if already in collab session
+  useEffect(() => {
+    if (!user?.uid) return;
+    // ✅ Don't wipe collab/viewer state on refresh if session was restored from sessionStorage
+    if (!isCollabRole) {
+      collab.reset();
+      viewer.setViewerToken(null);
+      collab.loadFromFirestore(user.uid);
+      viewer.loadFromFirestore(user.uid);
+    }
+  }, [user?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Handle share/view token from URL on mount
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const t = p.get('token') || p.get('view');
+    if (t) handleShareTokenLogin(t.toUpperCase());
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSaveConfig = async (e) => {
     e.preventDefault();
@@ -107,104 +98,33 @@ export default function App() {
     } catch (err) { alert('Error saving settings: ' + err.message); }
   };
 
-  const generateTokens = async () => {
-    if (!user || !timelineId) return;
-    try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) { alert('Please sign in again.'); return; }
-      const idToken = await currentUser.getIdToken(true);
-      let vToken = viewerToken;
-      if (!vToken) {
-        const res  = await fetch(`${getBackendUrl()}/api/create-viewer-token`, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-          body:    JSON.stringify({ timelineId }),
-        });
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error);
-        vToken = data.token;
-        setViewerToken(vToken);
-        await setDoc(doc(db, 'users', user.uid), { viewerToken: vToken }, { merge: true });
-      }
-      await refreshLimits();
-    } catch (err) { alert('Failed to generate share code: ' + err.message); }
-  };
-
-  const handleCollaborateClick = async () => {
-    if (!user || !timelineId || collabGenerating) return;
-    if (!collabToken) {
-      setCollabGenerating(true);
-      try {
-        const currentUser = auth.currentUser;
-        if (!currentUser) { alert('Please sign in again.'); return; }
-        const idToken = await currentUser.getIdToken(true);
-        const res  = await fetch(`${getBackendUrl()}/api/create-collaboration-token`, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-          body:    JSON.stringify({ timelineId }),
-        });
-        const data = await res.json();
-        if (!data.success) {
-          if (data.limitReached) { setIsPricingOpen(true); return; }
-          throw new Error(data.error);
-        }
-        const cToken = data.token;
-        setCollabToken(cToken);
-        await setDoc(doc(db, 'users', user.uid), { collabToken: cToken }, { merge: true });
-        setCollabShareUrl(`${window.location.origin}/?collab=${cToken}`);
-      } catch (err) { alert('Failed: ' + err.message); return; }
-      finally { setCollabGenerating(false); }
-    } else {
-      setCollabShareUrl(`${window.location.origin}/?collab=${collabToken}`);
-    }
-    setCollabPopoverOpen(prev => !prev);
-  };
-
   const handleJoinCollab = async (input) => {
     const match = input.match(/[?&]collab=([A-Za-z0-9]+)/);
     const token = match ? match[1] : input;
     return await handleShareTokenLogin(token.toUpperCase());
   };
 
-  const copyCollabLink = () => {
-    if (!collabShareUrl) return;
-    navigator.clipboard.writeText(collabShareUrl).catch(() => {});
-    setCollabLinkCopied(true);
-    setTimeout(() => setCollabLinkCopied(false), 2000);
-  };
-
   const handleExitCollaboration = () => {
     if (!user) { handleSignOut(); return; }
-    sessionStorage.removeItem('collabSession'); // ✅ clear persisted collab session
+    sessionStorage.removeItem('collabSession');
     setTimelineId(user.uid);
     setOwnerId(user.uid);
     setRole('owner');
     setIsSharedAccess(false);
     setIsCollaborator(false);
-    setCollabToken(null); setCollabShareUrl(null);
-    setCollabPopoverOpen(false); setViewerToken(null);
-    resetDriveToken(); // ✅ reset stale drive token so owner can re-auth cleanly
-    getDoc(doc(db, 'users', user.uid)).then(snap => {
-      if (snap.exists()) {
-        const d = snap.data();
-        if (d.viewerToken) setViewerToken(d.viewerToken);
-        if (d.collabToken) setCollabToken(d.collabToken);
-      }
-    });
+    collab.reset();
+    viewer.setViewerToken(null);
+    resetDriveToken();
+    collab.loadFromFirestore(user.uid);
+    viewer.loadFromFirestore(user.uid);
     window.history.replaceState({}, '', window.location.pathname);
   };
-
-  const handleUpgradeToPro = () => setIsPricingOpen(true);
 
   const handleOpenAdd = () => {
     if (isViewer) return;
     if (!isPro && memories.length >= 2) {
-      if (isCollabRole) {
-        alert("This timeline has reached its memory limit. Ask the timeline owner to upgrade to Pro.");
-        return;
-      }
-      setIsPricingOpen(true);
-      return;
+      if (isCollabRole) { alert("This timeline has reached its memory limit. Ask the timeline owner to upgrade to Pro."); return; }
+      setIsPricingOpen(true); return;
     }
     form.openAdd();
   };
@@ -214,24 +134,14 @@ export default function App() {
     await refreshLimits();
   };
 
-  const duration = useMemo(() => {
-    if (!config?.startDate) return { years:0, months:0, days:0, hours:0, minutes:0, seconds:0 };
-    const s = new Date(config.startDate), n = currentTime;
-    if (n < s) return { years:0, months:0, days:0, hours:0, minutes:0, seconds:0 };
-    let [yr,mo,dy,hr,mi,se] = [n.getFullYear()-s.getFullYear(),n.getMonth()-s.getMonth(),n.getDate()-s.getDate(),n.getHours()-s.getHours(),n.getMinutes()-s.getMinutes(),n.getSeconds()-s.getSeconds()];
-    if(se<0){se+=60;mi--;} if(mi<0){mi+=60;hr--;} if(hr<0){hr+=24;dy--;} if(dy<0){dy+=new Date(n.getFullYear(),n.getMonth(),0).getDate();mo--;} if(mo<0){mo+=12;yr--;}
-    return { years:yr, months:mo, days:dy, hours:hr, minutes:mi, seconds:se };
-  }, [config?.startDate, currentTime]);
-
   const galleryImages = useMemo(() =>
-    memories.flatMap(m => (m.imageUrls || []).map(url => ({
-      id: `${m.id}__${url}`, url, title: m.title, date: m.date
-    }))),
+    memories.flatMap(m => (m.imageUrls || []).map(url => ({ id: `${m.id}__${url}`, url, title: m.title, date: m.date }))),
     [memories]
   );
 
   const visibleMemories = isPro ? memories : memories.slice(0, 2);
 
+  // --- Loading / auth guards ---
   if (authLoading) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-rose-50 text-rose-400 gap-3">
       <style>{styles}</style><Heart className="animate-pulse" size={40}/><p className="text-sm">Loading...</p>
@@ -253,26 +163,11 @@ export default function App() {
     <div className={`h-screen w-full bg-gradient-to-br ${theme.gradient} text-gray-800 font-sans relative overflow-hidden flex flex-col`}>
       <FloatingElements theme={theme}/>
 
+      {/* Sticky top — banners + header */}
       <div className="relative z-30 shrink-0">
-        {!isPro && !isSharedAccess && !isCollabRole && (
-          <div className="bg-amber-50 border-b border-amber-100 text-center py-1.5 px-4 text-xs text-amber-700 flex items-center justify-center gap-2">
-            <Crown size={11} className="text-amber-500"/>
-            Free plan: 2 memories, 2 collaborators
-            <button onClick={handleUpgradeToPro} className="underline font-bold text-amber-600 hover:text-amber-700 ml-1">Upgrade to Pro →</button>
-          </div>
-        )}
-        {isCollabRole && (
-          <div className="bg-gradient-to-r from-violet-500 to-purple-600 text-white text-center py-2 px-4 text-xs flex items-center justify-center gap-3">
-            <span>✏️ You are collaborating on this timeline</span>
-            <button onClick={handleExitCollaboration} className="underline text-white/80 font-semibold hover:text-white ml-2">Exit Collaboration</button>
-          </div>
-        )}
-        {isViewer && (
-          <div className={`bg-gradient-to-r ${theme.banner} text-white text-center py-2 px-4 text-xs flex items-center justify-center gap-2`}>
-            <Heart size={12} fill="white"/> Viewing a shared love story
-            <button onClick={handleSignOut} className="underline text-white/80 ml-2">Leave</button>
-          </div>
-        )}
+        {!isPro && !isSharedAccess && !isCollabRole && <FreePlanBanner onUpgrade={() => setIsPricingOpen(true)}/>}
+        {isCollabRole && <CollabBanner onExit={handleExitCollaboration}/>}
+        {isViewer     && <ViewerBanner theme={theme} onLeave={handleSignOut}/>}
         <AppHeader
           config={config} duration={duration}
           activeTab={activeTab} setActiveTab={setActiveTab}
@@ -285,99 +180,51 @@ export default function App() {
         />
       </div>
 
+      {/* Scrollable content */}
       <main className="flex-1 overflow-y-auto relative z-10">
         <div className="max-w-5xl mx-auto w-full px-4 py-8 pb-24 sm:pb-16">
           {activeTab === 'timeline' && (
-            memories.length === 0 ? (
-              <div className="text-center py-20 px-6 bg-white/60 rounded-3xl border-2 border-dashed border-rose-200 max-w-sm mx-auto mt-4">
-                <div className={`w-16 h-16 ${theme.eventBg} rounded-full flex items-center justify-center mx-auto mb-4 ${theme.heart}`}><Heart size={32}/></div>
-                <h3 className="text-xl font-bold text-gray-700 mb-2">Your story starts here</h3>
-                <p className="text-gray-400 text-sm mb-6">Add your first memory together</p>
-                {canEdit && <Btn onClick={handleOpenAdd}>Add First Memory</Btn>}
-              </div>
-            ) : (
-              <div>
-                {!isPro && isOwner && (
-                  <div className="mb-6 bg-white/70 rounded-2xl p-3 border border-gray-100 max-w-xs mx-auto text-center">
-                    <p className="text-[11px] text-gray-400 mb-1 font-semibold">
-                      Memories: <span className={`font-bold ${memories.length >= 2 ? 'text-red-500' : 'text-gray-600'}`}>{memories.length} / 2</span>
-                    </p>
-                    <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-gradient-to-r from-rose-400 to-pink-500 transition-all"
-                        style={{ width: `${Math.min((memories.length / 2) * 100, 100)}%` }}/>
-                    </div>
-                    {memories.length >= 2 && (
-                      <button onClick={handleUpgradeToPro} className="text-[10px] text-amber-600 underline mt-1.5 block mx-auto">
-                        Upgrade for unlimited memories →
-                      </button>
-                    )}
+            memories.length === 0
+              ? <EmptyTimeline theme={theme} canEdit={canEdit} onAdd={handleOpenAdd}/>
+              : (
+                <div>
+                  {!isPro && isOwner && <MemoryLimitBar count={memories.length} onUpgrade={() => setIsPricingOpen(true)}/>}
+                  <div className="flex justify-center mb-10">
+                    <span className={`${theme.badge} px-5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5`}>
+                      <Heart size={12} fill="currentColor"/> To be continued...
+                    </span>
                   </div>
-                )}
-                <div className="flex justify-center mb-10">
-                  <span className={`${theme.badge} px-5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5`}>
-                    <Heart size={12} fill="currentColor"/> To be continued...
-                  </span>
+                  {visibleMemories.map(ev => (
+                    <EventCard key={ev.id} event={ev} theme={theme}
+                      onDelete={canEdit ? form.handleDelete : null}
+                      onEdit={canEdit ? form.openEdit : null}
+                    />
+                  ))}
+                  {!isPro && isOwner && memories.length > 2 &&
+                    <HiddenMemoriesTeaser count={memories.length - 2} onUpgrade={() => setIsPricingOpen(true)}/>
+                  }
                 </div>
-                {visibleMemories.map(ev => (
-                  <EventCard key={ev.id} event={ev} theme={theme}
-                    onDelete={canEdit ? form.handleDelete : null}
-                    onEdit={canEdit ? form.openEdit : null}
-                  />
-                ))}
-                {!isPro && isOwner && memories.length > 2 && (
-                  <div onClick={handleUpgradeToPro}
-                    className="cursor-pointer mt-4 p-5 rounded-2xl border-2 border-dashed border-amber-200 bg-amber-50/50 text-center hover:bg-amber-50 transition-colors">
-                    <Crown size={20} className="text-amber-400 mx-auto mb-2"/>
-                    <p className="text-sm font-bold text-amber-700">{memories.length - 2} more {memories.length - 2 === 1 ? 'memory' : 'memories'} hidden</p>
-                    <p className="text-xs text-amber-500 mt-1">Upgrade to Pro to view all your memories →</p>
-                  </div>
-                )}
-              </div>
-            )
+              )
           )}
-          {activeTab === 'gallery' && (
-            galleryImages.length === 0 ? (
-              <div className="text-center py-20">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-300"><Camera size={32}/></div>
-                <p className="text-gray-400 text-sm">Add photos to memories to see them here</p>
-              </div>
-            ) : (
-              <div className="columns-2 sm:columns-3 md:columns-4 gap-3 space-y-3">
-                {galleryImages.map((img) => (
-                  <div key={img.id} className="break-inside-avoid rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all group relative bg-white border border-gray-100">
-                    <img src={img.url} alt={img.title} className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" referrerPolicy="no-referrer"/>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                      <p className="text-white font-semibold text-xs">{img.title}</p>
-                      <p className="text-white/70 text-[10px]">{new Date(img.date).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )
-          )}
+          {activeTab === 'gallery' && <GalleryTab images={galleryImages}/>}
         </div>
       </main>
 
       <footer className="hidden sm:block relative z-10 shrink-0 text-center py-2 text-[11px] text-gray-400 space-x-2 px-4 border-t border-white/20">
         <span>© 2026 Safarnama</span>
-        <span>·</span>
-        <Link to="/about"      className="hover:text-rose-400 transition-colors">About</Link>
-        <span>·</span>
-        <Link to="/privacy"    className="hover:text-rose-400 transition-colors">Privacy</Link>
-        <span>·</span>
-        <Link to="/terms"      className="hover:text-rose-400 transition-colors">Terms</Link>
-        <span>·</span>
-        <Link to="/google-api" className="hover:text-rose-400 transition-colors">Google API</Link>
+        {[['About','/about'],['Privacy','/privacy'],['Terms','/terms'],['Google API','/google-api']].map(([l,h]) => (
+          <React.Fragment key={h}><span>·</span><Link to={h} className="hover:text-rose-400 transition-colors">{l}</Link></React.Fragment>
+        ))}
       </footer>
 
       {isOwner && !isSharedAccess && (
         <CollaborateButton
-          onCollaborate={handleCollaborateClick}
-          collabShareUrl={collabShareUrl} setCollabShareUrl={setCollabShareUrl}
-          collabLinkCopied={collabLinkCopied} onCopyLink={copyCollabLink}
+          onCollaborate={() => collab.handleCollaborateClick(() => setIsPricingOpen(true))}
+          collabShareUrl={collab.collabShareUrl} setCollabShareUrl={collab.setCollabShareUrl}
+          collabLinkCopied={collab.collabLinkCopied} onCopyLink={collab.copyCollabLink}
           limits={limits} onJoinCollab={handleJoinCollab}
-          isOpen={collabPopoverOpen} setIsOpen={setCollabPopoverOpen}
-          isGenerating={collabGenerating}
+          isOpen={collab.collabPopoverOpen} setIsOpen={collab.setCollabPopoverOpen}
+          isGenerating={collab.collabGenerating}
         />
       )}
 
@@ -388,6 +235,7 @@ export default function App() {
         </button>
       )}
 
+      {/* Modals */}
       <MemoryModal
         isOpen={form.isAddModalOpen} onClose={() => form.setIsAddModalOpen(false)}
         editingId={form.editingId}
@@ -398,8 +246,7 @@ export default function App() {
         addVideoLink={form.addVideoLink} removeVideo={form.removeVideo}
         handleUpload={handleUpload} handleSaveEvent={handleSaveEvent}
         isSaving={form.isSaving} isUploadingImage={isUploadingImage} isUploadingVideo={isUploadingVideo}
-        folderId={effectiveFolderId}
-        fileRef={fileRef} videoRef={videoRef}
+        folderId={effectiveFolderId} fileRef={fileRef} videoRef={videoRef}
         theme={theme} memberType={config?.memberType || 'duo'}
         isCollabRole={isCollabRole}
         onConnectDrive={() => { form.setIsAddModalOpen(false); setDriveSetupNeeded(true); }}
@@ -416,7 +263,7 @@ export default function App() {
       {isOwner && (
         <ShareModal
           isOpen={isShareModalOpen} onClose={() => setIsShareModalOpen(false)}
-          shareToken={viewerToken} onGenerateToken={generateTokens}
+          shareToken={viewer.viewerToken} onGenerateToken={viewer.generateToken}
           theme={theme}
         />
       )}

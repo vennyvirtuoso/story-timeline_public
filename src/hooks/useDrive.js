@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { gisAccessToken, setGisAccessToken, getEnv, loadGIS, requestDriveToken, uploadFileToDrive, getBackendUrl } from '../gis';
 
@@ -9,18 +9,37 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
   const [driveAccessToken, setDriveAccessToken] = useState(null);
 
   const ensureDriveToken = async () => {
+    // 1. Cached state token
     if (driveAccessToken) { setGisAccessToken(driveAccessToken); return driveAccessToken; }
+    // 2. Module-level GIS token
     if (gisAccessToken)   { setDriveAccessToken(gisAccessToken); return gisAccessToken; }
+    // 3. sessionStorage (survives re-renders)
+    const cached = sessionStorage.getItem('gisToken');
+    if (cached) { setDriveAccessToken(cached); setGisAccessToken(cached); return cached; }
+    // 4. If owner has folderId, backend uses stored driveToken — return a sentinel so upload proceeds
+    //    without triggering popup. Backend will use owner's stored credentials.
+    if (folderId && user?.uid) {
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        if (snap.exists() && snap.data().driveToken) {
+          // ✅ Owner has stored token — backend will use it, no GIS popup needed
+          return '__use_backend_token__';
+        }
+      } catch {}
+    }
+    // 5. Last resort — request new token (shows popup)
     const clientId = getEnv('VITE_GOOGLE_CLIENT_ID');
     await loadGIS();
     const t = await requestDriveToken(clientId);
     setDriveAccessToken(t);
     setGisAccessToken(t);
+    sessionStorage.setItem('gisToken', t);
     return t;
   };
 
   const resetDriveToken = () => {
     setDriveAccessToken(null);
+    sessionStorage.removeItem('gisToken');
   };
 
   const handleDriveSetupComplete = async (newFolderId, accessToken) => {
@@ -35,6 +54,7 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
       const rawToken = tokenData.token || accessToken;
       setDriveAccessToken(rawToken);
       setGisAccessToken(rawToken);
+      sessionStorage.setItem('gisToken', rawToken);
       setDriveSetupNeeded(false);
     } catch (e) {
       alert('Failed to save Drive setup: ' + e.message);
@@ -50,18 +70,19 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
       const { auth } = await import('../firebase/config');
       const idToken  = auth.currentUser ? await auth.currentUser.getIdToken() : null;
 
-      // ✅ Collaborators skip GIS token — backend always uses owner's stored credentials
-      // ✅ Owners still get a GIS token for direct upload fallback
+      // ✅ Collaborators and owners with stored driveToken skip GIS popup entirely
+      // Backend always uses owner's stored credentials for the actual upload
       let gisToken = null;
       if (!isCollabRole) {
         gisToken = await ensureDriveToken();
+        // If sentinel value — backend will use stored token, don't send accessToken
+        if (gisToken === '__use_backend_token__') gisToken = null;
       }
 
       if (idToken && timelineId) {
         const formData = new FormData();
         formData.append('file',       file);
         formData.append('timelineId', timelineId);
-        // Only send accessToken for owners (collaborators use owner's stored token on backend)
         if (gisToken) formData.append('accessToken', gisToken);
 
         const res  = await fetch(`${getBackendUrl()}/api/upload`, {
@@ -86,7 +107,7 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
         return;
       }
 
-      // Fallback: direct GIS upload (owner only)
+      // Fallback: direct GIS upload (only if we have a real token)
       if (gisToken) {
         const fileId = await uploadFileToDrive(file, folderId, gisToken);
         if (mediaType === 'image') {

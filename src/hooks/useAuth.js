@@ -50,7 +50,13 @@ export function useAuth() {
       }
       const ud = userSnap.exists() ? userSnap.data() : {};
       setFolderId(ud.folderId || null);
-      setDriveSetupNeeded(!ud.folderId);
+      // ✅ Only show drive setup if user has never connected — don't re-trigger after plan upgrade
+      setDriveSetupNeeded(!ud.folderId && !ud.driveSetupSkipped);
+
+      // ✅ Restore GIS token to sessionStorage if it exists in Firestore
+      if (ud.driveToken) {
+        sessionStorage.setItem('gisToken', ud.driveToken);
+      }
 
       const res  = await fetch(`${getBackendUrl()}/api/create-default-timeline`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -124,6 +130,14 @@ export function useAuth() {
   };
 
   const handleShareTokenLogin = async (token) => {
+    // ✅ Distinguish by length — viewer tokens are 6 chars, collab tokens are 16
+    if (token.length <= 6) {
+      return handleViewToken(token);
+    }
+    if (token.length >= 16) {
+      return handleCollabTokenLogin(token);
+    }
+    // Fallback: try both
     const r = await handleViewToken(token);
     if (r.success) return r;
     return handleCollabTokenLogin(token);
