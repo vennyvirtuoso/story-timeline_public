@@ -45,25 +45,22 @@ export default function App() {
   const [collabLinkCopied,  setCollabLinkCopied]  = useState(false);
   const [collabPopoverOpen, setCollabPopoverOpen] = useState(false);
   const [collabGenerating,  setCollabGenerating]  = useState(false);
-  const [ownerFolderId,     setOwnerFolderId]     = useState(null); // ✅ add this
+  const [ownerFolderId,     setOwnerFolderId]     = useState(null);
 
   const fileRef  = useRef(null);
   const videoRef = useRef(null);
 
-  // Clock ticker
   useEffect(() => {
     const t = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
-  // Handle share token from URL — runs once on mount
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     const t = p.get('token') || p.get('view');
     if (t) handleShareTokenLogin(t.toUpperCase());
   }, []); // eslint-disable-next-line react-hooks/exhaustive-deps
 
-  // ✅ Merged: reset tokens then load from Firestore in one effect
   useEffect(() => {
     setCollabToken(null);
     setCollabShareUrl(null);
@@ -87,11 +84,10 @@ export default function App() {
 
   const { memories, config, setConfig, isLoading } = useMemories(timelineId, role, () => setIsConfigModalOpen(true), ownerId);
   const theme = getTheme(config?.theme || 'love');
-  const { isUploading, handleDriveSetupComplete, handleUpload: _handleUpload } = useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timelineId);
+  const { isUploadingImage, isUploadingVideo, resetDriveToken, handleDriveSetupComplete, handleUpload: _handleUpload } = useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timelineId);
   const form = useEventForm(timelineId, user?.uid);
   const { isPro, limits, refreshLimits } = usePlan(ownerId, timelineId, isSharedAccess);
 
-  // ✅ Fetch owner's folderId so collaborators see upload button
   useEffect(() => {
     if (!isCollabRole || !ownerId) { setOwnerFolderId(null); return; }
     getDoc(doc(db, 'users', ownerId)).then(snap => {
@@ -99,12 +95,12 @@ export default function App() {
     });
   }, [isCollabRole, ownerId]);
 
-  const effectiveFolderId = isCollabRole ? ownerFolderId : folderId; // ✅ add this
-  const handleUpload = (e, mediaType) => _handleUpload(e, mediaType, form.setNewEvent, fileRef, videoRef);
+  const effectiveFolderId = isCollabRole ? ownerFolderId : folderId;
+  const handleUpload = (e, mediaType) => _handleUpload(e, mediaType, form.setNewEvent, fileRef, videoRef, isCollabRole);
 
   const handleSaveConfig = async (e) => {
     e.preventDefault();
-    if (!ownerId || !config) return;  // ✅ guard config undefined
+    if (!ownerId || !config) return;
     try {
       await setDoc(doc(db, 'users', ownerId, 'config', 'main'), { ...config, updatedAt: serverTimestamp() });
       setIsConfigModalOpen(false);
@@ -135,8 +131,7 @@ export default function App() {
   };
 
   const handleCollaborateClick = async () => {
-    if (!user || !timelineId) return;
-    if (collabGenerating) return;  // ✅ guard against double-click
+    if (!user || !timelineId || collabGenerating) return;
     if (!collabToken) {
       setCollabGenerating(true);
       try {
@@ -180,14 +175,15 @@ export default function App() {
 
   const handleExitCollaboration = () => {
     if (!user) { handleSignOut(); return; }
+    sessionStorage.removeItem('collabSession'); // ✅ clear persisted collab session
     setTimelineId(user.uid);
     setOwnerId(user.uid);
     setRole('owner');
     setIsSharedAccess(false);
     setIsCollaborator(false);
-    // ✅ Reload own tokens
     setCollabToken(null); setCollabShareUrl(null);
     setCollabPopoverOpen(false); setViewerToken(null);
+    resetDriveToken(); // ✅ reset stale drive token so owner can re-auth cleanly
     getDoc(doc(db, 'users', user.uid)).then(snap => {
       if (snap.exists()) {
         const d = snap.data();
@@ -219,7 +215,7 @@ export default function App() {
   };
 
   const duration = useMemo(() => {
-    if (!config?.startDate) return { years:0, months:0, days:0, hours:0, minutes:0, seconds:0 };  // ✅ optional chaining
+    if (!config?.startDate) return { years:0, months:0, days:0, hours:0, minutes:0, seconds:0 };
     const s = new Date(config.startDate), n = currentTime;
     if (n < s) return { years:0, months:0, days:0, hours:0, minutes:0, seconds:0 };
     let [yr,mo,dy,hr,mi,se] = [n.getFullYear()-s.getFullYear(),n.getMonth()-s.getMonth(),n.getDate()-s.getDate(),n.getHours()-s.getHours(),n.getMinutes()-s.getMinutes(),n.getSeconds()-s.getSeconds()];
@@ -229,8 +225,7 @@ export default function App() {
 
   const galleryImages = useMemo(() =>
     memories.flatMap(m => (m.imageUrls || []).map(url => ({
-      id: `${m.id}__${url}`,  // ✅ separator prevents key collisions
-      url, title: m.title, date: m.date
+      id: `${m.id}__${url}`, url, title: m.title, date: m.date
     }))),
     [memories]
   );
@@ -245,7 +240,6 @@ export default function App() {
   if (!user && !isSharedAccess) return (
     <LoginScreen onGoogleLogin={handleGoogleLogin} onShareTokenLogin={handleShareTokenLogin} isLoading={loginLoading}/>
   );
-  // ✅ Only show drive setup for owners, not collaborators
   if (user && !isSharedAccess && !isCollabRole && driveSetupNeeded) return (
     <DriveSetupScreen user={user} onSetupComplete={handleDriveSetupComplete} onSkip={() => setDriveSetupNeeded(false)}/>
   );
@@ -259,7 +253,6 @@ export default function App() {
     <div className={`h-screen w-full bg-gradient-to-br ${theme.gradient} text-gray-800 font-sans relative overflow-hidden flex flex-col`}>
       <FloatingElements theme={theme}/>
 
-      {/* ✅ All banners and header are sticky — never scroll */}
       <div className="relative z-30 shrink-0">
         {!isPro && !isSharedAccess && !isCollabRole && (
           <div className="bg-amber-50 border-b border-amber-100 text-center py-1.5 px-4 text-xs text-amber-700 flex items-center justify-center gap-2">
@@ -280,7 +273,6 @@ export default function App() {
             <button onClick={handleSignOut} className="underline text-white/80 ml-2">Leave</button>
           </div>
         )}
-
         <AppHeader
           config={config} duration={duration}
           activeTab={activeTab} setActiveTab={setActiveTab}
@@ -293,7 +285,6 @@ export default function App() {
         />
       </div>
 
-      {/* ✅ Only this area scrolls — pb-20 on mobile gives room above footer */}
       <main className="flex-1 overflow-y-auto relative z-10">
         <div className="max-w-5xl mx-auto w-full px-4 py-8 pb-24 sm:pb-16">
           {activeTab === 'timeline' && (
@@ -367,7 +358,6 @@ export default function App() {
         </div>
       </main>
 
-      {/* ✅ Footer pinned at bottom, hidden on mobile to avoid overlap with FAB/collaborate */}
       <footer className="hidden sm:block relative z-10 shrink-0 text-center py-2 text-[11px] text-gray-400 space-x-2 px-4 border-t border-white/20">
         <span>© 2026 Safarnama</span>
         <span>·</span>
@@ -407,10 +397,12 @@ export default function App() {
         addImageLink={form.addImageLink} removeImage={form.removeImage}
         addVideoLink={form.addVideoLink} removeVideo={form.removeVideo}
         handleUpload={handleUpload} handleSaveEvent={handleSaveEvent}
-        isSaving={form.isSaving} isUploading={isUploading}
-        folderId={effectiveFolderId}  // ✅ changed from folderId
+        isSaving={form.isSaving} isUploadingImage={isUploadingImage} isUploadingVideo={isUploadingVideo}
+        folderId={effectiveFolderId}
         fileRef={fileRef} videoRef={videoRef}
         theme={theme} memberType={config?.memberType || 'duo'}
+        isCollabRole={isCollabRole}
+        onConnectDrive={() => { form.setIsAddModalOpen(false); setDriveSetupNeeded(true); }}
       />
       {isOwner && (
         <SettingsModal

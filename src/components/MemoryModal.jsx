@@ -69,9 +69,11 @@ const MemoryModal = ({
   addImageLink, removeImage,
   addVideoLink, removeVideo,
   handleUpload, handleSaveEvent,
-  isSaving, isUploading, folderId,
+  isSaving, isUploadingImage, isUploadingVideo, folderId,  // ✅ replaced isUploading
   fileRef, videoRef,
-  theme, memberType
+  theme, memberType,
+  isCollabRole,        // ✅ add this prop
+  onConnectDrive,      // ✅ add this prop
 }) => {
   const t = theme || {};
   const accentBg     = t.accentBg     || 'bg-rose-100';
@@ -108,15 +110,24 @@ const MemoryModal = ({
         <div className="mb-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Photos</span>
-            {isUploading && <Loader2 size={13} className={`animate-spin ${accentText}`}/>}
+            {isUploadingImage && <Loader2 size={13} className={`animate-spin ${accentText}`}/>}  {/* ✅ only image spinner */}
           </div>
           {folderId ? (
             <label className={`flex items-center justify-center gap-2 w-full px-3 py-2 bg-white border ${accentBorder} rounded-xl cursor-pointer ${accentHover} transition-colors text-xs ${accentText} font-semibold mb-2`}>
-              <Upload size={13}/> Upload to Drive
-              <input type="file" className="hidden" accept="image/*" ref={fileRef} onChange={e => handleUpload(e, 'image')} disabled={isUploading}/>
+              <Upload size={13}/> {isUploadingImage ? 'Uploading...' : 'Upload to Drive'}
+              <input type="file" className="hidden" accept="image/*" ref={fileRef} onChange={e => handleUpload(e, 'image')} disabled={isUploadingImage}/>
             </label>
+          ) : isCollabRole ? (
+            // ✅ Collaborator — owner's drive is used, no action needed
+            <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-100 p-2 rounded-lg mb-2">
+              ☁️ Photos will be saved to the timeline owner's Drive
+            </p>
           ) : (
-            <p className="text-[11px] text-amber-500 bg-amber-50 p-2 rounded-lg mb-2">⚡ Connect Drive to upload directly</p>
+            // ✅ Owner not connected — show connect button
+            <button type="button" onClick={onConnectDrive}
+              className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-white border border-dashed border-gray-300 rounded-xl text-xs text-gray-500 hover:border-rose-300 hover:text-rose-500 transition-colors mb-2 font-semibold">
+              <Upload size={13}/> Connect Google Drive to upload photos
+            </button>
           )}
           <div className="flex gap-2 items-center text-[10px] text-gray-400 uppercase tracking-widest mb-2">
             <div className="flex-1 border-t border-gray-200"/>OR PASTE<div className="flex-1 border-t border-gray-200"/>
@@ -144,13 +155,22 @@ const MemoryModal = ({
         <div className="mb-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Videos</span>
-            {isUploading && <Loader2 size={13} className={`animate-spin ${accentText}`}/>}  {/* ✅ added spinner */}
+            {isUploadingVideo && <Loader2 size={13} className={`animate-spin ${accentText}`}/>}  {/* ✅ only video spinner */}
           </div>
-          {folderId && (
+          {folderId ? (
             <label className={`flex items-center justify-center gap-2 w-full px-3 py-2 bg-white border ${accentBorder} rounded-xl cursor-pointer ${accentHover} transition-colors text-xs ${accentText} font-semibold mb-2`}>
-              <Upload size={13}/> Upload to Drive
-              <input type="file" className="hidden" accept="video/*" ref={videoRef} onChange={e => handleUpload(e, 'video')} disabled={isUploading}/>
+              <Upload size={13}/> {isUploadingVideo ? 'Uploading...' : 'Upload to Drive'}
+              <input type="file" className="hidden" accept="video/*" ref={videoRef} onChange={e => handleUpload(e, 'video')} disabled={isUploadingVideo}/>
             </label>
+          ) : isCollabRole ? (
+            <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-100 p-2 rounded-lg mb-2">
+              ☁️ Videos will be saved to the timeline owner's Drive
+            </p>
+          ) : (
+            <button type="button" onClick={onConnectDrive}
+              className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-white border border-dashed border-gray-300 rounded-xl text-xs text-gray-500 hover:border-rose-300 hover:text-rose-500 transition-colors mb-2 font-semibold">
+              <Upload size={13}/> Connect Google Drive to upload videos
+            </button>
           )}
           <div className="flex gap-2 items-center text-[10px] text-gray-400 uppercase tracking-widest mb-2">
             <div className="flex-1 border-t border-gray-200"/>OR PASTE<div className="flex-1 border-t border-gray-200"/>
@@ -176,7 +196,7 @@ const MemoryModal = ({
 
         <div className="flex gap-2">
           <Btn variant="secondary" onClick={onClose} className="flex-1">Cancel</Btn>
-          <button type="submit" disabled={isSaving || isUploading}
+          <button type="submit" disabled={isSaving || isUploadingImage || isUploadingVideo}  /* ✅ disable save while either uploads */
             className={`flex-1 inline-flex items-center justify-center gap-1.5 font-medium rounded-xl px-4 py-2.5 bg-gradient-to-r ${btnPrimary} text-white shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}>
             {isSaving ? <><Loader2 size={15} className="animate-spin"/>Saving...</> : editingId ? 'Update' : 'Save Memory'}
           </button>

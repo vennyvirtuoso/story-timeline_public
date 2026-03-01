@@ -4,11 +4,13 @@ import { db } from '../firebase/config';
 import { gisAccessToken, setGisAccessToken, getEnv, loadGIS, requestDriveToken, uploadFileToDrive, getBackendUrl } from '../gis';
 
 export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timelineId) {
-  const [isUploading, setIsUploading]           = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
   const [driveAccessToken, setDriveAccessToken] = useState(null);
 
   const ensureDriveToken = async () => {
-    if (gisAccessToken) return gisAccessToken;
+    if (driveAccessToken) { setGisAccessToken(driveAccessToken); return driveAccessToken; }
+    if (gisAccessToken)   { setDriveAccessToken(gisAccessToken); return gisAccessToken; }
     const clientId = getEnv('VITE_GOOGLE_CLIENT_ID');
     await loadGIS();
     const t = await requestDriveToken(clientId);
@@ -17,39 +19,50 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
     return t;
   };
 
+  const resetDriveToken = () => {
+    setDriveAccessToken(null);
+  };
+
   const handleDriveSetupComplete = async (newFolderId, accessToken) => {
     try {
+      const tokenData = typeof accessToken === 'object' ? accessToken : { token: accessToken };
       await setDoc(doc(db, 'users', user.uid), {
         folderId:   newFolderId,
-        driveToken: JSON.stringify({ token: accessToken }),
+        driveToken: JSON.stringify(tokenData),
         updatedAt:  serverTimestamp(),
       }, { merge: true });
       setFolderId(newFolderId);
-      setDriveAccessToken(accessToken);
-      setGisAccessToken(accessToken);
+      const rawToken = tokenData.token || accessToken;
+      setDriveAccessToken(rawToken);
+      setGisAccessToken(rawToken);
       setDriveSetupNeeded(false);
     } catch (e) {
       alert('Failed to save Drive setup: ' + e.message);
     }
   };
 
-  const handleUpload = async (e, mediaType, setNewEvent, fileRef, videoRef) => {
+  const handleUpload = async (e, mediaType, setNewEvent, fileRef, videoRef, isCollabRole) => {
     const file = e.target.files?.[0];
     if (!file || !folderId) return;
-    setIsUploading(true);
+    const setUploading = mediaType === 'image' ? setIsUploadingImage : setIsUploadingVideo;
+    setUploading(true);
     try {
-      // ✅ Always get a fresh GIS token first — works for both owner and collaborator
-      const gisToken = await ensureDriveToken();
-
       const { auth } = await import('../firebase/config');
       const idToken  = auth.currentUser ? await auth.currentUser.getIdToken() : null;
 
-      if (idToken && timelineId && gisToken) {
-        // ✅ Send gisToken so backend uses it directly instead of stored driveToken
+      // ✅ Collaborators skip GIS token — backend always uses owner's stored credentials
+      // ✅ Owners still get a GIS token for direct upload fallback
+      let gisToken = null;
+      if (!isCollabRole) {
+        gisToken = await ensureDriveToken();
+      }
+
+      if (idToken && timelineId) {
         const formData = new FormData();
-        formData.append('file',        file);
-        formData.append('timelineId',  timelineId);
-        formData.append('accessToken', gisToken);
+        formData.append('file',       file);
+        formData.append('timelineId', timelineId);
+        // Only send accessToken for owners (collaborators use owner's stored token on backend)
+        if (gisToken) formData.append('accessToken', gisToken);
 
         const res  = await fetch(`${getBackendUrl()}/api/upload`, {
           method:  'POST',
@@ -73,21 +86,23 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
         return;
       }
 
-      // Fallback: direct GIS upload
-      const fileId = await uploadFileToDrive(file, folderId, gisToken);
-      if (mediaType === 'image') {
-        setNewEvent(p => ({ ...p, imageUrls: [...p.imageUrls, `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`] }));
-      } else {
-        setNewEvent(p => ({ ...p, videoUrls: [...p.videoUrls, `https://drive.google.com/file/d/${fileId}/preview`] }));
+      // Fallback: direct GIS upload (owner only)
+      if (gisToken) {
+        const fileId = await uploadFileToDrive(file, folderId, gisToken);
+        if (mediaType === 'image') {
+          setNewEvent(p => ({ ...p, imageUrls: [...p.imageUrls, `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`] }));
+        } else {
+          setNewEvent(p => ({ ...p, videoUrls: [...p.videoUrls, `https://drive.google.com/file/d/${fileId}/preview`] }));
+        }
       }
     } catch (e) {
       alert('Upload failed: ' + e.message);
     } finally {
-      setIsUploading(false);
+      setUploading(false);
       if (fileRef?.current)  fileRef.current.value  = '';
       if (videoRef?.current) videoRef.current.value = '';
     }
   };
 
-  return { isUploading, driveAccessToken, handleDriveSetupComplete, handleUpload };
+  return { isUploadingImage, isUploadingVideo, driveAccessToken, resetDriveToken, handleDriveSetupComplete, handleUpload };
 }

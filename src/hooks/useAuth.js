@@ -16,12 +16,30 @@ export function useAuth() {
   const [folderId,         setFolderId]         = useState(null);
   const [driveSetupNeeded, setDriveSetupNeeded] = useState(false);
 
-  // ✅ Use ref so onAuthStateChanged always sees latest value without re-subscribing
   const isSharedAccessRef = useRef(false);
   const setIsSharedAccessBoth = (val) => {
     isSharedAccessRef.current = val;
     setIsSharedAccess(val);
   };
+
+  // ✅ Restore collab session before Firebase auth resolves
+  useEffect(() => {
+    const saved = sessionStorage.getItem('collabSession');
+    if (!saved) return;
+    try {
+      const { timelineId: tid, ownerId: oid } = JSON.parse(saved);
+      if (tid && oid) {
+        setOwnerId(oid);
+        setTimelineId(tid);
+        setRole('collaborator');
+        setIsSharedAccessBoth(true);
+        setIsCollaborator(true);
+        getDoc(doc(db, 'users', oid)).then(snap => {
+          if (snap.exists()) setFolderId(snap.data().folderId || null);
+        });
+      }
+    } catch { sessionStorage.removeItem('collabSession'); }
+  }, []); // runs once on mount
 
   const loadUserData = async (uid) => {
     try {
@@ -54,12 +72,11 @@ export function useAuth() {
       const res  = await fetch(`${getBackendUrl()}/api/resolve-viewer-token?token=${token.toUpperCase()}`);
       const data = await res.json();
       if (!data.success) { setLoginLoading(false); return { success: false, error: data.error }; }
-      // ✅ Set ownerId/timelineId before isSharedAccess
       setOwnerId(data.ownerId);
       setTimelineId(data.timelineId);
       setRole('viewer');
       setIsCollaborator(false);
-      setIsSharedAccessBoth(true);   // ✅ updates ref too
+      setIsSharedAccessBoth(true);
       const ud = await getDoc(doc(db, 'users', data.ownerId));
       if (ud.exists()) setFolderId(ud.data().folderId || null);
       setLoginLoading(false);
@@ -81,19 +98,23 @@ export function useAuth() {
         const data = await res.json();
         if (!data.success) { setLoginLoading(false); return { success: false, error: data.error }; }
 
-        // ✅ Set ownerId BEFORE timelineId so useMemories gets correct configOwnerId
         setOwnerId(data.ownerId);
         setTimelineId(data.timelineId);
         setRole('collaborator');
-        setIsSharedAccessBoth(true);  // ✅ updates ref too
+        setIsSharedAccessBoth(true);
         setIsCollaborator(true);
+
+        // ✅ Persist so page refresh keeps the collab session alive
+        sessionStorage.setItem('collabSession', JSON.stringify({
+          timelineId: data.timelineId,
+          ownerId:    data.ownerId,
+        }));
 
         const ud = await getDoc(doc(db, 'users', data.ownerId));
         if (ud.exists()) setFolderId(ud.data().folderId || null);
         setLoginLoading(false);
         return { success: true };
       }
-      // Not logged in — can't join collaboration without Google sign-in
       setLoginLoading(false);
       return { success: false, error: 'Please sign in with Google to collaborate' };
     } catch (e) {
@@ -109,23 +130,26 @@ export function useAuth() {
   };
 
   useEffect(() => {
-    // ✅ Use ref instead of state to avoid re-subscribing
     const unsub = onAuthStateChanged(auth, async (u) => {
+      // ✅ Skip loadUserData if already in a collab/shared session
       if (u && !isSharedAccessRef.current) {
         setUser(u);
         await loadUserData(u.uid);
+      } else if (u && isSharedAccessRef.current) {
+        // ✅ Still set user so auth.currentUser works for uploads etc.
+        setUser(u);
       }
       setAuthLoading(false);
     });
     return () => unsub();
-  }, []); // ✅ empty deps — ref handles the shared access check
+  }, []);
 
   useEffect(() => {
     const params      = new URLSearchParams(window.location.search);
-    const viewToken   = params.get('view') || params.get('token');  // ✅ also handle ?token=
+    const viewToken   = params.get('view') || params.get('token');
     const collabToken = params.get('collab');
     if (viewToken) {
-      setAuthLoading(true);   // ✅ keep loading until resolved
+      setAuthLoading(true);
       handleViewToken(viewToken).finally(() => setAuthLoading(false));
     }
     if (collabToken) {
@@ -143,8 +167,6 @@ export function useAuth() {
       const r = await signInWithPopup(auth, googleProvider);
       setUser(r.user);
       await loadUserData(r.user.uid);
-
-      // ✅ After login, check for pending collab token
       const pending = sessionStorage.getItem('pendingCollabToken');
       if (pending) {
         sessionStorage.removeItem('pendingCollabToken');
@@ -156,11 +178,14 @@ export function useAuth() {
 
   const handleSignOut = async () => {
     if (isSharedAccessRef.current) {
+      // ✅ Clear collab session on explicit sign out / exit
+      sessionStorage.removeItem('collabSession');
       setIsSharedAccessBoth(false); setIsCollaborator(false);
       setRole('owner'); setOwnerId(null); setTimelineId(null); setUser(null);
       window.history.replaceState({}, '', window.location.pathname);
       return;
     }
+    sessionStorage.removeItem('collabSession');
     await signOut(auth);
     setUser(null); setOwnerId(null); setTimelineId(null); setFolderId(null); setRole('owner');
   };
