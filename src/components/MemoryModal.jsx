@@ -118,12 +118,11 @@ const MemoryModal = ({
               <input type="file" className="hidden" accept="image/*" ref={fileRef} onChange={e => handleUpload(e, 'image')} disabled={isUploadingImage}/>
             </label>
           ) : isCollabRole ? (
-            // ✅ Collaborator — owner's drive is used, no action needed
-            <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-100 p-2 rounded-lg mb-2">
-              ☁️ Photos will be saved to the timeline owner's Drive
+            // ✅ Collaborator + owner has NO Drive connected
+            <p className="text-[11px] text-red-500 bg-red-50 border border-red-100 p-2 rounded-lg mb-2">
+              ⚠️ The timeline owner hasn't connected Google Drive yet. Ask them to connect it before uploading.
             </p>
           ) : (
-            // ✅ Owner not connected — show connect button
             <button type="button" onClick={onConnectDrive}
               className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-white border border-dashed border-gray-300 rounded-xl text-xs text-gray-500 hover:border-rose-300 hover:text-rose-500 transition-colors mb-2 font-semibold">
               <Upload size={13}/> Connect Google Drive to upload photos
@@ -163,8 +162,9 @@ const MemoryModal = ({
               <input type="file" className="hidden" accept="video/*" ref={videoRef} onChange={e => handleUpload(e, 'video')} disabled={isUploadingVideo}/>
             </label>
           ) : isCollabRole ? (
-            <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-100 p-2 rounded-lg mb-2">
-              ☁️ Videos will be saved to the timeline owner's Drive
+            // ✅ Collaborator + owner has NO Drive connected
+            <p className="text-[11px] text-red-500 bg-red-50 border border-red-100 p-2 rounded-lg mb-2">
+              ⚠️ The timeline owner hasn't connected Google Drive yet. Ask them to connect it before uploading.
             </p>
           ) : (
             <button type="button" onClick={onConnectDrive}

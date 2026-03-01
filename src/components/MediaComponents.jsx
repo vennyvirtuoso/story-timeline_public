@@ -19,7 +19,11 @@ export const ImageSlider = ({ images, title }) => {
     updateArrows();
     el.addEventListener('scroll', updateArrows);
     // ✅ non-passive wheel listener for desktop scroll
-    const onWheel = (e) => { e.preventDefault(); el.scrollLeft += e.deltaY; };
+    const onWheel = (e) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        el.scrollLeft += e.deltaY;
+      }
+    };
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => { el.removeEventListener('scroll', updateArrows); el.removeEventListener('wheel', onWheel); };
   }, [images]);
