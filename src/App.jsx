@@ -72,21 +72,13 @@ export default function App() {
   // Load saved tokens when user changes — skip reset if already in collab session
   useEffect(() => {
     if (!user?.uid) return;
-    // ✅ Don't wipe collab/viewer state on refresh if session was restored from sessionStorage
-    if (!isCollabRole) {
-      collab.reset();
-      viewer.setViewerToken(null);
-      collab.loadFromFirestore(user.uid);
-      viewer.loadFromFirestore(user.uid);
-    }
+    // ✅ Skip for viewer/collab — never reset their timeline state
+    if (isCollabRole || isViewer) return;
+    collab.reset();
+    viewer.setViewerToken(null);
+    collab.loadFromFirestore(user.uid);
+    viewer.loadFromFirestore(user.uid);
   }, [user?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Handle share/view token from URL on mount
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    const t = p.get('token') || p.get('view');
-    if (t) handleShareTokenLogin(t.toUpperCase());
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSaveConfig = async (e) => {
     e.preventDefault();
@@ -105,7 +97,8 @@ export default function App() {
 
   const handleExitCollaboration = () => {
     if (!user) { handleSignOut(); return; }
-    sessionStorage.removeItem('collabSession');
+    localStorage.removeItem('collabSession');
+    localStorage.removeItem('viewerSession');
     setTimelineId(user.uid);
     setOwnerId(user.uid);
     setRole('owner');

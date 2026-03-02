@@ -4,42 +4,52 @@ import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase/config';
 import { getBackendUrl } from '../gis';
 
+// ✅ localStorage helper — survives refresh, works across tabs
+const ls = {
+  get:    (k)    => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch { return null; } },
+  set:    (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  remove: (k)    => { try { localStorage.removeItem(k); } catch {} },
+};
+
+// ✅ Module-level — runs ONCE at import time, before any React render or useEffect
+// Survives Strict Mode double-invocation
+const _boot = (() => {
+  const v = ls.get('viewerSession');
+  const c = ls.get('collabSession');
+  console.log('[boot] localStorage viewerSession:', v, 'collabSession:', c);
+  if (v?.timelineId && v?.ownerId) return { ...v, role: 'viewer', isShared: true, isCollab: false };
+  if (c?.timelineId && c?.ownerId) return { ...c, role: 'collaborator', isShared: true, isCollab: true };
+  return null;
+})();
+
 export function useAuth() {
+  // ✅ All state seeded from _boot — correct on FIRST render, no useEffect needed
   const [user,             setUser]             = useState(null);
-  const [ownerId,          setOwnerId]          = useState(null);
-  const [timelineId,       setTimelineId]       = useState(null);
-  const [role,             setRole]             = useState('owner');
-  const [isSharedAccess,   setIsSharedAccess]   = useState(false);
-  const [isCollaborator,   setIsCollaborator]   = useState(false);
+  const [ownerId,          setOwnerId]          = useState(_boot?.ownerId    ?? null);
+  const [timelineId,       setTimelineId]       = useState(_boot?.timelineId ?? null);
+  const [role,             setRole]             = useState(_boot?.role       ?? 'owner');
+  const [isSharedAccess,   setIsSharedAccess]   = useState(_boot?.isShared   ?? false);
+  const [isCollaborator,   setIsCollaborator]   = useState(_boot?.isCollab   ?? false);
   const [authLoading,      setAuthLoading]      = useState(true);
   const [loginLoading,     setLoginLoading]     = useState(false);
   const [folderId,         setFolderId]         = useState(null);
   const [driveSetupNeeded, setDriveSetupNeeded] = useState(false);
 
-  const isSharedAccessRef = useRef(false);
+  const isSharedAccessRef = useRef(_boot?.isShared ?? false);
+
   const setIsSharedAccessBoth = (val) => {
     isSharedAccessRef.current = val;
     setIsSharedAccess(val);
   };
 
-  // ✅ Restore collab session before Firebase auth resolves
+  // ✅ Load folderId for restored collab session
   useEffect(() => {
-    const saved = sessionStorage.getItem('collabSession');
-    if (!saved) return;
-    try {
-      const { timelineId: tid, ownerId: oid } = JSON.parse(saved);
-      if (tid && oid) {
-        setOwnerId(oid);
-        setTimelineId(tid);
-        setRole('collaborator');
-        setIsSharedAccessBoth(true);
-        setIsCollaborator(true);
-        getDoc(doc(db, 'users', oid)).then(snap => {
-          if (snap.exists()) setFolderId(snap.data().folderId || null);
-        });
-      }
-    } catch { sessionStorage.removeItem('collabSession'); }
-  }, []); // runs once on mount
+    if (_boot?.isCollab && _boot?.ownerId) {
+      getDoc(doc(db, 'users', _boot.ownerId)).then(snap => {
+        if (snap.exists()) setFolderId(snap.data().folderId || null);
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadUserData = async (uid) => {
     try {
@@ -50,14 +60,8 @@ export function useAuth() {
       }
       const ud = userSnap.exists() ? userSnap.data() : {};
       setFolderId(ud.folderId || null);
-      // ✅ Only show drive setup if user has never connected — don't re-trigger after plan upgrade
       setDriveSetupNeeded(!ud.folderId && !ud.driveSetupSkipped);
-
-      // ✅ Restore GIS token to sessionStorage if it exists in Firestore
-      if (ud.driveToken) {
-        sessionStorage.setItem('gisToken', ud.driveToken);
-      }
-
+      if (ud.driveToken) sessionStorage.setItem('gisToken', ud.driveToken);
       const res  = await fetch(`${getBackendUrl()}/api/create-default-timeline`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: uid }),
@@ -78,6 +82,9 @@ export function useAuth() {
       const res  = await fetch(`${getBackendUrl()}/api/resolve-viewer-token?token=${token.toUpperCase()}`);
       const data = await res.json();
       if (!data.success) { setLoginLoading(false); return { success: false, error: data.error }; }
+      // ✅ Clear old sessions, save new viewer session to localStorage
+      ls.remove('collabSession');
+      ls.set('viewerSession', { timelineId: data.timelineId, ownerId: data.ownerId });
       setOwnerId(data.ownerId);
       setTimelineId(data.timelineId);
       setRole('viewer');
@@ -103,19 +110,13 @@ export function useAuth() {
         });
         const data = await res.json();
         if (!data.success) { setLoginLoading(false); return { success: false, error: data.error }; }
-
+        ls.remove('viewerSession');
+        ls.set('collabSession', { timelineId: data.timelineId, ownerId: data.ownerId });
         setOwnerId(data.ownerId);
         setTimelineId(data.timelineId);
         setRole('collaborator');
         setIsSharedAccessBoth(true);
         setIsCollaborator(true);
-
-        // ✅ Persist so page refresh keeps the collab session alive
-        sessionStorage.setItem('collabSession', JSON.stringify({
-          timelineId: data.timelineId,
-          ownerId:    data.ownerId,
-        }));
-
         const ud = await getDoc(doc(db, 'users', data.ownerId));
         if (ud.exists()) setFolderId(ud.data().folderId || null);
         setLoginLoading(false);
@@ -130,14 +131,8 @@ export function useAuth() {
   };
 
   const handleShareTokenLogin = async (token) => {
-    // ✅ Distinguish by length — viewer tokens are 6 chars, collab tokens are 16
-    if (token.length <= 6) {
-      return handleViewToken(token);
-    }
-    if (token.length >= 16) {
-      return handleCollabTokenLogin(token);
-    }
-    // Fallback: try both
+    if (token.length <= 6)  return handleViewToken(token);
+    if (token.length >= 16) return handleCollabTokenLogin(token);
     const r = await handleViewToken(token);
     if (r.success) return r;
     return handleCollabTokenLogin(token);
@@ -145,39 +140,45 @@ export function useAuth() {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
-      // ✅ Skip loadUserData if already in a collab/shared session
-      if (u && !isSharedAccessRef.current) {
+      // ✅ Check localStorage directly — isSharedAccessRef may be stale after sign-out+re-enter token
+      const hasSession = !!(ls.get('viewerSession') || ls.get('collabSession'));
+      console.log('[onAuthStateChanged] u:', u?.uid ?? null, 'hasSession:', hasSession, 'viewerSession:', ls.get('viewerSession'));
+      if (u && !hasSession) {
         setUser(u);
         await loadUserData(u.uid);
-      } else if (u && isSharedAccessRef.current) {
-        // ✅ Still set user so auth.currentUser works for uploads etc.
+      } else if (u && hasSession) {
         setUser(u);
       }
       setAuthLoading(false);
     });
     return () => unsub();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const params      = new URLSearchParams(window.location.search);
     const viewToken   = params.get('view') || params.get('token');
     const collabToken = params.get('collab');
+    // ✅ If session already restored from localStorage, just clean the URL
+    if (ls.get('viewerSession') || ls.get('collabSession')) {
+      if (viewToken || collabToken) window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
     if (viewToken) {
       setAuthLoading(true);
       handleViewToken(viewToken).finally(() => setAuthLoading(false));
     }
     if (collabToken) {
-      if (auth.currentUser) {
-        handleCollabTokenLogin(collabToken);
-      } else {
-        sessionStorage.setItem('pendingCollabToken', collabToken);
-      }
+      if (auth.currentUser) handleCollabTokenLogin(collabToken);
+      else sessionStorage.setItem('pendingCollabToken', collabToken);
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleGoogleLogin = async () => {
     setLoginLoading(true);
     try {
+      // ✅ Clear any viewer/collab session before logging in
+      ls.remove('viewerSession');
+      ls.remove('collabSession');
       const r = await signInWithPopup(auth, googleProvider);
       setUser(r.user);
       await loadUserData(r.user.uid);
@@ -191,15 +192,14 @@ export function useAuth() {
   };
 
   const handleSignOut = async () => {
+    ls.remove('collabSession');
+    ls.remove('viewerSession');
     if (isSharedAccessRef.current) {
-      // ✅ Clear collab session on explicit sign out / exit
-      sessionStorage.removeItem('collabSession');
       setIsSharedAccessBoth(false); setIsCollaborator(false);
       setRole('owner'); setOwnerId(null); setTimelineId(null); setUser(null);
       window.history.replaceState({}, '', window.location.pathname);
       return;
     }
-    sessionStorage.removeItem('collabSession');
     await signOut(auth);
     setUser(null); setOwnerId(null); setTimelineId(null); setFolderId(null); setRole('owner');
   };
