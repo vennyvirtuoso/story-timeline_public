@@ -114,7 +114,7 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
             {/* Monthly */}
             <div className="flex-1 text-center bg-gray-50 rounded-xl p-3 border border-gray-100">
               <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Monthly</p>
-              <p className={`text-2xl font-black ${accentText}`}>₹99</p>
+              <p className={`text-2xl font-black ${accentText}`}>₹199</p>
               <p className="text-[10px] text-gray-400 mb-3">per month</p>
               <button onClick={() => handleSubscribe('monthly')} disabled={!!loading}
                 className={`w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-gradient-to-r ${btnPrimary} text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 disabled:opacity-50`}>
@@ -124,8 +124,8 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
             {/* Yearly */}
             <div className={`flex-1 text-center ${accentBg} rounded-xl p-3 border ${accentBorder}`}>
               <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide mb-1">Yearly</p>
-              <p className={`text-2xl font-black ${accentText}`}>₹799</p>
-              <p className="text-[10px] text-green-500 font-bold mb-3">Save 33%</p>
+              <p className={`text-2xl font-black ${accentText}`}>₹1499</p>
+              <p className="text-[10px] text-green-500 font-bold mb-3">Save 37%</p>
               <button onClick={() => handleSubscribe('yearly')} disabled={!!loading}
                 className={`w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-gradient-to-r ${btnPrimary} text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 disabled:opacity-50`}>
                 {loading === 'yearly' ? <><Loader2 size={12} className="animate-spin"/>Opening...</> : <><Zap size={12}/>Subscribe</>}
