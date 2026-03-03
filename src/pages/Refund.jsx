@@ -33,7 +33,7 @@ export default function Refund() {
           </section>
           <section>
             <h2 className="text-sm font-semibold text-gray-700 mb-1.5">Contact</h2>
-            <p className="text-sm">For refund requests, contact us at: <a href="mailto:support@safarnama.app" className="underline hover:text-rose-400">support@safarnama.app</a></p>
+            <p className="text-sm">For refund requests, contact us at: <a href="mailto:help.safarnama@gmail.com" className="underline hover:text-rose-400">help.safarnama@gmail.com</a></p>
           </section>
         </div>
 

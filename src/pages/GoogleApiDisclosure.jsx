@@ -35,7 +35,7 @@ export default function GoogleApiDisclosure() {
           </section>
           <section>
             <h2 className="text-sm font-semibold text-gray-700 mb-1.5">Contact</h2>
-            <p className="text-sm">Questions? Reach us at: <a href="mailto:vijendra9753@gmail.com" className="underline hover:text-rose-400">vijendra9753@gmail.com</a></p>
+            <p className="text-sm">Questions? Reach us at: <a href="mailto:help.safarnama@gmail.com" className="underline hover:text-rose-400">help.safarnama@gmail.com</a></p>
           </section>
         </div>
 

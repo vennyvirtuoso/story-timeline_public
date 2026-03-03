@@ -10,7 +10,7 @@ export default function Privacy() {
           <BookOpen size={14}/> Safarnama
         </Link>
         <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-rose-500 to-pink-500 mb-2">Privacy Policy</h1>
-        <p className="text-gray-400 text-xs mb-10">Last Updated: January 2026 &nbsp;·&nbsp; Contact: <a href="mailto:vijendra9753@gmail.com" className="underline hover:text-rose-400">vijendra9753@gmail.com</a></p>
+        <p className="text-gray-400 text-xs mb-10">Last Updated: January 2026 &nbsp;·&nbsp; Contact: <a href="mailto:help.safarnama@gmail.com" className="underline hover:text-rose-400">help.safarnama@gmail.com</a></p>
 
         <div className="text-gray-600 leading-relaxed space-y-6">
           <section>
@@ -59,7 +59,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-sm font-semibold text-gray-700 mb-1.5">7. Your Rights (India – DPDP Act 2023)</h2>
             <p className="text-sm">You may request access to your stored data, request correction, request deletion, or withdraw consent.</p>
-            <p className="text-sm mt-2">Contact us at: <a href="mailto:vijendra9753@gmail.com" className="underline hover:text-rose-400">vijendra9753@gmail.com</a></p>
+            <p className="text-sm mt-2">Contact us at: <a href="mailto:help.safarnama@gmail.com" className="underline hover:text-rose-400">help.safarnama@gmail.com</a></p>
           </section>
 
           <section>
