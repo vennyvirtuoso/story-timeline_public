@@ -9,13 +9,23 @@ const DriveSetupScreen = ({ user, onSetupComplete, onSkip }) => {
 
   const handleConnect = async () => {
     setBusy(true);
+    setErr('');
     try {
-      const res = await fetch(`${getBackendUrl()}/api/drive/auth-url?userId=${user.uid}`);
+      // ✅ Open popup FIRST synchronously (before any await) — required on mobile browsers
+      const popup = window.open('about:blank', 'driveAuth', 'width=500,height=600');
+
+      const res  = await fetch(`${getBackendUrl()}/api/drive/auth-url?userId=${user.uid}`);
       const data = await res.json();
       if (!data.authUrl) throw new Error('Failed to get auth URL');
 
-      // ✅ Open OAuth in popup — receives message when done
-      const popup = window.open(data.authUrl, 'driveAuth', 'width=500,height=600');
+      // ✅ Now navigate the already-open popup to the real URL
+      if (popup && !popup.closed) {
+        popup.location.href = data.authUrl;
+      } else {
+        // Fallback: if popup was blocked anyway, redirect current tab
+        window.location.href = data.authUrl;
+        return;
+      }
 
       const handler = async (e) => {
         if (e.data?.type !== 'DRIVE_CONNECTED') return;
@@ -23,13 +33,33 @@ const DriveSetupScreen = ({ user, onSetupComplete, onSkip }) => {
         popup?.close();
         const folderId = e.data.folderId;
         if (folderId) {
-          await onSetupComplete(folderId, null); // token already saved by backend
+          await onSetupComplete(folderId, null);
         }
         setBusy(false);
       };
       window.addEventListener('message', handler);
+
+      // ✅ Timeout fallback — if popup closed without message (mobile Safari)
+      const pollTimer = setInterval(() => {
+        if (popup?.closed) {
+          clearInterval(pollTimer);
+          window.removeEventListener('message', handler);
+          // Re-check Firestore for folderId in case postMessage was missed
+          import('../firebase/config').then(({ db }) => {
+            import('firebase/firestore').then(({ doc, getDoc }) => {
+              getDoc(doc(db, 'users', user.uid)).then(snap => {
+                if (snap.exists() && snap.data().folderId) {
+                  onSetupComplete(snap.data().folderId, null);
+                }
+                setBusy(false);
+              });
+            });
+          });
+        }
+      }, 500);
+
     } catch (err) {
-      alert('Failed to connect Drive: ' + err.message);
+      setErr('Failed to connect Drive: ' + err.message);
       setBusy(false);
     }
   };
