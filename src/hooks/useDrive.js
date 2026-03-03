@@ -44,17 +44,27 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
 
   const handleDriveSetupComplete = async (newFolderId, accessToken) => {
     try {
-      const tokenData = typeof accessToken === 'object' ? accessToken : { token: accessToken };
-      await setDoc(doc(db, 'users', user.uid), {
-        folderId:   newFolderId,
-        driveToken: JSON.stringify(tokenData),
-        updatedAt:  serverTimestamp(),
-      }, { merge: true });
+      if (accessToken) {
+        // ✅ Legacy GIS flow — save token to Firestore
+        const tokenData = typeof accessToken === 'object' ? accessToken : { token: accessToken };
+        await setDoc(doc(db, 'users', user.uid), {
+          folderId:   newFolderId,
+          driveToken: JSON.stringify(tokenData),
+          updatedAt:  serverTimestamp(),
+        }, { merge: true });
+        const rawToken = tokenData.token || accessToken;
+        setDriveAccessToken(rawToken);
+        setGisAccessToken(rawToken);
+        sessionStorage.setItem('gisToken', rawToken);
+      } else {
+        // ✅ New OAuth flow — backend already saved folderId + driveToken
+        // Just update folderId in Firestore in case backend missed it
+        await setDoc(doc(db, 'users', user.uid), {
+          folderId:  newFolderId,
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+      }
       setFolderId(newFolderId);
-      const rawToken = tokenData.token || accessToken;
-      setDriveAccessToken(rawToken);
-      setGisAccessToken(rawToken);
-      sessionStorage.setItem('gisToken', rawToken);
       setDriveSetupNeeded(false);
     } catch (e) {
       alert('Failed to save Drive setup: ' + e.message);
@@ -70,12 +80,9 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
       const { auth } = await import('../firebase/config');
       const idToken  = auth.currentUser ? await auth.currentUser.getIdToken() : null;
 
-      // ✅ Collaborators and owners with stored driveToken skip GIS popup entirely
-      // Backend always uses owner's stored credentials for the actual upload
       let gisToken = null;
       if (!isCollabRole) {
         gisToken = await ensureDriveToken();
-        // If sentinel value — backend will use stored token, don't send accessToken
         if (gisToken === '__use_backend_token__') gisToken = null;
       }
 
@@ -91,18 +98,30 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
           body:    formData,
         });
         const data = await res.json();
-        if (!data.success) throw new Error(data.error);
+        if (!data.success) {
+          // ✅ If token expired, clear all cached tokens and retry with fresh GIS token
+          if (data.error?.includes('token expired') || data.error?.includes('reconnect Google Drive')) {
+            sessionStorage.removeItem('gisToken');
+            setDriveAccessToken(null);
+            setGisAccessToken(null);
+            if (!isCollabRole) setDriveSetupNeeded(true);
+          }
+          throw new Error(data.error);
+        }
 
-        const fileId = data.fileId;
-        const url = mediaType === 'image'
+        const fileId  = data.fileId;
+        // ✅ Use fileUrl from backend if provided, otherwise build it
+        const fileUrl = data.fileUrl || (
+          mediaType === 'image'
           ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`
-          : `https://drive.google.com/file/d/${fileId}/preview`;
+          : `https://drive.google.com/file/d/${fileId}/preview`
+        );
 
         setNewEvent(prev => ({
           ...prev,
           ...(mediaType === 'image'
-            ? { imageUrls: [...(prev.imageUrls || []), url] }
-            : { videoUrls: [...(prev.videoUrls || []), url] }),
+            ? { imageUrls: [...(prev.imageUrls || []), fileUrl] }
+            : { videoUrls: [...(prev.videoUrls || []), fileUrl] }),
         }));
         return;
       }

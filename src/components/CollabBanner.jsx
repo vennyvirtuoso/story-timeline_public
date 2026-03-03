@@ -10,7 +10,7 @@ export const CollabBanner = ({ onExit }) => (
 
 export const ViewerBanner = ({ theme, onLeave }) => (
   <div className={`bg-gradient-to-r ${theme.banner} text-white text-center py-2 px-4 text-xs flex items-center justify-center gap-2`}>
-    <Heart size={12} fill="white"/> Viewing a shared love story
+    <Heart size={12} fill="white"/> Viewing a shared Timeline
     <button onClick={onLeave} className="underline text-white/80 ml-2">Leave</button>
   </div>
 );

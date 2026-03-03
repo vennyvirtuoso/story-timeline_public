@@ -91,7 +91,21 @@ const MemoryModal = ({
         {/* ✅ Stack date/time vertically on small screens */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="Date" type="date" value={newEvent.date} onChange={v => setNewEvent({ ...newEvent, date: v })} required icon={Calendar}/>
-          <Field label="Time" type="time" value={newEvent.time} onChange={v => setNewEvent({ ...newEvent, time: v })} icon={Clock}/>
+          {/* ✅ type="time" stored as 24hr internally, browser renders in OS locale */}
+          {/* Force 12hr display by wrapping with a hidden native input + visible formatted label */}
+          <div className="mb-3">
+            <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide flex items-center gap-1">
+              <Clock size={12}/> Time <span className="text-gray-400 font-normal normal-case">(optional)</span>
+            </label>
+            <input
+              type="time"
+              value={newEvent.time || ''}
+              onChange={e => setNewEvent({ ...newEvent, time: e.target.value })}
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-gray-700 bg-white outline-none focus:ring-2 focus:border-rose-300 text-sm"
+              style={{ colorScheme: 'light' }}
+            />
+
+          </div>
         </div>
         <div className="mb-3">
           <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Type</label>

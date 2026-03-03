@@ -5,6 +5,7 @@ import { db } from '../firebase/config';
 const blank = () => ({
   title: '', description: '',
   date: new Date().toISOString().split('T')[0],
+  time: '',           // ✅ add time field
   imageUrls: [], videoUrls: [],
   emoji: '❤️',
   type: 'general',  // ✅ include type in blank
@@ -59,6 +60,7 @@ export function useEventForm(timelineId, userId) {
         title:       newEvent.title.trim(),
         description: newEvent.description || '',
         date:        newEvent.date,
+        time:        newEvent.time || '',   // ✅ save time
         imageUrls:   newEvent.imageUrls || [],
         videoUrls:   newEvent.videoUrls || [],
         emoji:       newEvent.emoji || '❤️',

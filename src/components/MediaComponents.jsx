@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { Heart, Calendar, MapPin, Star, Clock, Edit2, Trash2, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 
+
+// ─── ImageSlider ──────────────────────────────────────────────────────────────
 export const ImageSlider = ({ images, title }) => {
   const scrollRef = useRef(null);
   const [canScrollLeft,  setCanScrollLeft]  = useState(false);
@@ -16,58 +18,125 @@ export const ImageSlider = ({ images, title }) => {
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+
+    // Re-evaluate arrows after images load/render
     updateArrows();
-    el.addEventListener('scroll', updateArrows);
-    // ✅ non-passive wheel listener for desktop scroll
+    const ro = new ResizeObserver(updateArrows);
+    ro.observe(el);
+
+    el.addEventListener("scroll", updateArrows);
+
     const onWheel = (e) => {
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
         el.scrollLeft += e.deltaY;
       }
     };
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => { el.removeEventListener('scroll', updateArrows); el.removeEventListener('wheel', onWheel); };
+    el.addEventListener("wheel", onWheel, { passive: false });
+
+    return () => {
+      el.removeEventListener("scroll", updateArrows);
+      el.removeEventListener("wheel", onWheel);
+      ro.disconnect();
+    };
   }, [images]);
 
   const scroll = (dir) => {
     const el = scrollRef.current;
     if (!el) return;
-    el.scrollBy({ left: dir * 200, behavior: 'smooth' });
+    // Scroll by ~80% of visible width for a natural page-flip feel
+    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
   };
 
   if (!images?.length) return null;
-  if (images.length === 1) return (
-    <div className="mt-3 inline-block rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 max-h-72">
-      <img src={images[0]} alt={title} className="h-full w-auto max-h-72 max-w-full object-contain block" loading="lazy" referrerPolicy="no-referrer"
-        onError={e=>{e.target.onerror=null;e.target.src='https://placehold.co/600x400/ffe4e6/be123c?text=Image+Error';}}/>
-    </div>
-  );
 
+  // ── Single image: let it breathe at its natural ratio ──
+  if (images.length === 1) {
+    return (
+      <div className="mt-3 inline-flex rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 max-w-full">
+        <img
+          src={images[0]}
+          alt={title}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="block max-h-72 max-w-full w-auto h-auto object-contain"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = "https://placehold.co/600x400/ffe4e6/be123c?text=Image+Error";
+          }}
+        />
+      </div>
+    );
+  }
+
+  // ── Multiple images: uniform height, width derived from intrinsic ratio ──
   return (
-    <div className="mt-3 relative">
-      {/* ✅ Left arrow */}
+    <div className="mt-3 relative group">
+      {/* Left arrow */}
       {canScrollLeft && (
-        <button onClick={() => scroll(-1)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 shadow rounded-full p-1 hover:bg-white transition-all -ml-3">
-          <ChevronLeft size={16} className="text-gray-600"/>
+        <button
+          onClick={() => scroll(-1)}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 shadow-md rounded-full p-1.5 hover:bg-white hover:shadow-lg transition-all -ml-3 opacity-0 group-hover:opacity-100"
+          aria-label="Scroll left"
+        >
+          <ChevronLeft size={16} className="text-gray-600" />
         </button>
       )}
-      {/* ✅ Right arrow */}
+
+      {/* Right arrow */}
       {canScrollRight && (
-        <button onClick={() => scroll(1)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 shadow rounded-full p-1 hover:bg-white transition-all -mr-3">
-          <ChevronRight size={16} className="text-gray-600"/>
+        <button
+          onClick={() => scroll(1)}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 shadow-md rounded-full p-1.5 hover:bg-white hover:shadow-lg transition-all -mr-3 opacity-0 group-hover:opacity-100"
+          aria-label="Scroll right"
+        >
+          <ChevronRight size={16} className="text-gray-600" />
         </button>
       )}
+
       <div
         ref={scrollRef}
-        className="flex gap-2 pb-2 overflow-x-auto"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+        className="flex gap-2 pb-2 overflow-x-auto items-end"
+        style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          WebkitOverflowScrolling: "touch",
+        }}
       >
         {images.map((url, i) => (
-          <div key={i} className="shrink-0 h-56 w-48 relative rounded-xl overflow-hidden bg-gray-50 border border-gray-100">
-            <img src={url} alt={`${title} ${i+1}`} className="h-full w-full object-cover" loading="lazy" referrerPolicy="no-referrer"
-              onError={e=>{e.target.onerror=null;e.target.src='https://placehold.co/400x300/ffe4e6/be123c?text=Error';}}/>
-            <span className="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full">{i+1}/{images.length}</span>
+          <div
+            key={i}
+            className="shrink-0 relative rounded-xl overflow-hidden bg-gray-50 border border-gray-100"
+            style={{
+              /*
+               * All thumbnails share the same height.
+               * width:auto lets the browser size each card to the image's
+               * intrinsic aspect ratio, so a portrait shot stays portrait
+               * and a wide landscape stays wide.
+               *
+               * We cap width so a single image never dominates the strip.
+               */
+              height: "14rem",       /* 224 px – tweak to taste */
+              width: "auto",
+              maxWidth: "24rem",     /* 384 px */
+              minWidth: "6rem",      /* 96 px  */
+            }}
+          >
+            <img
+              src={url}
+              alt={`${title} ${i + 1}`}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              className="h-full w-auto block"   /* width:auto preserves ratio */
+              style={{ display: "block" }}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "https://placehold.co/400x300/ffe4e6/be123c?text=Error";
+              }}
+            />
+            <span className="absolute bottom-1.5 right-1.5 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded-full select-none">
+              {i + 1}/{images.length}
+            </span>
           </div>
         ))}
       </div>
@@ -75,16 +144,97 @@ export const ImageSlider = ({ images, title }) => {
   );
 };
 
+// ─── VideoGallery ─────────────────────────────────────────────────────────────
 export const VideoGallery = ({ videos }) => {
+  const scrollRef = useRef(null);
+  const [canScrollLeft,  setCanScrollLeft]  = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateArrows = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 0);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateArrows();
+    const ro = new ResizeObserver(updateArrows);
+    ro.observe(el);
+    el.addEventListener("scroll", updateArrows);
+    return () => { el.removeEventListener("scroll", updateArrows); ro.disconnect(); };
+  }, [videos]);
+
+  const scroll = (dir) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * el.clientWidth * 0.8, behavior: "smooth" });
+  };
+
   if (!videos?.length) return null;
+
   return (
-    <div className="mt-3 space-y-3">
-      {videos.map((url,i)=>(
-        <div key={i} className="rounded-xl overflow-hidden bg-black aspect-video">
-          <iframe src={url} className="w-full h-full" allowFullScreen title={`Video ${i+1}`}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"/>
-        </div>
-      ))}
+    <div className="mt-3 relative group">
+      {canScrollLeft && (
+        <button
+          onClick={() => scroll(-1)}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 shadow-md rounded-full p-1.5 hover:bg-white hover:shadow-lg transition-all -ml-3 opacity-0 group-hover:opacity-100"
+          aria-label="Scroll left"
+        >
+          <ChevronLeft size={16} className="text-gray-600" />
+        </button>
+      )}
+
+      {canScrollRight && (
+        <button
+          onClick={() => scroll(1)}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/90 shadow-md rounded-full p-1.5 hover:bg-white hover:shadow-lg transition-all -mr-3 opacity-0 group-hover:opacity-100"
+          aria-label="Scroll right"
+        >
+          <ChevronRight size={16} className="text-gray-600" />
+        </button>
+      )}
+
+      <div
+        ref={scrollRef}
+        className="flex gap-2 pb-2 overflow-x-auto"
+        style={{
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        {videos.map((url, i) => (
+          /*
+           * 16:9 aspect-ratio wrapper that is responsive.
+           * The iframe fills 100% of the wrapper, so the video
+           * always stays in the correct ratio regardless of screen width.
+           *
+           * Adjust the `width` value to control how many videos are
+           * visible at once (e.g. "min(320px, 80vw)" for mobile-friendly).
+           */
+          <div
+            key={i}
+            className="shrink-0 rounded-xl overflow-hidden bg-black"
+            style={{
+              width: "min(320px, 80vw)",
+              aspectRatio: "16 / 9",   /* preserves ratio on resize */
+              position: "relative",
+            }}
+          >
+            <iframe
+              src={url}
+              className="absolute inset-0 w-full h-full"
+              allowFullScreen
+              title={`Video ${i + 1}`}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              style={{ border: 0 }}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -126,7 +276,23 @@ export const EventCard = ({ event, onDelete, onEdit, theme }) => {
   };
 
   const tc  = typeConfig[event.type] || typeConfig.general;
-  const d   = new Date(event.date+(event.time?`T${event.time}`:''));
+  const d = event.time
+    ? new Date(`${event.date}T${event.time}`)
+    : new Date(`${event.date}T00:00:00`);
+
+  // ✅ Resolve display time: user-selected time > createdAt > nothing
+  const displayTime = (() => {
+    if (event.time) {
+      return new Date(`${event.date}T${event.time}`)
+        .toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+    if (event.createdAt) {
+      const ca = event.createdAt.toDate ? event.createdAt.toDate() : new Date(event.createdAt);
+      return ca.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: true });
+    }
+    return null;
+  })();
+
   const images = Array.isArray(event.imageUrls)?event.imageUrls:(event.imageUrl?[event.imageUrl]:[]);
   const videos = Array.isArray(event.videoUrls)?event.videoUrls:[];
 
@@ -145,9 +311,11 @@ export const EventCard = ({ event, onDelete, onEdit, theme }) => {
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${t.dateBadge||'text-rose-500 bg-rose-50 border-rose-100'}`}>
               {d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})}
             </span>
-            {event.time && (
+            {displayTime && (
               <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                <Clock size={9}/>{d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})}
+                <Clock size={9}/>
+                {displayTime}
+                {!event.time && <span className="text-gray-300"></span>}
               </span>
             )}
           </div>

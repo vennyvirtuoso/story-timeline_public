@@ -7,35 +7,31 @@ const DriveSetupScreen = ({ user, onSetupComplete, onSkip }) => {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
-  const connect = async () => {
-    setBusy(true); setErr('');
+  const handleConnect = async () => {
+    setBusy(true);
     try {
-      const clientId = getEnv('VITE_GOOGLE_CLIENT_ID');
-      if (!clientId) throw new Error('VITE_GOOGLE_CLIENT_ID not set');
-      await loadGIS();
-      const accessToken = await requestDriveToken(clientId);
-      const fr = await fetch('https://www.googleapis.com/drive/v3/files', {
-        method:'POST', headers:{'Authorization':`Bearer ${accessToken}`,'Content-Type':'application/json'},
-        body: JSON.stringify({name:'My Timeline 📖', mimeType:'application/vnd.google-apps.folder'})  // ✏️ Change folder name here
-      });
-      if (!fr.ok) { const e=await fr.json(); throw new Error(e?.error?.message||'Folder creation failed'); }
-      const { id: folderId } = await fr.json();
-      await fetch(`https://www.googleapis.com/drive/v3/files/${folderId}/permissions`, {
-        method:'POST', headers:{'Authorization':`Bearer ${accessToken}`,'Content-Type':'application/json'},
-        body: JSON.stringify({type:'anyone', role:'reader'})
-      });
-      const sr = await fetch(`${getBackendUrl()}/api/setup-drive`, {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({userId: user.uid, folderId})
-      });
-      const sd = await sr.json();
-      if (!sd.success) throw new Error(sd.error||'Save failed');
-      onSetupComplete(folderId, accessToken);
-    } catch(e) {
-      console.error(e);
-      if (e.message?.includes('popup')) setErr('Popup closed. Please try again.');
-      else setErr(e.message||'Setup failed');
-    } finally { setBusy(false); }
+      const res = await fetch(`${getBackendUrl()}/api/drive/auth-url?userId=${user.uid}`);
+      const data = await res.json();
+      if (!data.authUrl) throw new Error('Failed to get auth URL');
+
+      // ✅ Open OAuth in popup — receives message when done
+      const popup = window.open(data.authUrl, 'driveAuth', 'width=500,height=600');
+
+      const handler = async (e) => {
+        if (e.data?.type !== 'DRIVE_CONNECTED') return;
+        window.removeEventListener('message', handler);
+        popup?.close();
+        const folderId = e.data.folderId;
+        if (folderId) {
+          await onSetupComplete(folderId, null); // token already saved by backend
+        }
+        setBusy(false);
+      };
+      window.addEventListener('message', handler);
+    } catch (err) {
+      alert('Failed to connect Drive: ' + err.message);
+      setBusy(false);
+    }
   };
 
   const handleSkip = async () => {
@@ -71,7 +67,7 @@ const DriveSetupScreen = ({ user, onSetupComplete, onSkip }) => {
           <li className="flex items-center gap-2">✅ Shared users can view & upload too</li>
         </ul>
         {err && <p className="text-red-500 text-xs mb-3 bg-red-50 p-2.5 rounded-xl">{err}</p>}
-        <Btn onClick={connect} disabled={busy} className="w-full py-3 mb-3">
+        <Btn onClick={handleConnect} disabled={busy} className="w-full py-3 mb-3">
           {busy?<><Loader2 size={16} className="animate-spin"/>Connecting...</>:'Connect Google Drive'}
         </Btn>
         <button onClick={handleSkip} className="text-xs text-gray-400 hover:text-gray-500 transition-colors">Skip — paste links manually</button>

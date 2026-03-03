@@ -61,7 +61,8 @@ export function useAuth() {
       const ud = userSnap.exists() ? userSnap.data() : {};
       setFolderId(ud.folderId || null);
       setDriveSetupNeeded(!ud.folderId && !ud.driveSetupSkipped);
-      if (ud.driveToken) sessionStorage.setItem('gisToken', ud.driveToken);
+      // ✅ REMOVED: sessionStorage.setItem('gisToken', ud.driveToken)
+      // That was leaking the JSON token string into GIS flow, causing backend to get wrong token
       const res  = await fetch(`${getBackendUrl()}/api/create-default-timeline`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: uid }),
