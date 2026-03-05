@@ -100,7 +100,7 @@ const DriveSetupScreen = ({ user, onSetupComplete, onSkip }) => {
         <Btn onClick={handleConnect} disabled={busy} className="w-full py-3 mb-3">
           {busy?<><Loader2 size={16} className="animate-spin"/>Connecting...</>:'Connect Google Drive'}
         </Btn>
-        <button onClick={handleSkip} className="text-xs text-gray-400 hover:text-gray-500 transition-colors">Skip — paste links manually</button>
+        <button onClick={handleSkip} className="text-xs text-gray-400 hover:text-gray-500 transition-colors">Skip</button>
       </div>
     </div>
   );

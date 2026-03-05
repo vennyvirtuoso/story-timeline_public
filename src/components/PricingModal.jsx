@@ -146,7 +146,7 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
             </Link>
           </p>
         </div>
-        <p className="text-[10px] text-gray-400 text-center">Secured by Razorpay · One-time payment · No auto-renewal</p>
+        <p className="text-[10px] text-gray-400 text-center">Secured by Payment Gateway · One-time payment · No auto-renewal</p>
       </div>
     </Modal>
   );
