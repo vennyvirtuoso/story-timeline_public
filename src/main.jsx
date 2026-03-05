@@ -6,8 +6,10 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Refund from './pages/Refund';
 import About from './pages/About';
+import Pricing from './pages/PricingPage.jsx';
 import GoogleApiDisclosure from './pages/GoogleApiDisclosure';
 import './index.css';
+import { getTheme }         from './utils/themes';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
@@ -19,6 +21,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/google-api" element={<GoogleApiDisclosure />} />
         <Route path="/*"          element={<App />} />
         <Route path="/about"      element={<About />} />
+        <Route path="/pricing" element={<Pricing theme={getTheme} />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

@@ -8,77 +8,137 @@ export default function About() {
       <div className="max-w-[680px] mx-auto">
 
         {/* Back link */}
-        <Link to="/" className="inline-flex items-center gap-2 text-rose-400 text-sm mb-10 hover:text-rose-500 transition-colors">
-          <BookOpen size={14}/> Safarnama
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 text-rose-400 text-sm mb-10 hover:text-rose-500 transition-colors"
+        >
+          <BookOpen size={14} /> Safarnama
         </Link>
 
         {/* Heading */}
         <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-rose-500 to-pink-500 mb-2">
           About Safarnama
         </h1>
-        <h5 className="text-gray-400 text-xs mb-10">A little story behind the app</h5>
+        <h5 className="text-gray-400 text-xs mb-10">
+          A private space for the journeys that matter most
+        </h5>
 
-        {/* Origin */}
+        {/* Product Description */}
         <section className="mb-8">
           <p className="text-sm text-gray-600 leading-relaxed">
-            Safarnama started as a quiet idea — what if there was a beautiful, safe place where people could
-            preserve the journeys that matter most to them?
+            Safarnama is a Software-as-a-Service (SaaS) web application that
+            allows users to create private digital timelines to preserve
+            meaningful moments with their partners, friends, family, or even
+            their personal journeys.
           </p>
+
           <p className="text-sm text-gray-600 leading-relaxed mt-3">
-            Not a social feed. Not a photo dump. Just a private, shared space for the moments you never want to forget.
+            Users can upload photos, videos, and notes to organize memories
+            chronologically and build a lasting record of important life
+            experiences.
+          </p>
+
+          <p className="text-sm text-gray-600 leading-relaxed mt-3">
+            Timelines can remain completely private or be shared with trusted
+            collaborators through invitation links, allowing multiple people to
+            contribute to the same shared story.
           </p>
         </section>
 
         {/* Divider */}
-        <div className="border-t border-gray-100 mb-8"/>
+        <div className="border-t border-gray-100 mb-8" />
+
+        {/* Business Model */}
+        <section className="mb-8">
+          <h2 className="text-sm font-semibold text-gray-700 mb-2">
+            How Safarnama works
+          </h2>
+
+          <p className="text-sm text-gray-500 leading-relaxed">
+            Safarnama operates on a freemium model. Users can create timelines
+            and store memories with a free plan, while premium subscriptions
+            unlock additional features such as unlimited timelines, expanded
+            collaboration capabilities, and priority support.
+          </p>
+
+          <p className="text-sm text-gray-500 leading-relaxed mt-3">
+            All services are delivered digitally through the web application.
+            Safarnama does not sell or ship any physical goods.
+          </p>
+        </section>
+
+        {/* Divider */}
+        <div className="border-t border-gray-100 mb-8" />
 
         {/* Builder */}
         <section className="mb-8">
-          <h2 className="text-sm font-semibold text-gray-700 mb-2">Who built this</h2>
+          <h2 className="text-sm font-semibold text-gray-700 mb-2">
+            Who built Safarnama
+          </h2>
+
           <p className="text-sm text-gray-500 leading-relaxed">
-            Safarnama is built by a Master's student in Computer Science at{' '}
+            Safarnama is developed and maintained by an independent developer
+            and Master's student in Computer Science at{' '}
             <span className="text-gray-700 font-medium">IIT Bombay</span>.
-            No team, no funding, just a genuine belief that the people and places we love deserve to be remembered with care.
           </p>
-        </section>
 
-        {/* Divider */}
-        <div className="border-t border-gray-100 mb-8"/>
-
-        {/* Memories are personal */}
-        <section className="mb-8">
-          <h2 className="text-sm font-semibold text-gray-700 mb-2">Your memories are yours</h2>
-          <p className="text-sm text-gray-500 leading-relaxed">
-            Memories are deeply personal. They carry feelings that can't be replicated like a first trip,
-            a quiet evening, a moment that changed everything. Safarnama is designed with one intent:
-            to protect what matters most to you.
-          </p>
           <p className="text-sm text-gray-500 leading-relaxed mt-3">
-            You control who sees your timeline. Nothing is public unless you choose it to be.
+            The goal behind Safarnama is simple — to create a calm, private
+            place where people can preserve the moments that truly matter,
+            outside the noise of traditional social media.
           </p>
         </section>
 
         {/* Divider */}
-        <div className="border-t border-gray-100 mb-8"/>
+        <div className="border-t border-gray-100 mb-8" />
 
         {/* Security */}
         <section className="mb-10">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">How we protect your data</h2>
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">
+            Security and data protection
+          </h2>
+
           <ul className="space-y-2.5">
             {[
-              { icon: Shield, text: 'Secure Google authentication — no passwords stored' },
-              { icon: Lock,   text: 'All communication encrypted over HTTPS' },
-              { icon: Users,  text: 'Careful access control — only people you invite can see your memories' },
-              { icon: Heart,  text: 'No data selling. Ever. Your memories are not a product.' },
+              {
+                icon: Shield,
+                text: 'Secure authentication using Google OAuth'
+              },
+              {
+                icon: Lock,
+                text: 'All communication encrypted using HTTPS'
+              },
+              {
+                icon: Users,
+                text:
+                  'Access controlled timelines — only invited collaborators can view or edit'
+              },
+              {
+                icon: Heart,
+                text: 'Safarnama does not sell user data or personal content'
+              }
             ].map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-start gap-3 text-sm text-gray-500">
+              <li
+                key={text}
+                className="flex items-start gap-3 text-sm text-gray-500"
+              >
                 <div className="mt-0.5 p-1.5 rounded-full bg-rose-50 shrink-0">
-                  <Icon size={12} className="text-rose-400"/>
+                  <Icon size={12} className="text-rose-400" />
                 </div>
                 {text}
               </li>
             ))}
           </ul>
+        </section>
+
+        {/* Support */}
+        <section className="mb-10">
+          <h2 className="text-sm font-semibold text-gray-700 mb-2">
+            Support
+          </h2>
+
+          <p className="text-sm text-gray-500 leading-relaxed">For product questions, technical issues, or billing support, please contact: <a href="mailto:help.safarnama@gmail.com" className="text-sm text-rose-400 mt-2">help.safarnama@gmail.com</a></p>
+
         </section>
 
         {/* Footer */}
@@ -89,18 +149,31 @@ export default function About() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-[12px] text-gray-400 hover:text-rose-400 transition-colors"
           >
-            <Heart size={11} className="text-rose-300" fill="currentColor"/>
+            <Heart size={11} className="text-rose-300" fill="currentColor" />
             Made with love by 👨🏻‍🎓
           </a>
         </div>
 
         {/* Nav */}
         <div className="mt-8 flex gap-4 justify-center text-xs text-gray-300">
-          <Link to="/privacy"    className="hover:text-rose-400">Privacy</Link>
-          <Link to="/terms"      className="hover:text-rose-400">Terms</Link>
-          <Link to="/refund"     className="hover:text-rose-400">Refund</Link>
-          <Link to="/google-api" className="hover:text-rose-400">Google API</Link>
-          <Link to="/"        className="hover:text-rose-400 ml-auto">← Back to app</Link>
+          <Link to="/privacy" className="hover:text-rose-400">
+            Privacy
+          </Link>
+          <Link to="/terms" className="hover:text-rose-400">
+            Terms
+          </Link>
+          <Link to="/refund" className="hover:text-rose-400">
+            Refund
+          </Link>
+          <Link to="/pricing" className="hover:text-rose-400">
+            Pricing
+          </Link>
+          <Link to="/google-api" className="hover:text-rose-400">
+            Google API
+          </Link>
+          <Link to="/" className="hover:text-rose-400 ml-auto">
+            ← Back to app
+          </Link>
         </div>
 
       </div>

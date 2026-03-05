@@ -40,6 +40,7 @@ export default function Refund() {
         <div className="mt-12 pt-6 border-t border-gray-100 flex gap-4 text-xs text-gray-400">
           <Link to="/privacy"    className="hover:text-rose-400">Privacy</Link>
           <Link to="/terms"      className="hover:text-rose-400">Terms</Link>
+          <Link to="/pricing" className="hover:text-rose-400">Pricing</Link>
           <Link to="/google-api" className="hover:text-rose-400">Google API</Link>
           <Link to="/about"      className="hover:text-rose-400 transition-colors">About</Link>
           <Link to="/"           className="hover:text-rose-400 ml-auto">← Back to app</Link>
