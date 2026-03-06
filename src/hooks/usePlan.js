@@ -16,6 +16,8 @@ export function usePlan(ownerId, timelineId, isSharedAccess) {
       if (!snap.exists()) { setPlanLoading(false); return; }
       const d = snap.data();
       const p = d.plan || 'free';
+      // ✅ Always set customerId regardless of plan state
+      setCustomerId(d.customerId || null);
       if (p === 'pro' && d.planExpiry) {
         const exp = d.planExpiry.toDate ? d.planExpiry.toDate() : new Date(d.planExpiry);
         if (exp < new Date()) {
@@ -23,7 +25,6 @@ export function usePlan(ownerId, timelineId, isSharedAccess) {
           setPlanLoading(false); return;
         }
       }
-      setCustomerId(d.customerId || null); // ✅ read customerId saved by webhook
       setPlan(p); setPlanExpiry(d.planExpiry || null); setPlanType(d.planType || null);
       setPlanLoading(false);
     }, err => { console.error('usePlan snapshot error:', err.code); setPlanLoading(false); });
