@@ -10,7 +10,7 @@ const MEMBER_TYPES = [
   { id: 'group',  label: 'Friend Group',  icon: Users, placeholder1: 'Group Name',  placeholder2: '',          showTwo: false },
 ];
 
-const SettingsModal = ({ isOpen, onClose, config, setConfig, onSave, folderId, onConnectDrive, theme, isPro, user, customerId }) => {
+const SettingsModal = ({ isOpen, onClose, config, setConfig, onSave, folderId, onConnectDrive, theme, isPro, user, customerId, onUpgrade }) => {
   // ✅ Ensure memberType always has a default when config loads
   const memberType = config.memberType || 'duo';
   const memberTypeDetails = MEMBER_TYPES.find(m => m.id === memberType) || MEMBER_TYPES[0];
@@ -74,7 +74,7 @@ const SettingsModal = ({ isOpen, onClose, config, setConfig, onSave, folderId, o
         <div className="mt-5"><Btn type="submit" className="w-full">Save Changes</Btn></div>
       </form>
       <div className="border-t border-gray-100 pt-4 mt-2">
-        <p className="text-xs font-semibold text-gray-500 mb-2">Subscription</p>
+        <p className="text-xs font-semibold text-gray-500 mb-2">Manage Subscription</p>
         {isPro ? (
           <div className="flex items-center justify-between bg-green-50 rounded-xl px-3 py-2 border border-green-100">
             <span className="text-xs text-green-600 font-semibold">✨ Pro Plan Active</span>
@@ -83,7 +83,14 @@ const SettingsModal = ({ isOpen, onClose, config, setConfig, onSave, folderId, o
         ) : (
           <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2 border border-gray-100">
             <span className="text-xs text-gray-500">Free Plan</span>
-            <button onClick={onClose} className="text-xs text-rose-500 font-semibold hover:underline">
+            {/* ✅ Close settings first, then open pricing */}
+            <button
+              onClick={() => {
+                onClose();
+                setTimeout(() => onUpgrade?.(), 150);
+              }}
+              className="text-xs text-rose-500 font-semibold hover:underline"
+            >
               Upgrade to Pro →
             </button>
           </div>

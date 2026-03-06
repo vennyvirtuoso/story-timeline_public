@@ -254,6 +254,7 @@ export default function App() {
           isPro={isPro}
           user={user}
           customerId={planCustomerId}
+          onUpgrade={() => setIsPricingOpen(true)}
         />
       )}
       {isOwner && (
