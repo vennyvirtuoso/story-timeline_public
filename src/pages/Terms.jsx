@@ -40,7 +40,7 @@ export default function Terms() {
           </section>
           <section>
             <h2 className="text-sm font-semibold text-gray-700 mb-1.5">7. Subscription & Billing</h2>
-            <p className="text-sm">Paid plans are processed through Payment Gateway. Plans may be monthly or yearly. Downgrading limits access but does not delete stored content.</p>
+            <p className="text-sm">Paid plans are processed through Dodo Payments. Plans may be monthly or yearly. Downgrading limits access but does not delete stored content.</p>
           </section>
           <section>
             <h2 className="text-sm font-semibold text-gray-700 mb-1.5">8. Refund Policy</h2>

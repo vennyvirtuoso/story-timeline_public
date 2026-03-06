@@ -14,6 +14,7 @@ import { useViewerToken }   from './hooks/useViewerToken';
 import { useOwnerFolderId } from './hooks/useOwnerFolderId';
 import AppHeader            from './components/AppHeader';
 import MemoryModal          from './components/MemoryModal';
+import ManageBillingButton from './components/ManageBillingButton';
 import SettingsModal        from './components/SettingsModal';
 import LoginScreen          from './components/LoginScreen';
 import ShareModal           from './components/ShareModal';
@@ -159,6 +160,13 @@ export default function App() {
       {/* Sticky top — banners + header */}
       <div className="relative z-30 shrink-0">
         {!isPro && !isSharedAccess && !isCollabRole && <FreePlanBanner onUpgrade={() => setIsPricingOpen(true)}/>}
+        {/* ✅ Show manage billing bar for Pro users */}
+        {isPro && isOwner && !isSharedAccess && (
+          <div className="bg-green-50 border-b border-green-100 text-center py-1 px-4 flex items-center justify-center gap-2">
+            <span className="text-[11px] text-green-600 font-semibold">✨ Pro Plan Active</span>
+            <ManageBillingButton user={user} />
+          </div>
+        )}
         {isCollabRole && <CollabBanner onExit={handleExitCollaboration}/>}
         {isViewer     && <ViewerBanner theme={theme} onLeave={handleSignOut}/>}
         <AppHeader

@@ -1,17 +1,35 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Safarnama — Your Shared Story Timeline</title>
+    <meta name="description" content="Safarnama is a shared digital timeline to store and relive your memories together." />
+
+    <!-- ✅ Open Graph / Social sharing -->
+    <meta property="og:title"       content="Safarnama — Your Shared Story Timeline" />
+    <meta property="og:description" content="Store and relive your most precious memories with the people you love." />
+    <meta property="og:image"       content="https://app-safarnama.vercel.app/og-image.png" />
+    <meta property="og:url"         content="https://app-safarnama.vercel.app" />
+    <meta property="og:type"        content="website" />
+    <meta name="twitter:card"       content="summary_large_image" />
+    <meta name="twitter:title"      content="Safarnama — Your Shared Story Timeline" />
+    <meta name="twitter:description" content="Store and relive your most precious memories with the people you love." />
+    <meta name="twitter:image"      content="https://app-safarnama.vercel.app/og-image.png" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#f43f5e" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="description" content="Safarnama — capture and preserve your memories together" />
-    <title>Safarnama</title>
   </head>
   <body>
     <div id="root"></div>
+    <!-- ✅ Noscript fallback -->
+    <noscript>
+      <div style="text-align:center;padding:40px;font-family:sans-serif">
+        <h2>Safarnama</h2>
+        <p>Please enable JavaScript to use Safarnama.</p>
+      </div>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

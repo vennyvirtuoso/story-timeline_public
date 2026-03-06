@@ -143,7 +143,7 @@ export default function Pricing({ theme }) {
 
             <p>
               The Pro plan unlocks unlimited timelines and collaborators.
-              Payment is processed securely through a payment gateway.
+              Payment is processed securely through a Dodo Payments.
             </p>
           </div>
 

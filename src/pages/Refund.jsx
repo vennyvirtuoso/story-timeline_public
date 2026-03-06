@@ -15,7 +15,7 @@ export default function Refund() {
         <div className="text-gray-600 leading-relaxed space-y-6">
           <section>
             <h2 className="text-sm font-semibold text-gray-700 mb-1.5">Subscription Payments</h2>
-            <p className="text-sm">All payments are processed securely via Payment Gateway.</p>
+            <p className="text-sm">All payments are processed securely via Dodo Payments.</p>
           </section>
           <section>
             <h2 className="text-sm font-semibold text-gray-700 mb-1.5">Refund Eligibility</h2>
