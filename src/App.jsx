@@ -57,7 +57,7 @@ export default function App() {
   const { memories, config, setConfig, isLoading } = useMemories(timelineId, role, () => setIsConfigModalOpen(true), ownerId);
   const theme    = getTheme(config?.theme || 'love');
   const duration = useDuration(config?.startDate);
-  const { isPro, limits, refreshLimits } = usePlan(ownerId, timelineId, isSharedAccess);
+  const { isPro, limits, refreshLimits, planCustomerId } = usePlan(ownerId, timelineId, isSharedAccess);
 
   const { isUploadingImage, isUploadingVideo, resetDriveToken, handleDriveSetupComplete, handleUpload: _handleUpload } =
     useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timelineId);
@@ -161,12 +161,6 @@ export default function App() {
       <div className="relative z-30 shrink-0">
         {!isPro && !isSharedAccess && !isCollabRole && <FreePlanBanner onUpgrade={() => setIsPricingOpen(true)}/>}
         {/* ✅ Show manage billing bar for Pro users */}
-        {isPro && isOwner && !isSharedAccess && (
-          <div className="bg-green-50 border-b border-green-100 text-center py-1 px-4 flex items-center justify-center gap-2">
-            <span className="text-[11px] text-green-600 font-semibold">✨ Pro Plan Active</span>
-            <ManageBillingButton user={user} />
-          </div>
-        )}
         {isCollabRole && <CollabBanner onExit={handleExitCollaboration}/>}
         {isViewer     && <ViewerBanner theme={theme} onLeave={handleSignOut}/>}
         <AppHeader
@@ -257,6 +251,9 @@ export default function App() {
           onSave={handleSaveConfig} folderId={folderId}
           onConnectDrive={() => { setIsConfigModalOpen(false); setDriveSetupNeeded(true); }}
           theme={theme}
+          isPro={isPro}
+          user={user}
+          customerId={planCustomerId}
         />
       )}
       {isOwner && (

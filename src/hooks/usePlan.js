@@ -8,7 +8,7 @@ export function usePlan(ownerId, timelineId, isSharedAccess) {
   const [planType,    setPlanType]    = useState(null);
   const [limits,      setLimits]      = useState({ memories: { canAdd: true }, collaborators: { canAdd: true } });
   const [planLoading, setPlanLoading] = useState(true);
-
+  const [customerId, setCustomerId] = useState(null);
   // ✅ Always listen to OWNER's plan doc
   useEffect(() => {
     if (!ownerId) { setPlanLoading(false); return; }
@@ -23,6 +23,7 @@ export function usePlan(ownerId, timelineId, isSharedAccess) {
           setPlanLoading(false); return;
         }
       }
+      setCustomerId(d.customerId || null); // ✅ read customerId saved by webhook
       setPlan(p); setPlanExpiry(d.planExpiry || null); setPlanType(d.planType || null);
       setPlanLoading(false);
     }, err => { console.error('usePlan snapshot error:', err.code); setPlanLoading(false); });
@@ -59,5 +60,5 @@ export function usePlan(ownerId, timelineId, isSharedAccess) {
   }, [ownerId, timelineId]); // ✅ re-fetch whenever owner or timeline changes (catches expiry on revisit)
 
   const isPro = plan === 'pro';
-  return { plan, isPro, planExpiry, planType, limits, planLoading, refreshLimits };
+  return { plan, isPro, planExpiry, planType, limits, planLoading, refreshLimits, planCustomerId: customerId };
 }
