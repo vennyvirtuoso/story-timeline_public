@@ -132,8 +132,8 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
 
       {/* Footer */}
       <div className="mt-auto pt-6 border-t border-gray-100 flex gap-4 text-xs text-gray-400 w-full max-w-xs justify-center flex-wrap">
-        <Link to="/about" className="hover:text-rose-400">About</Link>
-        <Link to="/pricing" className="hover:text-rose-400">Pricing</Link>
+        {/* <Link to="/about" className="hover:text-rose-400">About</Link> */}
+        {/* <Link to="/pricing" className="hover:text-rose-400">Pricing</Link> */}
       </div>
 
     </div>
