@@ -11,8 +11,20 @@ export function useDuration(startDate) {
   const duration = useMemo(() => {
     const zero = { years:0, months:0, days:0, hours:0, minutes:0, seconds:0 };
     if (!startDate) return zero;
-    const s = new Date(startDate), n = currentTime;
-    if (n < s) return zero;
+
+    // ✅ Fix: "YYYY-MM-DD" must be parsed as LOCAL midnight, not UTC
+    // new Date("2024-01-15")         → UTC midnight → wrong in IST/any non-UTC timezone
+    // new Date("2024-01-15T00:00:00") → local midnight → correct
+    let s;
+    if (typeof startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+      s = new Date(`${startDate}T00:00:00`);
+    } else {
+      s = new Date(startDate);
+    }
+
+    const n = currentTime;
+    if (isNaN(s.getTime()) || n < s) return zero;
+
     let [yr,mo,dy,hr,mi,se] = [
       n.getFullYear()-s.getFullYear(), n.getMonth()-s.getMonth(),
       n.getDate()-s.getDate(),         n.getHours()-s.getHours(),
