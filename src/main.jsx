@@ -22,6 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/*"          element={<App />} />
         <Route path="/about"      element={<About />} />
         <Route path="/pricing" element={<Pricing theme={getTheme} />} />
+        <Route path="/billing/success" element={<App />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

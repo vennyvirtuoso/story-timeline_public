@@ -5,16 +5,8 @@ import { Link } from 'react-router-dom';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8069';
 
-const FEATURES_FREE = ['2 timelines', '2 collaborators', 'All themes', 'Google Drive upload'];
-const FEATURES_PRO  = ['Unlimited timelines', 'Unlimited collaborators', 'All themes', 'Google Drive upload', 'Priority support'];
-
-const loadRazorpay = () => new Promise((resolve, reject) => {
-  if (window.Razorpay) return resolve();
-  const s = document.createElement('script');
-  s.src = 'https://checkout.razorpay.com/v1/checkout.js';
-  s.onload = resolve; s.onerror = reject;
-  document.head.appendChild(s);
-});
+const FEATURES_FREE = ['2 memories', '2 collaborators', 'All themes', 'Google Drive upload'];
+const FEATURES_PRO  = ['Unlimited memories', 'Unlimited collaborators', 'All themes', 'Google Drive upload', 'Priority support'];
 
 const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
   const [loading, setLoading] = useState(null);
@@ -27,55 +19,24 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
   const accentBorder = t.accentBorder || 'border-rose-200';
   const badge        = t.badge        || 'bg-rose-100 text-rose-500';
 
-  const handleSubscribe = async (planType) => {
+  const handleSubscribe = async (plan) => {
     if (!user) return;
-    setLoading(planType); setError('');
+    setLoading(plan); setError('');
     try {
-      // 1. Create order
-      const res = await fetch(`${BACKEND_URL}/api/razorpay/create-order`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.uid, planType, userEmail: user.email || '', userName: user.displayName || '' }),
+      const res = await fetch(`${BACKEND_URL}/api/checkout`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan,
+          email:  user.email  || '',
+          name:   user.displayName || '',
+          userId: user.uid,
+        }),
       });
-      const order = await res.json();
-      if (!order.success) throw new Error(order.error);
-
-      // 2. Load Razorpay
-      await loadRazorpay();
-
-      // 3. Open checkout
-      const rzp = new window.Razorpay({
-        key: order.keyId, amount: order.amount, currency: 'INR',
-        name: 'My Timeline', description: order.planLabel, order_id: order.orderId,
-        prefill: { name: order.userName, email: order.userEmail },
-        theme: { color: '#f43f5e' },
-        modal: { ondismiss: () => setLoading(null) },
-        // 4. On payment success
-        handler: async (response) => {
-          try {
-            const vRes = await fetch(`${BACKEND_URL}/api/razorpay/verify-payment`, {
-              method:  'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id:   response.razorpay_order_id,
-                razorpay_signature:  response.razorpay_signature,
-                userId:   user.uid,
-                planType,
-              }),
-            });
-            const vData = await vRes.json();
-            if (!vData.success) throw new Error(vData.error);
-            await new Promise(r => setTimeout(r, 3000));
-            onSuccess?.(vData);
-            onClose();
-          } catch (e) {
-            alert('Payment received but verification failed: ' + e.message + '\n\nPlease contact support with payment ID: ' + response.razorpay_payment_id);
-            setError('Verification failed: ' + e.message);
-            setLoading(null);
-          }
-        },
-      });
-      rzp.open();
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      // ✅ Redirect to Dodo hosted checkout
+      window.location.href = data.checkout_url;
     } catch (e) {
       setError(e.message);
       setLoading(null);
@@ -118,7 +79,7 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
               <p className="text-[10px] text-gray-400 mb-3">per month</p>
               <button onClick={() => handleSubscribe('monthly')} disabled={!!loading}
                 className={`w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-gradient-to-r ${btnPrimary} text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 disabled:opacity-50`}>
-                {loading === 'monthly' ? <><Loader2 size={12} className="animate-spin"/>Opening...</> : <><Zap size={12}/>Subscribe</>}
+                {loading === 'monthly' ? <><Loader2 size={12} className="animate-spin"/>Redirecting...</> : <><Zap size={12}/>Subscribe</>}
               </button>
             </div>
             {/* Yearly */}
@@ -128,7 +89,7 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
               <p className="text-[10px] text-green-500 font-bold mb-3">Save 37%</p>
               <button onClick={() => handleSubscribe('yearly')} disabled={!!loading}
                 className={`w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-gradient-to-r ${btnPrimary} text-white rounded-xl text-xs font-semibold shadow-md transition-all active:scale-95 disabled:opacity-50`}>
-                {loading === 'yearly' ? <><Loader2 size={12} className="animate-spin"/>Opening...</> : <><Zap size={12}/>Subscribe</>}
+                {loading === 'yearly' ? <><Loader2 size={12} className="animate-spin"/>Redirecting...</> : <><Zap size={12}/>Subscribe</>}
               </button>
             </div>
           </div>
@@ -140,13 +101,11 @@ const PricingModal = ({ isOpen, onClose, user, theme, onSuccess }) => {
             ))}
           </ul>
           <p className="text-center text-[11px] text-gray-400 mt-3">
-            Payments are governed by our{' '}
-            <Link to="/refund" className="underline hover:text-rose-400 transition-colors">
-              Refund Policy
-            </Link>
+            Payments governed by our{' '}
+            <Link to="/refund" className="underline hover:text-rose-400 transition-colors">Refund Policy</Link>
           </p>
         </div>
-        <p className="text-[10px] text-gray-400 text-center">Secured by Payment Gateway · One-time payment · No auto-renewal</p>
+        <p className="text-[10px] text-gray-400 text-center">Secured by Dodo Payments · Subscription · Cancel anytime</p>
       </div>
     </Modal>
   );
