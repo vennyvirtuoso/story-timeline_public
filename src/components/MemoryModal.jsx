@@ -129,7 +129,7 @@ const MemoryModal = ({
           {folderId ? (
             <label className={`flex items-center justify-center gap-2 w-full px-3 py-2 bg-white border ${accentBorder} rounded-xl cursor-pointer ${accentHover} transition-colors text-xs ${accentText} font-semibold mb-2`}>
               <Upload size={13}/> {isUploadingImage ? 'Uploading...' : 'Upload to Drive'}
-              <input type="file" className="hidden" accept="image/*" ref={fileRef} onChange={e => handleUpload(e, 'image')} disabled={isUploadingImage}/>
+              <input type="file" className="hidden" accept="image/*" multiple ref={fileRef} onChange={e => handleUpload(e, 'image')} disabled={isUploadingImage}/>
             </label>
           ) : isCollabRole ? (
             // ✅ Collaborator + owner has NO Drive connected
@@ -173,7 +173,7 @@ const MemoryModal = ({
           {folderId ? (
             <label className={`flex items-center justify-center gap-2 w-full px-3 py-2 bg-white border ${accentBorder} rounded-xl cursor-pointer ${accentHover} transition-colors text-xs ${accentText} font-semibold mb-2`}>
               <Upload size={13}/> {isUploadingVideo ? 'Uploading...' : 'Upload to Drive'}
-              <input type="file" className="hidden" accept="video/*" ref={videoRef} onChange={e => handleUpload(e, 'video')} disabled={isUploadingVideo}/>
+              <input type="file" className="hidden" accept="video/*" multiple ref={videoRef} onChange={e => handleUpload(e, 'video')} disabled={isUploadingVideo}/>
             </label>
           ) : isCollabRole ? (
             // ✅ Collaborator + owner has NO Drive connected

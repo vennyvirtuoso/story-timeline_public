@@ -9,25 +9,18 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
   const [driveAccessToken, setDriveAccessToken] = useState(null);
 
   const ensureDriveToken = async () => {
-    // 1. Cached state token
     if (driveAccessToken) { setGisAccessToken(driveAccessToken); return driveAccessToken; }
-    // 2. Module-level GIS token
     if (gisAccessToken)   { setDriveAccessToken(gisAccessToken); return gisAccessToken; }
-    // 3. sessionStorage (survives re-renders)
     const cached = sessionStorage.getItem('gisToken');
     if (cached) { setDriveAccessToken(cached); setGisAccessToken(cached); return cached; }
-    // 4. If owner has folderId, backend uses stored driveToken — return a sentinel so upload proceeds
-    //    without triggering popup. Backend will use owner's stored credentials.
     if (folderId && user?.uid) {
       try {
         const snap = await getDoc(doc(db, 'users', user.uid));
         if (snap.exists() && snap.data().driveToken) {
-          // ✅ Owner has stored token — backend will use it, no GIS popup needed
           return '__use_backend_token__';
         }
       } catch {}
     }
-    // 5. Last resort — request new token (shows popup)
     const clientId = getEnv('VITE_GOOGLE_CLIENT_ID');
     await loadGIS();
     const t = await requestDriveToken(clientId);
@@ -45,7 +38,6 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
   const handleDriveSetupComplete = async (newFolderId, accessToken) => {
     try {
       if (accessToken) {
-        // ✅ Legacy GIS flow — save token to Firestore
         const tokenData = typeof accessToken === 'object' ? accessToken : { token: accessToken };
         await setDoc(doc(db, 'users', user.uid), {
           folderId:   newFolderId,
@@ -57,8 +49,6 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
         setGisAccessToken(rawToken);
         sessionStorage.setItem('gisToken', rawToken);
       } else {
-        // ✅ New OAuth flow — backend already saved folderId + driveToken
-        // Just update folderId in Firestore in case backend missed it
         await setDoc(doc(db, 'users', user.uid), {
           folderId:  newFolderId,
           updatedAt: serverTimestamp(),
@@ -72,10 +62,13 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
   };
 
   const handleUpload = async (e, mediaType, setNewEvent, fileRef, videoRef, isCollabRole) => {
-    const file = e.target.files?.[0];
-    if (!file || !folderId) return;
+    // ✅ Support multiple files
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !folderId) return;
+
     const setUploading = mediaType === 'image' ? setIsUploadingImage : setIsUploadingVideo;
     setUploading(true);
+
     try {
       const { auth } = await import('../firebase/config');
       const idToken  = auth.currentUser ? await auth.currentUser.getIdToken() : null;
@@ -87,53 +80,67 @@ export function useDrive(user, folderId, setFolderId, setDriveSetupNeeded, timel
       }
 
       if (idToken && timelineId) {
-        const formData = new FormData();
-        formData.append('file',       file);
-        formData.append('timelineId', timelineId);
-        if (gisToken) formData.append('accessToken', gisToken);
+        // ✅ Upload all files in parallel
+        const results = await Promise.all(files.map(async (file) => {
+          const formData = new FormData();
+          formData.append('file',       file);
+          formData.append('timelineId', timelineId);
+          if (gisToken) formData.append('accessToken', gisToken);
 
-        const res  = await fetch(`${getBackendUrl()}/api/upload`, {
-          method:  'POST',
-          headers: { 'Authorization': `Bearer ${idToken}` },
-          body:    formData,
-        });
-        const data = await res.json();
-        if (!data.success) {
-          // ✅ If token expired, clear all cached tokens and retry with fresh GIS token
-          if (data.error?.includes('token expired') || data.error?.includes('reconnect Google Drive')) {
-            sessionStorage.removeItem('gisToken');
-            setDriveAccessToken(null);
-            setGisAccessToken(null);
-            if (!isCollabRole) setDriveSetupNeeded(true);
+          const res  = await fetch(`${getBackendUrl()}/api/upload`, {
+            method:  'POST',
+            headers: { 'Authorization': `Bearer ${idToken}` },
+            body:    formData,
+          });
+          const data = await res.json();
+
+          if (!data.success) {
+            const isExpired = data.error?.includes('token') ||
+                              data.error?.includes('expired') ||
+                              data.error?.includes('reconnect') ||
+                              data.error?.includes('invalid_grant');
+            if (isExpired && !isCollabRole) {
+              sessionStorage.removeItem('gisToken');
+              setDriveAccessToken(null);
+              setGisAccessToken(null);
+              setDriveSetupNeeded(true);
+              throw new Error('Drive token expired. Please reconnect Google Drive in Settings.');
+            }
+            throw new Error(data.error);
           }
-          throw new Error(data.error);
-        }
 
-        const fileId  = data.fileId;
-        // ✅ Use fileUrl from backend if provided, otherwise build it
-        const fileUrl = data.fileUrl || (
-          mediaType === 'image'
-          ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`
-          : `https://drive.google.com/file/d/${fileId}/preview`
-        );
+          const fileId = data.fileId;
+          return data.fileUrl || (
+            mediaType === 'image'
+              ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`
+              : `https://drive.google.com/file/d/${fileId}/preview`
+          );
+        }));
 
+        // ✅ Add all uploaded URLs at once
         setNewEvent(prev => ({
           ...prev,
           ...(mediaType === 'image'
-            ? { imageUrls: [...(prev.imageUrls || []), fileUrl] }
-            : { videoUrls: [...(prev.videoUrls || []), fileUrl] }),
+            ? { imageUrls: [...(prev.imageUrls || []), ...results] }
+            : { videoUrls: [...(prev.videoUrls || []), ...results] }),
         }));
         return;
       }
 
-      // Fallback: direct GIS upload (only if we have a real token)
+      // Fallback: direct GIS upload
       if (gisToken) {
-        const fileId = await uploadFileToDrive(file, folderId, gisToken);
-        if (mediaType === 'image') {
-          setNewEvent(p => ({ ...p, imageUrls: [...p.imageUrls, `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`] }));
-        } else {
-          setNewEvent(p => ({ ...p, videoUrls: [...p.videoUrls, `https://drive.google.com/file/d/${fileId}/preview`] }));
-        }
+        const fileIds = await Promise.all(files.map(f => uploadFileToDrive(f, folderId, gisToken)));
+        const urls = fileIds.map(id =>
+          mediaType === 'image'
+            ? `https://drive.google.com/thumbnail?id=${id}&sz=w1000`
+            : `https://drive.google.com/file/d/${id}/preview`
+        );
+        setNewEvent(p => ({
+          ...p,
+          ...(mediaType === 'image'
+            ? { imageUrls: [...p.imageUrls, ...urls] }
+            : { videoUrls: [...p.videoUrls, ...urls] }),
+        }));
       }
     } catch (e) {
       alert('Upload failed: ' + e.message);
