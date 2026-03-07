@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { collection, doc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db,auth } from '../firebase/config';
+import { getBackendUrl } from '../gis';
 
 const blank = () => ({
   title: '', description: '',
@@ -21,11 +22,40 @@ export function useEventForm(timelineId, userId) {
 
   const openAdd  = () => { setEditingId(null); setNewEvent(blank()); setIsAddModalOpen(true); };
   const openEdit = (ev) => { setEditingId(ev.id); setNewEvent({ ...ev }); setIsAddModalOpen(true); };
+  // ✅ Extract Drive file ID from URL
+  const extractDriveFileId = (url) => {
+    if (!url) return null;
+    // thumbnail: https://drive.google.com/thumbnail?id=FILE_ID&sz=...
+    const thumbMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (thumbMatch) return thumbMatch[1];
+    // preview: https://drive.google.com/file/d/FILE_ID/preview
+    const previewMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (previewMatch) return previewMatch[1];
+    return null;
+  };
 
+  const deleteDriveFile = async (url, timelineId) => {
+    const fileId = extractDriveFileId(url);
+    if (!fileId || !timelineId) return;
+    try {
+      const idToken = auth.currentUser ? await auth.currentUser.getIdToken() : null;
+      if (!idToken) return;
+      await fetch(`${getBackendUrl()}/api/delete-drive-file`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+        body:    JSON.stringify({ fileId, timelineId }),
+      });
+    } catch (e) {
+      console.warn('Drive file delete failed (non-blocking):', e.message);
+    }
+  };
   const addImageLink = () => {
     if (tempImageLink.trim()) { setNewEvent(p => ({ ...p, imageUrls: [...p.imageUrls, tempImageLink.trim()] })); setTempImageLink(''); }
   };
-  const removeImage = (url) => setNewEvent(p => ({ ...p, imageUrls: p.imageUrls.filter(u => u !== url) }));
+  const removeImage = (url) => {
+    deleteDriveFile(url, timelineId); // ✅ non-blocking
+    setNewEvent(prev => ({ ...prev, imageUrls: prev.imageUrls.filter(u => u !== url) }));
+  };
 
   const normalizeVideoUrl = (url) => {
     // YouTube: convert watch/short URLs to embed
@@ -46,7 +76,10 @@ export function useEventForm(timelineId, userId) {
       setTempVideoLink('');
     }
   };
-  const removeVideo = (url) => setNewEvent(p => ({ ...p, videoUrls: p.videoUrls.filter(u => u !== url) }));
+  const removeVideo = (url) => {
+    deleteDriveFile(url, timelineId); // ✅ non-blocking
+    setNewEvent(prev => ({ ...prev, videoUrls: prev.videoUrls.filter(u => u !== url) }));
+  };
 
   const handleSaveEvent = async (e) => {
     e?.preventDefault();
