@@ -24,25 +24,42 @@ export default function About() {
         </h5>
 
         {/* Product Description */}
-        <section className="mb-8">
+        <section className="mb-8 space-y-5">
+
+<div>
+  <h3 className="text-sm font-semibold text-gray-900 mb-1">
+    What is Safarnama?
+  </h3>
   <p className="text-sm text-gray-600 leading-relaxed">
-    Safarnama lets people create private digital
-    timelines of their memories. Instead of moments getting scattered across
-    camera rolls, chat apps, and social media, Safarnama brings them together
-    into a single, story-like timeline.
+    Safarnama is a web app that helps people create private digital timelines
+    of their memories. Instead of moments getting scattered across camera
+    rolls, chat apps, and social media, everything lives in one
+    story-like timeline.
   </p>
+</div>
 
-  <p className="text-sm text-gray-600 leading-relaxed mt-3">
-    It is designed for every kind of journey — couples ❤️, friends 👯,
-    families 👨‍👩‍👧‍👦, and even solo adventures 🌍. Users can upload photos,
-    videos, and notes to document meaningful moments and watch their story
-    unfold over time.
-  </p>
+<div>
+  <h3 className="text-sm font-semibold text-gray-900 mb-2">
+    Built for
+  </h3>
+  <ul className="text-sm text-gray-600 space-y-1">
+    <li>• Couples</li>
+    <li>• Friends</li>
+    <li>• Families</li>
+    <li>• Solo journeys</li>
+  </ul>
+</div>
 
-  <p className="text-sm text-gray-600 leading-relaxed mt-3">
+<div>
+  <h3 className="text-sm font-semibold text-gray-900 mb-1">
+    The idea
+  </h3>
+  <p className="text-sm text-gray-600 leading-relaxed">
     Every relationship and every life journey is a story made of moments.
-    Safarnama simply gives those moments a beautiful place to live.
+    Safarnama gives those moments a place to live.
   </p>
+</div>
+
 </section>
 
         {/* Divider */}

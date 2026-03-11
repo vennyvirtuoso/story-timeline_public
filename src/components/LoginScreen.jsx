@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, Loader2, Key } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import FloatingElements from './FloatingElements';
+import WelcomeModal from './WelcomeModal';
 import { getTheme } from '../utils/themes';
 
 const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
@@ -12,24 +13,34 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!token.trim()) return;
+
+    const code = token.trim().toUpperCase();
+    if (!code) return;
+
     setErr('');
-    const r = await onShareTokenLogin(token.trim().toUpperCase());
-    if (!r.success) setErr(r.error || 'Invalid code');
+    const r = await onShareTokenLogin(code);
+
+    if (!r?.success) {
+      setErr(r?.error || 'Invalid code');
+    }
   };
 
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     const t = p.get('token');
+
     if (t) {
       setToken(t.toUpperCase());
       setShowInput(true);
+
+      // remove token from URL after reading
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-rose-50 via-white to-pink-50 flex flex-col items-center p-5 relative overflow-hidden">
-
+      <WelcomeModal />
       <FloatingElements theme={defaultTheme} />
 
       {/* Main Content */}
@@ -54,6 +65,7 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
         <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl border border-white/50 p-6 space-y-3 w-full">
 
           <button
+            type="button"
             onClick={onGoogleLogin}
             disabled={isLoading}
             className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow rounded-xl text-sm font-medium transition-all disabled:opacity-50"
@@ -71,14 +83,15 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
             Sign in with Google
           </button>
 
-          <div className="flex items-center gap-2">
-            <div className="flex-1 border-t border-gray-200" />
-            <span className="text-[11px] text-gray-400 font-medium">OR</span>
-            <div className="flex-1 border-t border-gray-200" />
+          <div className="flex items-center gap-3 my-2">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400">or</span>
+            <div className="flex-1 h-px bg-gray-200" />
           </div>
 
           {!showInput ? (
             <button
+              type="button"
               onClick={() => setShowInput(true)}
               className="w-full flex items-center justify-center gap-2 py-2.5 border border-dashed border-rose-200 rounded-xl text-rose-400 hover:bg-rose-50 text-sm transition-colors"
             >
@@ -88,18 +101,27 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
             <form onSubmit={submit} className="space-y-2">
               <input
                 value={token}
-                onChange={(e) => setToken(e.target.value)}
+                onChange={(e) =>
+                  setToken(
+                    e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
+                  )
+                }
                 placeholder="e.g. ABC123"
                 maxLength={8}
                 className="w-full px-4 py-3 border border-rose-200 rounded-xl text-center text-xl font-black tracking-widest uppercase focus:ring-2 focus:ring-rose-200 outline-none bg-white text-rose-500 placeholder-rose-200"
               />
 
-              {err && <p className="text-red-500 text-xs text-center">{err}</p>}
+              {err && (
+                <p className="text-red-500 text-xs text-center">{err}</p>
+              )}
 
               <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={() => { setShowInput(false); setErr(''); }}
+                  onClick={() => {
+                    setShowInput(false);
+                    setErr('');
+                  }}
                   className="flex-1 py-2 border border-gray-200 rounded-xl text-gray-400 text-sm hover:bg-gray-50"
                 >
                   Back
@@ -110,7 +132,10 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
                   disabled={isLoading}
                   className="flex-1 py-2 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-1"
                 >
-                  {isLoading && <Loader2 size={14} className="animate-spin" />} Enter
+                  {isLoading && (
+                    <Loader2 size={14} className="animate-spin" />
+                  )}
+                  Enter
                 </button>
               </div>
             </form>
@@ -118,14 +143,18 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
         </div>
 
         <p className="text-center text-xs text-gray-400 mt-4 px-4">
-          Sign in to create your timeline or enter a share code
+          Sign in to start your Safarnama or enter a share code to join one.
         </p>
 
         <p className="text-center text-[11px] text-gray-300 mt-2 px-4">
           By continuing, you agree to our{' '}
-          <Link to="/terms" className="hover:text-rose-400 underline">Terms</Link>
-          {' & '}
-          <Link to="/privacy" className="hover:text-rose-400 underline">Privacy Policy</Link>
+          <Link to="/terms" className="hover:text-rose-400 underline">
+            Terms
+          </Link>{' '}
+          &{' '}
+          <Link to="/privacy" className="hover:text-rose-400 underline">
+            Privacy Policy
+          </Link>
         </p>
 
       </div>
