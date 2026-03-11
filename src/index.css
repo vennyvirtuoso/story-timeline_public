@@ -21,10 +21,11 @@ html {
   text-size-adjust: 100%;
 }
 
-/* ✅ Smooth scrolling */
+/* ✅ Smooth scrolling + prevent bounce */
 html, body {
   scroll-behavior: smooth;
-  overscroll-behavior-y: contain;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
@@ -34,24 +35,23 @@ body {
   overflow-x: hidden;
 }
 
-/* ✅ Better tap targets on mobile — removed touch-action:manipulation as it can interfere with scroll */
+/* ✅ Remove tap highlight on all interactive elements */
 button, a, [role="button"] {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ✅ Fix date/time inputs on iOS — they can appear too small */
+/* ✅ Prevent iOS zoom on ALL inputs — must be >= 16px */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* ✅ Fix date/time inputs on iOS */
 input[type="date"],
 input[type="time"] {
   min-height: 40px;
-  font-size: 16px; /* prevents iOS zoom on focus */
 }
 
-/* ✅ Prevent iOS zoom on any input focus */
-input, select, textarea {
-  font-size: 16px;
-}
-
-/* ✅ Safe area for notched iPhones */
+/* ✅ Safe area for iPhone notch/home bar */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
@@ -59,14 +59,20 @@ input, select, textarea {
 }
 
 /* ✅ Use dynamic viewport height — fixes iOS Safari 100vh bug */
-.h-dvh { height: 100dvh; }
+.h-dvh     { height: 100dvh; }
 .min-h-dvh { min-height: 100dvh; }
 
 /* ✅ Custom scrollbar for desktop */
+::-webkit-scrollbar        { width: 4px; height: 4px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: #fda4af; border-radius: 99px; }
+
+/* ✅ Hide scrollbar on sliders */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ✅ Scrollbar for specific elements */
 .scrollbar-thin::-webkit-scrollbar        { width: 4px; }
 .scrollbar-thin::-webkit-scrollbar-track  { background: transparent; }
 .scrollbar-thin::-webkit-scrollbar-thumb  { background: #e5e7eb; border-radius: 99px; }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
-
-/* ✅ Hide scrollbar on image sliders — arrows handle navigation */
-.hide-scrollbar::-webkit-scrollbar { display: none; }

@@ -13,6 +13,8 @@ const styles = `
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #fda4af; border-radius: 99px; }
+  input, select, textarea { font-size: 16px !important; }
+  * { -webkit-tap-highlight-color: transparent; }
 `;
 
 export default styles;
