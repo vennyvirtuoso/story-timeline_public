@@ -25,25 +25,25 @@ export default function About() {
 
         {/* Product Description */}
         <section className="mb-8">
-          <p className="text-sm text-gray-600 leading-relaxed">
-            Safarnama is a Software-as-a-Service (SaaS) web application that
-            allows users to create private digital timelines to preserve
-            meaningful moments with their partners, friends, family, or even
-            their personal journeys.
-          </p>
+  <p className="text-sm text-gray-600 leading-relaxed">
+    Safarnama lets people create private digital
+    timelines of their memories. Instead of moments getting scattered across
+    camera rolls, chat apps, and social media, Safarnama brings them together
+    into a single, story-like timeline.
+  </p>
 
-          <p className="text-sm text-gray-600 leading-relaxed mt-3">
-            Users can upload photos, videos, and notes to organize memories
-            chronologically and build a lasting record of important life
-            experiences.
-          </p>
+  <p className="text-sm text-gray-600 leading-relaxed mt-3">
+    It is designed for every kind of journey — couples ❤️, friends 👯,
+    families 👨‍👩‍👧‍👦, and even solo adventures 🌍. Users can upload photos,
+    videos, and notes to document meaningful moments and watch their story
+    unfold over time.
+  </p>
 
-          <p className="text-sm text-gray-600 leading-relaxed mt-3">
-            Timelines can remain completely private or be shared with trusted
-            collaborators through invitation links, allowing multiple people to
-            contribute to the same shared story.
-          </p>
-        </section>
+  <p className="text-sm text-gray-600 leading-relaxed mt-3">
+    Every relationship and every life journey is a story made of moments.
+    Safarnama simply gives those moments a beautiful place to live.
+  </p>
+</section>
 
         {/* Divider */}
         <div className="border-t border-gray-100 mb-8" />
