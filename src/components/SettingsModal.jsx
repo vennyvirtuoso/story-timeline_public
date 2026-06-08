@@ -25,8 +25,8 @@ const SettingsModal = ({ isOpen, onClose, config, setConfig, onSave, folderId, o
           placeholder="e.g. Our Adventure, The Smiths, Squad Goals"
         />
 
-        <div className="mb-3">
-          <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Type</label>
+        <div className="mb-4">
+          <label className="block text-[10px] font-sub font-bold text-dark/60 mb-2 uppercase tracking-widest">Type</label>
           <div className="grid grid-cols-2 gap-2">
             {MEMBER_TYPES.map(m => {
               const Icon = m.icon;
@@ -34,7 +34,7 @@ const SettingsModal = ({ isOpen, onClose, config, setConfig, onSave, folderId, o
               return (
                 <button key={m.id} type="button"
                   onClick={() => setConfig({ ...config, memberType: m.id, partner2: m.showTwo ? (config.partner2 || '') : '' })}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 text-xs font-semibold transition-all ${active ? 'border-rose-400 bg-rose-50 text-rose-600' : 'border-gray-100 text-gray-500 hover:border-gray-200'}`}>
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-sub font-bold uppercase tracking-wider transition-all duration-200 ${active ? 'border-primary bg-white text-primary shadow-theme-sm' : 'border-border-theme text-dark/60 hover:bg-cream-dark/30'}`}>
                   <Icon size={14}/>{m.label}
                 </button>
               );
@@ -67,29 +67,29 @@ const SettingsModal = ({ isOpen, onClose, config, setConfig, onSave, folderId, o
         <ThemePicker value={config.theme || 'love'} onChange={v => setConfig({ ...config, theme: v })}/>
 
         {!folderId && (
-          <div className="mt-3 p-3 bg-amber-50 rounded-xl text-xs text-amber-700">
+          <div className="mt-4 p-3 bg-cream border border-dashed border-accent/40 rounded-xl text-xs text-accent font-sans">
             ⚡ <button type="button" onClick={onConnectDrive} className="underline font-semibold">Connect Google Drive</button> to enable direct uploads
           </div>
         )}
         <div className="mt-5"><Btn type="submit" className="w-full">Save Changes</Btn></div>
       </form>
-      <div className="border-t border-gray-100 pt-4 mt-2">
-        <p className="text-xs font-semibold text-gray-500 mb-2">Manage Subscription</p>
+      <div className="border-t border-border-theme pt-4 mt-4">
+        <p className="text-[10px] font-sub font-bold text-dark/60 mb-2.5 uppercase tracking-widest">Manage Subscription</p>
         {isPro ? (
-          <div className="flex items-center justify-between bg-green-50 rounded-xl px-3 py-2 border border-green-100">
-            <span className="text-xs text-green-600 font-semibold">✨ Pro Plan Active</span>
+          <div className="flex items-center justify-between bg-white rounded-xl px-4 py-2.5 border border-border-theme shadow-theme-sm">
+            <span className="text-xs font-sub font-bold uppercase tracking-wider text-green-700">✨ Pro Plan Active</span>
             <ManageBillingButton user={user} customerId={customerId} />
           </div>
         ) : (
-          <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2 border border-gray-100">
-            <span className="text-xs text-gray-500">Free Plan</span>
+          <div className="flex items-center justify-between bg-white rounded-xl px-4 py-2.5 border border-border-theme shadow-theme-sm">
+            <span className="text-xs font-sub font-bold uppercase tracking-wider text-dark/50">Free Plan</span>
             {/* ✅ Close settings first, then open pricing */}
             <button
               onClick={() => {
                 onClose();
                 setTimeout(() => onUpgrade?.(), 150);
               }}
-              className="text-xs text-rose-500 font-semibold hover:underline"
+              className="text-xs font-sub font-bold uppercase tracking-wider text-rose-safarnama hover:text-primary transition-colors"
             >
               Upgrade to Pro →
             </button>

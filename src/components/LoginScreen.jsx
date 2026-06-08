@@ -36,7 +36,7 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-rose-50 via-white to-pink-50 flex flex-col items-center p-5 relative overflow-hidden">
+    <div className="min-h-screen w-full bg-cream flex flex-col items-center p-5 relative overflow-hidden">
       <WelcomeModal />
       <FloatingElements theme={defaultTheme} />
 
@@ -45,21 +45,17 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
         
         {/* Branding Header */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-rose-400 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-rose-200 ring-4 ring-white/50">
+          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 shadow-theme-md ring-4 ring-white/50">
             <BookOpen fill="white" size={28} className="text-white" />
           </div>
 
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-wide 
-              text-transparent bg-clip-text 
-              bg-gradient-to-r from-amber-400 via-rose-500 to-pink-500 
-              drop-shadow-[0_2px_10px_rgba(255,105,135,0.35)]
-              mb-2">
+          <h1 className="text-4.5xl sm:text-5xl font-heading font-medium text-primary tracking-normal mb-1">
             Safarnama
           </h1>
-          <p className="text-gray-400 text-sm italic font-medium">Your memories, your story</p>
+          <p className="font-cursive text-2xl text-accent font-bold mt-1">Your memories, your story</p>
         </div>
 
-        <div className="bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white p-7 space-y-4 w-full">
+        <div className="bg-white rounded-3xl shadow-theme-lg border border-border-theme p-7 space-y-5 w-full">
           
           {!showInput ? (
             <>
@@ -68,7 +64,7 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
                 type="button"
                 onClick={onGoogleLogin}
                 disabled={isLoading}
-                className="w-full inline-flex items-center justify-center gap-3 py-3.5 px-4 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm rounded-2xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-50"
+                className="w-full inline-flex items-center justify-center gap-3 py-3.5 px-4 bg-white border border-border-theme text-dark/80 hover:bg-cream-dark/30 shadow-theme-sm rounded-xl text-xs font-sub font-bold uppercase tracking-wider transition-all duration-150 active:scale-95 disabled:opacity-50"
               >
                 {isLoading ? (
                   <Loader2 className="animate-spin" size={18} />
@@ -84,9 +80,9 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
               </button>
 
               <div className="flex items-center gap-3 my-2">
-                <div className="flex-1 h-px bg-gray-100" />
-                <span className="text-[10px] uppercase tracking-[0.2em] text-gray-300 font-bold">Visiting?</span>
-                <div className="flex-1 h-px bg-gray-100" />
+                <div className="flex-1 h-px bg-border-theme opacity-50" />
+                <span className="text-[9px] font-sub uppercase tracking-[0.2em] text-dark/30 font-bold">Visiting?</span>
+                <div className="flex-1 h-px bg-border-theme opacity-50" />
               </div>
 
               {/* The Viewer Pass Button */}
@@ -94,27 +90,27 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
                 type="button"
                 onClick={() => setShowInput(true)}
                 className="w-full flex items-center justify-between py-4 px-5 
-                           bg-amber-50/40 border-2 border-dashed border-amber-200 rounded-2xl 
-                           text-amber-700 hover:bg-amber-50 hover:border-amber-300 transition-all group"
+                           bg-cream border border-dashed border-accent/40 rounded-xl 
+                           text-accent hover:bg-cream-dark hover:border-accent transition-all duration-150 group"
               >
                 <div className="flex items-center gap-3">
-                  <Ticket size={20} className="text-amber-500 group-hover:rotate-12 transition-transform" />
-                  <div className="text-left">
-                    <p className="text-sm font-bold">View a Timeline</p>
-                    <p className="text-[10px] text-amber-600/70 font-medium">Enter your access pass</p>
+                  <Ticket size={20} className="text-accent group-hover:rotate-12 transition-transform" />
+                  <div className="text-left font-sub">
+                    <p className="text-xs font-bold uppercase tracking-wider">View a Timeline</p>
+                    <p className="text-[9px] text-accent/80 font-medium uppercase tracking-wide mt-0.5">Enter access pass</p>
                   </div>
                 </div>
-                <ChevronRight size={16} className="text-amber-400 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight size={16} className="text-accent/60 group-hover:translate-x-1 transition-transform" />
               </button>
             </>
           ) : (
             /* The "Viewer" Form */
             <form onSubmit={submit} className="space-y-4 animate-in fade-in zoom-in duration-300">
-              <div className="text-center space-y-1">
-                <h3 className="text-amber-600 font-bold text-sm flex items-center justify-center gap-2">
-                  <Sparkles size={14} className="text-amber-400" /> Unlock Private Gallery
+              <div className="text-center space-y-1 font-sub">
+                <h3 className="text-accent font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2">
+                  <Sparkles size={14} className="text-accent" /> Unlock Private Gallery
                 </h3>
-                <p className="text-gray-400 text-[11px]">You've been invited to view a story.</p>
+                <p className="text-dark/50 text-[10px] uppercase tracking-wide">You've been invited to view a story.</p>
               </div>
 
               <div className="relative">
@@ -128,10 +124,10 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
                   }
                   placeholder="TOKEN"
                   maxLength={8}
-                  className="w-full px-4 py-4 border-2 border-amber-100 rounded-2xl 
-                             text-center text-2xl font-black tracking-[0.4em] uppercase 
-                             focus:border-amber-400 focus:ring-4 focus:ring-amber-50 outline-none 
-                             bg-white text-amber-700 placeholder-amber-100 transition-all shadow-inner"
+                  className="w-full px-4 py-4 border border-border-theme rounded-xl 
+                             text-center text-xl font-semibold tracking-[0.3em] uppercase 
+                             focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none 
+                             bg-cream text-dark placeholder-dark/20 transition-all font-sans"
                 />
               </div>
 
@@ -139,14 +135,11 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
                 <p className="text-red-500 text-xs text-center font-medium">{err}</p>
               )}
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2.5">
                 <button
                   type="submit"
                   disabled={isLoading || !token}
-                  className="w-full py-3.5 bg-gradient-to-r from-amber-400 to-amber-600 
-                             text-white rounded-xl text-sm font-bold shadow-lg 
-                             shadow-amber-100 hover:shadow-amber-200 active:scale-95 
-                             transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="w-full py-3.5 bg-primary text-cream rounded-xl text-xs font-sub font-bold uppercase tracking-wider hover:bg-primary-hover shadow-theme-sm transition-all duration-150 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <Loader2 size={18} className="animate-spin" />
@@ -161,7 +154,7 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
                     setShowInput(false);
                     setErr('');
                   }}
-                  className="flex items-center justify-center gap-1 py-2 text-gray-400 text-xs hover:text-amber-600 transition-colors"
+                  className="flex items-center justify-center gap-1 py-2 text-dark/40 text-[11px] font-sub uppercase tracking-wider hover:text-primary transition-colors"
                 >
                   <ArrowLeft size={12} /> Sign in as owner
                 </button>
@@ -171,19 +164,19 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
         </div>
 
         {/* Supporting Text */}
-        <p className="text-center text-[11px] text-gray-400 mt-6 px-6 leading-relaxed">
+        <p className="text-center text-[10px] font-sub uppercase tracking-wider text-dark/40 mt-6 px-6 leading-relaxed">
           Safarnama is a private space for your most cherished memories. 
           <br />Secure. Private. Forever.
         </p>
 
         {/* Legal links */}
-        <p className="text-center text-[10px] text-gray-300 mt-4">
+        <p className="text-center text-[9px] font-sub uppercase tracking-wider text-dark/30 mt-4">
           By continuing, you agree to our{' '}
-          <Link to="/terms" className="hover:text-rose-400 underline decoration-rose-200">
+          <Link to="/terms" className="hover:text-rose-safarnama underline decoration-border-theme">
             Terms
           </Link>{' '}
           &{' '}
-          <Link to="/privacy" className="hover:text-rose-400 underline decoration-rose-200">
+          <Link to="/privacy" className="hover:text-rose-safarnama underline decoration-border-theme">
             Privacy
           </Link>
         </p>

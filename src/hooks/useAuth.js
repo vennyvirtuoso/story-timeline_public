@@ -3,6 +3,7 @@ import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase/config';
 import { getBackendUrl } from '../gis';
+import { Capacitor } from '@capacitor/core';
 
 // ✅ localStorage helper — survives refresh, works across tabs
 const ls = {
@@ -155,6 +156,29 @@ export function useAuth() {
     return () => unsub();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ✅ Handle Firebase redirect sign-in result on mobile/native platform
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      import('firebase/auth').then(({ getRedirectResult }) => {
+        getRedirectResult(auth)
+          .then(async (result) => {
+            if (result?.user) {
+              setUser(result.user);
+              await loadUserData(result.user.uid);
+              const pending = sessionStorage.getItem('pendingCollabToken');
+              if (pending) {
+                sessionStorage.removeItem('pendingCollabToken');
+                await handleCollabTokenLogin(pending);
+              }
+            }
+          })
+          .catch((e) => {
+            console.error('getRedirectResult error:', e);
+          });
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     const params      = new URLSearchParams(window.location.search);
     const viewToken   = params.get('view') || params.get('token');
@@ -180,13 +204,18 @@ export function useAuth() {
       // ✅ Clear any viewer/collab session before logging in
       ls.remove('viewerSession');
       ls.remove('collabSession');
-      const r = await signInWithPopup(auth, googleProvider);
-      setUser(r.user);
-      await loadUserData(r.user.uid);
-      const pending = sessionStorage.getItem('pendingCollabToken');
-      if (pending) {
-        sessionStorage.removeItem('pendingCollabToken');
-        await handleCollabTokenLogin(pending);
+      if (Capacitor.isNativePlatform()) {
+        const { signInWithRedirect } = await import('firebase/auth');
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        const r = await signInWithPopup(auth, googleProvider);
+        setUser(r.user);
+        await loadUserData(r.user.uid);
+        const pending = sessionStorage.getItem('pendingCollabToken');
+        if (pending) {
+          sessionStorage.removeItem('pendingCollabToken');
+          await handleCollabTokenLogin(pending);
+        }
       }
     } catch (e) { alert('Login failed: ' + e.message); }
     finally { setLoginLoading(false); }

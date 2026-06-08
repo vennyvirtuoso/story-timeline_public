@@ -26,48 +26,48 @@ const WelcomeModal = ({ theme }) => {
       {/* Modal */}
       <div
         onClick={e => e.stopPropagation()}
-        className="relative z-10 w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden"
+        className="relative z-10 w-full max-w-sm bg-white rounded-3xl border border-border-theme shadow-theme-lg overflow-hidden"
         style={{ animation: 'fadeSlideUp 0.4s ease' }}
       >
         {/* Top gradient bar */}
-        <div className="h-1.5 w-full bg-gradient-to-r from-amber-400 via-rose-400 to-pink-500" />
+        <div className="h-1.5 w-full bg-gradient-to-r from-primary to-accent" />
 
         {/* Close button */}
         <button
           onClick={handleClose}
-          className="absolute top-3 right-3 p-1.5 rounded-full text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-colors"
+          className="absolute top-3.5 right-3.5 p-1.5 rounded-full text-dark/30 hover:text-dark/60 hover:bg-cream-dark/50 transition-colors"
         >
           <X size={14} />
         </button>
 
-        <div className="px-6 pt-6 pb-7">
+        <div className="px-6 pt-6 pb-7 bg-cream/20">
           {/* Icon */}
           <div className="flex justify-center mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-200">
-              <Heart size={22} fill="white" className="text-white" />
+            <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-theme-sm">
+              <Heart size={20} fill="white" className="text-white" />
             </div>
           </div>
 
           {/* Content */}
-          <div className="text-center space-y-3">
-            <p className="text-[13px] text-gray-400 italic leading-relaxed">
+          <div className="text-center space-y-4">
+            <p className="font-cursive text-2.5xl text-accent font-bold leading-normal">
               Some gifts are forgotten.<br />
               Some gifts become memories.
             </p>
 
-            <p className="text-sm text-gray-700 leading-relaxed">
-              <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-500">Safarnama</span> lets you turn the moments you've lived together into a beautiful timeline — something you can gift to someone who truly matters.
+            <p className="text-sm text-dark/70 leading-relaxed font-sans">
+              <span className="font-heading font-semibold text-primary text-base">Safarnama</span> lets you turn the moments you've lived together into a beautiful timeline — something you can gift to someone who truly matters.
             </p>
 
-            <p className="text-sm text-gray-500 leading-relaxed">
+            <p className="text-xs text-dark/50 leading-relaxed font-sans">
               Trips, laughs, inside jokes, and little moments that shaped your story — all in one place.
             </p>
 
-            <div className="border-t border-gray-100 pt-3">
-              <p className="text-sm text-gray-700 leading-relaxed font-medium">
+            <div className="border-t border-border-theme/60 pt-4">
+              <p className="text-sm font-heading font-semibold text-primary leading-relaxed">
                 And the most beautiful part?
               </p>
-              <p className="text-sm text-gray-500 leading-relaxed mt-1">
+              <p className="text-xs text-dark/50 leading-relaxed mt-1 font-sans">
                 They can add to it too. With just a link, they can open the timeline and relive every memory. Up to 20 people can collaborate, making it a gift filled with shared moments.
               </p>
             </div>
@@ -76,11 +76,10 @@ const WelcomeModal = ({ theme }) => {
           {/* CTA */}
           <button
             onClick={handleClose}
-            className="mt-5 w-full py-2.5 bg-gradient-to-r from-rose-400 to-pink-500 text-white rounded-2xl text-sm font-semibold shadow-md shadow-rose-200 hover:opacity-90 active:scale-95 transition-all"
+            className="mt-6 w-full py-3 bg-primary text-cream rounded-xl text-xs font-sub font-bold uppercase tracking-wider hover:bg-primary-hover shadow-theme-sm transition-all active:scale-95 duration-150"
           >
             Start your story ✨
           </button>
-
 
         </div>
       </div>

@@ -1,55 +1,70 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { X } from 'lucide-react';
-import styles from '../utils/styles';
-
-// FloatingHearts removed — use FloatingElements from ./FloatingElements instead
 
 export const Btn = ({ children, onClick, variant='primary', className='', type='button', disabled=false }) => {
-  const base = "inline-flex items-center justify-center gap-1.5 font-medium rounded-xl transition-all duration-150 active:scale-95 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
+  const base = "inline-flex items-center justify-center gap-1.5 font-sub text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-150 active:scale-95 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed";
   const v = {
-    primary: "bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 text-white shadow-md shadow-rose-200 px-4 py-2.5",
-    secondary: "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50 shadow-sm px-4 py-2.5",
-    danger: "bg-red-50 text-red-600 hover:bg-red-100 px-4 py-2.5",
-    ghost: "text-gray-600 hover:bg-white/60 hover:text-rose-600 px-3 py-2",
-    icon: "p-2 rounded-full hover:bg-white/80 text-gray-500",
-    google: "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow px-4 py-2.5",
+    primary: "bg-primary hover:bg-primary-hover text-cream shadow-theme-sm px-5 py-3 transform transition hover:-translate-y-0.5",
+    secondary: "bg-white text-dark border border-border-theme hover:bg-cream-dark/50 shadow-theme-sm px-5 py-3",
+    danger: "bg-red-50 text-red-600 hover:bg-red-100 px-5 py-3",
+    ghost: "text-dark/70 hover:bg-primary/10 hover:text-primary px-4 py-2.5",
+    icon: "p-2 rounded-full hover:bg-cream-dark/50 text-dark/60 hover:text-dark",
+    google: "bg-white border border-border-theme text-dark/80 hover:bg-cream-dark/30 shadow-theme-sm px-5 py-3",
   };
   return <button type={type} onClick={onClick} disabled={disabled} className={`${base} ${v[variant]} ${className}`}>{children}</button>;
 };
 
 export const Field = ({ label, value, onChange, placeholder, type='text', required=false, icon:Icon }) => {
-    const isDateOrTime = type === 'date' || type === 'time';
-    return (
-      <div className="mb-3">
-        <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">{label}{required&&<span className="text-rose-400 ml-0.5">*</span>}</label>
-        <div className="relative">
-          {Icon && !isDateOrTime && <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><Icon size={15}/></div>}
-          <input type={type} value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} required={required}
-            className={`w-full py-2.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 text-sm text-gray-700 placeholder-gray-400 bg-white transition-all ${Icon && !isDateOrTime ?'pl-9 pr-3':'px-3'}`}/>
-        </div>
+  const isDateOrTime = type === 'date' || type === 'time';
+  return (
+    <div className="mb-4">
+      <label className="block text-[10px] font-sub font-bold text-dark/60 mb-1.5 uppercase tracking-widest">
+        {label}{required && <span className="text-rose-safarnama ml-0.5">*</span>}
+      </label>
+      <div className="relative">
+        {Icon && !isDateOrTime && (
+          <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark/40 pointer-events-none">
+            <Icon size={15}/>
+          </div>
+        )}
+        <input 
+          type={type} 
+          value={value} 
+          onChange={e=>onChange(e.target.value)} 
+          placeholder={placeholder} 
+          required={required}
+          className={`w-full py-3 border border-border-theme rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-dark placeholder-dark/30 bg-white/70 focus:bg-white transition-all ${Icon && !isDateOrTime ? 'pl-10 pr-4' : 'px-4'}`}
+        />
       </div>
-    );
-  };
+    </div>
+  );
+};
 
 export const TA = ({ label, value, onChange, placeholder }) => (
-  <div className="mb-3">
-    <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">{label}</label>
-    <textarea value={value} onChange={e=>onChange(e.target.value)} placeholder={placeholder} rows={3}
-      className="w-full px-3 py-2.5 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-400 text-sm text-gray-700 placeholder-gray-400 bg-white resize-none transition-all"/>
+  <div className="mb-4">
+    <label className="block text-[10px] font-sub font-bold text-dark/60 mb-1.5 uppercase tracking-widest">{label}</label>
+    <textarea 
+      value={value} 
+      onChange={e=>onChange(e.target.value)} 
+      placeholder={placeholder} 
+      rows={3}
+      className="w-full px-4 py-3 border border-border-theme rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-dark placeholder-dark/30 bg-white/70 focus:bg-white resize-none transition-all"
+    />
   </div>
 );
 
 export const Modal = ({ isOpen, onClose, title, children, theme }) => {
   if (!isOpen) return null;
-  const headerGradient = theme ? `from-${theme.id === 'monochrome' ? 'gray' : theme.id === 'love' ? 'rose' : theme.id === 'ocean' ? 'sky' : theme.id === 'forest' ? 'emerald' : theme.id === 'sunset' ? 'orange' : 'violet'}-50 to-${theme.id === 'love' ? 'pink' : theme.id === 'ocean' ? 'cyan' : theme.id === 'forest' ? 'green' : theme.id === 'sunset' ? 'amber' : theme.id === 'galaxy' ? 'purple' : 'slate'}-50` : 'from-rose-50 to-pink-50';
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm animate-fadeIn" onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[88vh]">
-        <div className={`px-5 py-4 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r ${headerGradient} rounded-t-3xl sm:rounded-t-3xl shrink-0`}>
-          <h3 className="text-base font-bold text-gray-800">{title}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-white rounded-full transition-colors"><X size={18}/></button>
+      <div className="bg-cream w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-theme-lg flex flex-col max-h-[92vh] sm:max-h-[88vh] border border-border-theme">
+        <div className="px-6 py-4.5 border-b border-border-theme flex items-center justify-between bg-cream-dark/40 rounded-t-3xl sm:rounded-t-3xl shrink-0">
+          <h3 className="text-base font-heading font-semibold text-primary">{title}</h3>
+          <button onClick={onClose} className="text-dark/40 hover:text-dark/80 p-1 hover:bg-cream-dark/60 rounded-full transition-colors">
+            <X size={18}/>
+          </button>
         </div>
-        <div className="overflow-y-auto flex-1 p-5">{children}</div>
+        <div className="overflow-y-auto flex-1 p-6 bg-cream/20">{children}</div>
       </div>
     </div>
   );

@@ -297,38 +297,37 @@ export const EventCard = ({ event, onDelete, onEdit, theme }) => {
   const videos = Array.isArray(event.videoUrls)?event.videoUrls:[];
 
   return (
-    <div className="relative pl-10 md:pl-14 group mb-8 last:mb-0">
-      <div className={`absolute left-3 md:left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b ${t.timeline||'from-rose-200 to-pink-100'}`}/>
-      <div className={`absolute left-[7px] md:left-[15px] top-5 w-3 h-3 rounded-full ${t.dot||'bg-rose-400'} border-2 border-white shadow z-10`}/>
+    <div className="relative pl-10 md:pl-14 group mb-8 last:mb-0 animate-fadeIn">
+      <div className="absolute left-[12px] md:left-[20px] top-0 bottom-0 w-px border-l border-dashed border-border-theme opacity-60"/>
+      <div className={`absolute left-[7px] md:left-[15px] top-5 w-2.5 h-2.5 rounded-full ${t.dot||'bg-rose-safarnama'} border-2 border-cream shadow-theme-sm z-10`}/>
 
-      <div className="bg-white/80 backdrop-blur-sm p-4 rounded-2xl shadow-sm border border-white/60 hover:shadow-md transition-all">
-        <div className="flex items-center justify-between mb-2 gap-2">
+      <div className="bg-white/95 p-5 rounded-2xl shadow-theme-sm border border-border-theme hover:shadow-theme-md transition-all duration-200">
+        <div className="flex items-center justify-between mb-3 gap-2">
           <div className="flex items-center gap-2 flex-wrap">
             {/* ✅ Type badge with icon + label */}
-            <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${tc.color}`}>
+            <span className={`inline-flex items-center gap-1 text-[9px] font-sub font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${tc.color}`}>
               {tc.icon} {tc.label}
             </span>
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-full border ${t.dateBadge||'text-rose-500 bg-rose-50 border-rose-100'}`}>
+            <span className={`text-[10px] font-sub font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${t.dateBadge||'text-accent bg-cream border-border-theme'}`}>
               {d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})}
             </span>
             {displayTime && (
-              <span className="text-[10px] text-gray-400 flex items-center gap-1">
+              <span className="text-[9px] font-sub font-medium uppercase tracking-wider text-dark/40 flex items-center gap-1">
                 <Clock size={9}/>
                 {displayTime}
-                {!event.time && <span className="text-gray-300"></span>}
               </span>
             )}
           </div>
           {(onEdit || onDelete) && (
             <div className="flex gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shrink-0">
-              {onEdit   && <button onClick={()=>onEdit(event)}      className="text-gray-400 hover:text-blue-500 p-1.5 hover:bg-blue-50 rounded-full"><Edit2  size={13}/></button>}
-              {onDelete && <button onClick={()=>onDelete(event.id)} className="text-gray-400 hover:text-red-500  p-1.5 hover:bg-red-50  rounded-full"><Trash2 size={13}/></button>}
+              {onEdit   && <button onClick={()=>onEdit(event)}      className="text-dark/40 hover:text-blue-500 p-1.5 hover:bg-blue-50 rounded-full transition-colors"><Edit2  size={13}/></button>}
+              {onDelete && <button onClick={()=>onDelete(event.id)} className="text-dark/40 hover:text-red-500  p-1.5 hover:bg-red-50  rounded-full transition-colors"><Trash2 size={13}/></button>}
             </div>
           )}
         </div>
 
-        <h4 className="font-bold text-gray-800 text-sm sm:text-base leading-tight mb-1">{event.title}</h4>
-        {event.description && <p className="text-gray-500 text-sm leading-relaxed whitespace-pre-line">{event.description}</p>}
+        <h4 className="font-heading font-semibold text-primary text-base sm:text-lg leading-tight mb-2">{event.title}</h4>
+        {event.description && <p className="text-dark/70 text-sm leading-relaxed whitespace-pre-line font-sans mb-1">{event.description}</p>}
         <ImageSlider images={images} title={event.title}/>
         <VideoGallery videos={videos}/>
       </div>

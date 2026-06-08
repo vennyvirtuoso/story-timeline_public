@@ -17,6 +17,7 @@ import MemoryModal          from './components/MemoryModal';
 import ManageBillingButton from './components/ManageBillingButton';
 import SettingsModal        from './components/SettingsModal';
 import LoginScreen          from './components/LoginScreen';
+import HeaderLogo             from './components/HeaderLogo';
 import ShareModal           from './components/ShareModal';
 import DriveSetupScreen     from './components/DriveSetupScreen';
 import FloatingElements     from './components/FloatingElements';
@@ -30,8 +31,10 @@ import GalleryTab           from './components/GalleryTab';
 import { EventCard }        from './components/MediaComponents';
 import { getTheme }         from './utils/themes';
 import { Link }             from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 
 export default function App() {
+  <HeaderLogo />
   const {
     user, ownerId, timelineId, role,
     isSharedAccess, authLoading, loginLoading,
@@ -80,6 +83,48 @@ export default function App() {
     collab.loadFromFirestore(user.uid);
     viewer.loadFromFirestore(user.uid);
   }, [user?.uid]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleDriveSetupCompleteRef = useRef(handleDriveSetupComplete);
+  useEffect(() => {
+    handleDriveSetupCompleteRef.current = handleDriveSetupComplete;
+  });
+
+  // ✅ Handle Deep Linking for Google Drive Setup (safarnama://drive-connected)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let appListenerPromise = null;
+    const initDeepLink = async () => {
+      const { App: CapApp } = await import('@capacitor/app');
+      const { Browser } = await import('@capacitor/browser');
+
+      const listener = await CapApp.addListener('appUrlOpen', async (data) => {
+        console.log('[App] Received deep link:', data.url);
+        try {
+          const parsedUrl = new URL(data.url);
+          if (parsedUrl.host === 'drive-connected' || parsedUrl.pathname.includes('drive-connected')) {
+            const folderId = parsedUrl.searchParams.get('folderId');
+            if (folderId) {
+              console.log('[App] Deep link matched drive-connected, folderId:', folderId);
+              await handleDriveSetupCompleteRef.current(folderId, null);
+            }
+            await Browser.close();
+          }
+        } catch (e) {
+          console.error('[App] Deep link parsing error:', e);
+        }
+      });
+      return listener;
+    };
+
+    appListenerPromise = initDeepLink();
+
+    return () => {
+      if (appListenerPromise) {
+        appListenerPromise.then(l => l?.remove());
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSaveConfig = async (e) => {
     e.preventDefault();
@@ -154,7 +199,7 @@ export default function App() {
   );
 
   return (
-    <div className={`h-screen w-full bg-gradient-to-br ${theme.gradient} text-gray-800 font-sans relative overflow-hidden flex flex-col`}>
+    <div data-theme={theme.id} className="h-dvh w-full bg-cream text-dark font-sans relative overflow-hidden flex flex-col transition-colors duration-300">
       <FloatingElements theme={theme}/>
 
       {/* Sticky top — banners + header */}
@@ -185,7 +230,7 @@ export default function App() {
                 <div>
                   {!isPro && isOwner && <MemoryLimitBar count={memories.length} onUpgrade={() => setIsPricingOpen(true)}/>}
                   <div className="flex justify-center mb-10">
-                    <span className={`${theme.badge} px-5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5`}>
+                    <span className={`${theme.badge} px-5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 font-sub`}>
                       <Heart size={12} fill="currentColor"/> To be continued...
                     </span>
                   </div>
@@ -203,10 +248,10 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="hidden sm:block relative z-10 shrink-0 text-center py-2 text-[11px] text-gray-400 space-x-2 px-4 border-t border-white/20">
+      <footer className="hidden sm:block relative z-10 shrink-0 text-center py-2 text-[11px] text-gray-400 space-x-2 px-4 border-t border-border-theme font-sub uppercase tracking-wider">
         <span>© 2026 Safarnama</span>
         {[['About','/about'],['Privacy','/privacy'],['Terms','/terms'],['Google API','/google-api']].map(([l,h]) => (
-          <React.Fragment key={h}><span>·</span><Link to={h} className="hover:text-rose-400 transition-colors">{l}</Link></React.Fragment>
+          <React.Fragment key={h}><span>·</span><Link to={h} className="hover:text-rose-safarnama transition-colors">{l}</Link></React.Fragment>
         ))}
       </footer>
 
@@ -223,7 +268,7 @@ export default function App() {
 
       {canEdit && (
         <button onClick={handleOpenAdd}
-          className={`fixed bottom-6 right-5 sm:bottom-8 sm:right-8 bg-gradient-to-r ${theme.fab} text-white p-3.5 sm:p-4 rounded-full shadow-xl shadow-rose-300/50 transition-transform hover:scale-110 active:scale-95 z-40`}>
+          className={`fixed bottom-6 right-5 sm:bottom-8 sm:right-8 ${theme.fab} text-white p-3.5 sm:p-4 rounded-full shadow-theme-md transition-transform hover:scale-110 active:scale-95 z-40`}>
           <Plus size={24} strokeWidth={2.5}/>
         </button>
       )}

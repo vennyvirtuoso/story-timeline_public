@@ -1,0 +1,8 @@
+{
+  "appId": "com.safarnama.app",
+  "appName": "Safarnama",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}
