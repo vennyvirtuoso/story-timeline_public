@@ -89,14 +89,6 @@ const AppHeader = ({ config, duration, activeTab, setActiveTab, galleryCount, is
               </button>
             ))}
           </div>
-
-          <div className="flex sm:hidden items-center gap-2 text-[10px] font-sub uppercase tracking-wider text-dark/40">
-            <Link to="/about"   className="hover:text-rose-safarnama transition-colors">About</Link>
-            <span>·</span>
-            <Link to="/privacy" className="hover:text-rose-safarnama transition-colors">Privacy</Link>
-            <span>·</span>
-            <Link to="/terms"   className="hover:text-rose-safarnama transition-colors">Terms</Link>
-          </div>
         </div>
 
       </div>

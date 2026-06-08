@@ -14,14 +14,14 @@ const swatchGradients = {
 const ThemePicker = ({ value, onChange }) => (
   <div className="mb-4">
     <label className="block text-[10px] font-sub font-bold text-dark/60 mb-2 uppercase tracking-widest">Theme</label>
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
       {THEMES.map(t => (
         <button key={t.id} type="button" onClick={() => onChange(t.id)}
-          className={`relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all duration-200 ${value === t.id ? 'border-primary bg-white shadow-theme-md scale-102' : 'border-border-theme hover:bg-cream-dark/30'}`}>
-          <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${swatchGradients[t.id]} shadow-theme-sm`}/>
-          <span className="text-[10px] font-sub font-bold text-dark/70 uppercase tracking-wider leading-tight text-center mt-1">{t.name}</span>
+          className={`relative flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl border transition-all duration-200 ${value === t.id ? 'border-primary bg-white shadow-theme-md scale-102' : 'border-border-theme hover:bg-cream-dark/30'}`}>
+          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br ${swatchGradients[t.id]} shadow-theme-sm`}/>
+          <span className="text-[9px] sm:text-[10px] font-sub font-bold text-dark/70 uppercase tracking-wider leading-tight text-center mt-0.5 sm:mt-1 truncate w-full">{t.name}</span>
           {value === t.id && (
-            <div className="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-primary rounded-full flex items-center justify-center">
+            <div className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-3.5 h-3.5 bg-primary rounded-full flex items-center justify-center">
               <svg width="7" height="7" viewBox="0 0 8 8" fill="none"><path d="M1 4l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
           )}

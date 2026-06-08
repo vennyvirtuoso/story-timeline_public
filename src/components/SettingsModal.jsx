@@ -34,8 +34,9 @@ const SettingsModal = ({ isOpen, onClose, config, setConfig, onSave, folderId, o
               return (
                 <button key={m.id} type="button"
                   onClick={() => setConfig({ ...config, memberType: m.id, partner2: m.showTwo ? (config.partner2 || '') : '' })}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-xs font-sub font-bold uppercase tracking-wider transition-all duration-200 ${active ? 'border-primary bg-white text-primary shadow-theme-sm' : 'border-border-theme text-dark/60 hover:bg-cream-dark/30'}`}>
-                  <Icon size={14}/>{m.label}
+                  className={`flex items-center justify-center gap-1.5 px-2 py-2 sm:px-3 sm:py-2.5 rounded-xl border text-[10px] sm:text-xs font-sub font-bold uppercase tracking-wider transition-all duration-200 ${active ? 'border-primary bg-white text-primary shadow-theme-sm' : 'border-border-theme text-dark/60 hover:bg-cream-dark/30'}`}>
+                  <Icon size={12} className="shrink-0 sm:w-3.5 sm:h-3.5"/>
+                  <span className="truncate">{m.label}</span>
                 </button>
               );
             })}

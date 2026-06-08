@@ -41,7 +41,7 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
       <FloatingElements theme={defaultTheme} />
 
       {/* Main Content */}
-      <div className="relative z-10 w-full max-w-xs flex flex-col items-center justify-center flex-grow">
+      <div className="relative z-10 w-full max-w-[350px] px-4 flex flex-col items-center justify-center flex-grow">
         
         {/* Branding Header */}
         <div className="text-center mb-8">

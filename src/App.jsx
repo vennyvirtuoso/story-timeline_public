@@ -248,10 +248,13 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="hidden sm:block relative z-10 shrink-0 text-center py-2 text-[11px] text-gray-400 space-x-2 px-4 border-t border-border-theme font-sub uppercase tracking-wider">
+      <footer className="relative z-10 shrink-0 text-center py-3 text-[10px] text-gray-400 px-4 border-t border-border-theme font-sub uppercase tracking-wider flex flex-wrap justify-center items-center gap-x-2 gap-y-1">
         <span>© 2026 Safarnama</span>
         {[['About','/about'],['Privacy','/privacy'],['Terms','/terms'],['Google API','/google-api']].map(([l,h]) => (
-          <React.Fragment key={h}><span>·</span><Link to={h} className="hover:text-rose-safarnama transition-colors">{l}</Link></React.Fragment>
+          <React.Fragment key={h}>
+            <span className="text-gray-300">•</span>
+            <Link to={h} className="hover:text-rose-safarnama transition-colors">{l}</Link>
+          </React.Fragment>
         ))}
       </footer>
 

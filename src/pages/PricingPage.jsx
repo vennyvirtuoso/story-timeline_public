@@ -22,7 +22,7 @@ export default function Pricing({ theme }) {
 
   return (
     <div className="min-h-screen bg-cream px-4 py-16 text-dark font-sans">
-      <div className="max-w-5xl mx-auto bg-white/60 p-8 sm:p-12 rounded-3xl border border-border-theme shadow-theme-md">
+      <div className="max-w-5xl mx-auto bg-white/60 p-6 sm:p-12 rounded-3xl border border-border-theme shadow-theme-md">
         
         {/* Back Link */}
         <Link to="/" className="inline-flex items-center gap-2 text-primary font-sub font-bold uppercase tracking-wider text-xs mb-8 hover:text-primary-hover transition-colors">
