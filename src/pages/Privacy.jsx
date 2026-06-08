@@ -5,19 +5,23 @@ import { BookOpen } from 'lucide-react';
 export default function Privacy() {
   return (
     <div className="min-h-screen bg-cream px-4 py-12 text-dark font-sans">
-      <div className="max-w-[700px] mx-auto bg-white/60 p-8 sm:p-12 rounded-3xl border border-border-theme shadow-theme-md">
+      <div className="max-w-[700px] mx-auto bg-white/60 p-5 sm:p-12 rounded-3xl border border-border-theme shadow-theme-md">
         
         <Link to="/" className="inline-flex items-center gap-2 text-primary font-sub font-bold uppercase tracking-wider text-xs mb-8 hover:text-primary-hover transition-colors">
           <BookOpen size={14}/> Safarnama
         </Link>
         
-        <h1 className="text-3xl font-heading font-semibold text-primary mb-2">Privacy Policy</h1>
-        <p className="text-dark/40 text-[10px] font-sub uppercase tracking-wider mb-8">
-          Last Updated: January 2026 &nbsp;·&nbsp; Contact:{' '}
-          <a href="mailto:help.safarnama@gmail.com" className="underline hover:text-rose-safarnama font-semibold">
-            help.safarnama@gmail.com
-          </a>
-        </p>
+        <h1 className="text-2xl sm:text-3xl font-heading font-semibold text-primary mb-2">Privacy Policy</h1>
+        <div className="text-dark/40 text-[10px] font-sub uppercase tracking-wider mb-8 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span>Last Updated: January 2026</span>
+          <span className="text-dark/20">•</span>
+          <span>
+            Contact:{' '}
+            <a href="mailto:help.safarnama@gmail.com" className="underline hover:text-rose-safarnama font-semibold break-all">
+              help.safarnama@gmail.com
+            </a>
+          </span>
+        </div>
 
         <div className="text-dark/70 leading-relaxed space-y-6">
           <section>
@@ -85,7 +89,7 @@ export default function Privacy() {
           </section>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-border-theme flex flex-wrap gap-4 text-[10px] font-sub font-bold uppercase tracking-wider text-dark/40">
+        <div className="mt-12 pt-6 border-t border-border-theme flex flex-wrap gap-x-4 gap-y-2 text-[10px] font-sub font-bold uppercase tracking-wider text-dark/40">
           <Link to="/terms"      className="hover:text-primary">Terms</Link>
           <Link to="/refund"     className="hover:text-primary">Refund Policy</Link>
           <Link to="/pricing"    className="hover:text-primary">Pricing</Link>

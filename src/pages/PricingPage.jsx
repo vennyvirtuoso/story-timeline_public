@@ -148,7 +148,7 @@ export default function Pricing({ theme }) {
             Safarnama is a digital service. No physical goods are shipped.
           </p>
 
-          <div className="flex flex-wrap justify-center gap-4 text-[10px] font-bold uppercase tracking-wider">
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-[10px] font-bold uppercase tracking-wider">
             <Link to="/privacy" className="hover:text-primary">
               Privacy
             </Link>

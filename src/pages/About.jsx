@@ -5,7 +5,7 @@ import { BookOpen, Shield, Lock, Users, Heart } from 'lucide-react';
 export default function About() {
   return (
     <div className="min-h-screen bg-cream px-4 py-12 text-dark font-sans">
-      <div className="max-w-[680px] mx-auto bg-white/60 p-8 sm:p-12 rounded-3xl border border-border-theme shadow-theme-md">
+      <div className="max-w-[680px] mx-auto bg-white/60 p-5 sm:p-12 rounded-3xl border border-border-theme shadow-theme-md">
 
         {/* Back link */}
         <Link
@@ -16,10 +16,10 @@ export default function About() {
         </Link>
 
         {/* Heading */}
-        <h1 className="text-3xl font-heading font-semibold text-primary mb-1">
+        <h1 className="text-2xl sm:text-3xl font-heading font-semibold text-primary mb-1">
           About Safarnama
         </h1>
-        <h5 className="font-cursive text-2xl text-accent mb-8">
+        <h5 className="font-cursive text-xl sm:text-2xl text-accent mb-8">
           A private space for the journeys that matter most
         </h5>
 
@@ -184,7 +184,7 @@ export default function About() {
         </div>
 
         {/* Nav */}
-        <div className="mt-8 flex flex-wrap gap-4 justify-center text-[10px] font-sub font-bold uppercase tracking-wider text-dark/40 border-t border-border-theme pt-8">
+        <div className="mt-8 flex flex-wrap gap-x-4 gap-y-2 justify-center text-[10px] font-sub font-bold uppercase tracking-wider text-dark/40 border-t border-border-theme pt-8">
           <Link to="/privacy" className="hover:text-primary">
             Privacy
           </Link>
