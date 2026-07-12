@@ -10,6 +10,9 @@ const blank = () => ({
   imageUrls: [], videoUrls: [],
   emoji: '❤️',
   type: 'general',  // ✅ include type in blank
+  washiStyle: 'rose-floral',
+  paperclipColor: 'silver',
+  stampType: 'none',
 });
 
 export function useEventForm(timelineId, userId) {
@@ -21,7 +24,16 @@ export function useEventForm(timelineId, userId) {
   const [tempVideoLink, setTempVideoLink]   = useState('');
 
   const openAdd  = () => { setEditingId(null); setNewEvent(blank()); setIsAddModalOpen(true); };
-  const openEdit = (ev) => { setEditingId(ev.id); setNewEvent({ ...ev }); setIsAddModalOpen(true); };
+  const openEdit = (ev) => {
+    setEditingId(ev.id);
+    setNewEvent({
+      ...ev,
+      washiStyle: ev.washiStyle || 'rose-floral',
+      paperclipColor: ev.paperclipColor || 'silver',
+      stampType: ev.stampType || 'none',
+    });
+    setIsAddModalOpen(true);
+  };
   // ✅ Extract Drive file ID from URL
   const extractDriveFileId = (url) => {
     if (!url) return null;
@@ -98,6 +110,9 @@ export function useEventForm(timelineId, userId) {
         videoUrls:   newEvent.videoUrls || [],
         emoji:       newEvent.emoji || '❤️',
         type:        newEvent.type || 'general',  // ✅ persist type
+        washiStyle:  newEvent.washiStyle || 'rose-floral',
+        paperclipColor: newEvent.paperclipColor || 'silver',
+        stampType:   newEvent.stampType || 'none',
         createdBy:   userId || null,
         ...(editingId ? {} : { createdAt: serverTimestamp() }),
         updatedAt:   serverTimestamp(),

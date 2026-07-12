@@ -205,6 +205,106 @@ const MemoryModal = ({
           </div>
         </div>
 
+        {/* Scrapbook Visual Customizer */}
+        <div className="mb-5 bg-cream/30 p-4.5 rounded-2xl border border-border-theme/80 backdrop-blur-[0.5px]">
+          <span className="block text-[10px] font-sub font-bold text-dark/70 uppercase tracking-widest mb-3.5 flex items-center gap-1.5">
+            🎨 Scrapbook Decorations
+          </span>
+
+          <div className="space-y-4.5">
+            {/* Washi Tape Selector */}
+            <div>
+              <label className="block text-[10px] font-sub font-bold text-dark/50 mb-2 uppercase tracking-wider">
+                Washi Tape Style
+              </label>
+              <div className="grid grid-cols-5 gap-2">
+                {[
+                  { id: 'rose-floral', name: '🌸 Rose', bg: 'bg-gradient-to-r from-rose-200/80 via-pink-100/80 to-rose-200/80' },
+                  { id: 'gold-stars', name: '⭐ Gold', bg: 'bg-gradient-to-r from-amber-200/80 via-yellow-100/80 to-amber-200/80' },
+                  { id: 'mint-checker', name: '🏁 Mint', bg: 'bg-gradient-to-r from-emerald-200/80 via-teal-100/80 to-emerald-200/80' },
+                  { id: 'lavender-lace', name: '💜 Lace', bg: 'bg-gradient-to-r from-purple-200/80 via-fuchsia-100/80 to-purple-200/80' },
+                  { id: 'sky-clouds', name: '☁️ Sky', bg: 'bg-gradient-to-r from-sky-200/80 via-blue-100/80 to-sky-200/80' }
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setNewEvent({ ...newEvent, washiStyle: item.id })}
+                    className={`h-11 rounded-xl border-2 flex flex-col items-center justify-center transition-all ${
+                      newEvent.washiStyle === item.id 
+                        ? 'border-primary ring-2 ring-primary/20 scale-[1.03] bg-white' 
+                        : 'border-border-theme hover:scale-[1.01] bg-white/60'
+                    }`}
+                  >
+                    <div className={`w-8 h-3 rounded-sm ${item.bg} border border-dark/5 mb-1`} />
+                    <span className="text-[9px] font-sans text-dark/70 font-semibold">{item.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Paperclip Selector */}
+            <div>
+              <label className="block text-[10px] font-sub font-bold text-dark/50 mb-2 uppercase tracking-wider">
+                Paperclip Metal
+              </label>
+              <div className="grid grid-cols-5 gap-2">
+                {[
+                  { id: 'silver', name: 'Silver', color: 'bg-gray-400' },
+                  { id: 'rose-gold', name: 'Rose Gold', color: 'bg-rose-300' },
+                  { id: 'gold', name: 'Gold', color: 'bg-amber-400' },
+                  { id: 'mint', name: 'Teal', color: 'bg-emerald-400' },
+                  { id: 'pink', name: 'Pink', color: 'bg-pink-400' }
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setNewEvent({ ...newEvent, paperclipColor: item.id })}
+                    className={`h-10 rounded-xl border-2 flex items-center justify-center gap-1.5 transition-all ${
+                      newEvent.paperclipColor === item.id 
+                        ? 'border-primary ring-2 ring-primary/20 scale-[1.03] bg-white' 
+                        : 'border-border-theme hover:scale-[1.01] bg-white/60'
+                    }`}
+                  >
+                    <div className={`w-2.5 h-2.5 rounded-full ${item.color} shadow-inner`} />
+                    <span className="text-[9px] font-sans text-dark/70 font-semibold">{item.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Stamp Selector */}
+            <div>
+              <label className="block text-[10px] font-sub font-bold text-dark/50 mb-2 uppercase tracking-wider">
+                Scrapbook Stamp / Sticker
+              </label>
+              <div className="grid grid-cols-5 gap-2">
+                {[
+                  { id: 'none', name: 'None', label: '❌' },
+                  { id: 'love', name: 'Love', label: '❤️' },
+                  { id: 'adventure', name: 'Travel', label: '✈️' },
+                  { id: 'forever', name: 'Forever', label: '♾️' },
+                  { id: 'sweetest', name: 'Sweet', label: '💘' }
+                ].map(item => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setNewEvent({ ...newEvent, stampType: item.id })}
+                    className={`h-11 rounded-xl border-2 flex flex-col items-center justify-center transition-all ${
+                      newEvent.stampType === item.id 
+                        ? 'border-primary ring-2 ring-primary/20 scale-[1.03] bg-white' 
+                        : 'border-border-theme hover:scale-[1.01] bg-white/60'
+                    }`}
+                  >
+                    <span className="text-[14px] leading-none mb-0.5">{item.label}</span>
+                    <span className="text-[9px] font-sans text-dark/70 font-semibold">{item.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         <div className="flex gap-3">
           <Btn variant="secondary" onClick={onClose} className="flex-1">Cancel</Btn>
           <button type="submit" disabled={isSaving || isUploadingImage || isUploadingVideo}
