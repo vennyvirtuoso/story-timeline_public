@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import FloatingElements from './FloatingElements';
 import WelcomeModal from './WelcomeModal';
 import { getTheme } from '../utils/themes';
+import introArt from '../assets/safarnama-intro-art.jpg';
 
 const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
   const [token, setToken] = useState(() => {
@@ -95,44 +96,26 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
               </p>
             </div>
 
-            {/* Tactile Polaroid & Story Preview Vignette (Desktop & Tablet) */}
-            <div className="hidden sm:flex items-center justify-center lg:justify-start gap-5 pt-3">
-              {/* Tilted Polaroid Preview Card */}
-              <div className="relative w-56 bg-white p-3 pb-5 rounded-sm shadow-theme-lg border border-black/5 -rotate-2 hover:rotate-0 transition-transform duration-500">
-                {/* Washi tape */}
-                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-16 h-4 bg-gradient-to-r from-rose-200/80 via-pink-100/80 to-rose-200/80 border-x border-dashed border-rose-300/40 rotate-1" />
-                <div className="h-28 rounded-sm bg-gradient-to-br from-[#f6e3d3] via-[#f2d0c2] to-[#e4bfa9] flex flex-col items-center justify-center relative overflow-hidden">
-                  <Heart size={26} className="text-rose-safarnama/80 fill-rose-safarnama/20 mb-1" />
-                  <span className="text-[9px] font-sub font-bold uppercase tracking-[0.2em] text-primary/70">First Sunset</span>
-                </div>
-                <p className="font-cursive text-2xl text-accent text-center mt-2 leading-none">
-                  Goa, November &apos;25
-                </p>
-                <p className="text-[9px] font-sub uppercase tracking-widest text-dark/40 text-center mt-1">
-                  Tap to flip &amp; read note
-                </p>
+            {/* Custom Editorial Graphic Art Showcase */}
+            <div className="relative max-w-md mx-auto lg:mx-0 pt-2">
+              <div className="relative rounded-[28px] overflow-hidden">
+                <img
+                  src={introArt}
+                  alt="Open leather memory journal with polaroids, glowing dream jar, vintage key, pressed leaves, and floating hearts"
+                  className="w-full h-auto object-contain mix-blend-multiply animate-float-gentle select-none"
+                  fetchPriority="high"
+                  decoding="async"
+                />
               </div>
 
-              {/* Companion Story Meta Card */}
-              <div className="w-60 bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-border-theme shadow-theme-md rotate-1 hover:rotate-0 transition-transform duration-500 text-left space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] font-sub font-bold uppercase tracking-[0.18em] text-primary bg-primary/10 px-2.5 py-1 rounded-full">
-                    Together Since
-                  </span>
-                  <Heart size={13} className="text-rose-safarnama fill-rose-safarnama" />
-                </div>
-                <div className="grid grid-cols-3 gap-1.5 text-center">
-                  {[['02', 'Yrs'], ['08', 'Mo'], ['14', 'Days']].map(([n, l]) => (
-                    <div key={l} className="bg-cream/90 rounded-lg py-1.5 border border-border-theme">
-                      <div className="font-heading text-lg font-semibold text-primary leading-none tabular-nums">{n}</div>
-                      <div className="text-[8px] font-sub font-bold uppercase tracking-widest text-dark/45 mt-0.5">{l}</div>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center gap-2 text-[11px] text-dark/65 pt-0.5">
-                  <Users size={13} className="text-accent shrink-0" />
-                  <span>Co-authored with your favorite people</span>
-                </div>
+              {/* Subtle floating companion badge */}
+              <div className="hidden sm:inline-flex items-center gap-2 bg-white/85 backdrop-blur-md border border-border-theme shadow-theme-md rounded-full px-3.5 py-1.5 absolute bottom-3 right-2 text-[11px] font-sub font-semibold text-dark/75">
+                <Users size={13} className="text-accent shrink-0" />
+                <span>Co-authored with your favorite people</span>
+              </div>
+              <div className="hidden sm:inline-flex items-center gap-1.5 bg-white/85 backdrop-blur-md border border-border-theme shadow-theme-sm rounded-full px-3 py-1 absolute top-4 left-2 text-[10px] font-sub font-bold uppercase tracking-wider text-primary">
+                <Heart size={11} className="text-rose-safarnama fill-rose-safarnama" />
+                <span>Your Living Keepsake</span>
               </div>
             </div>
 
