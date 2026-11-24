@@ -27,9 +27,15 @@ export function useMemories(timelineId, role, onNoConfig, ownerId) {
 
   useEffect(() => {
     if (!timelineId) return;
-    setIsLoading(true);
+    let settled = false;
+    const fallbackTimer = setTimeout(() => {
+      if (!settled) setIsLoading(false);
+    }, 8000);
+
     const q     = query(collection(db, 'timelines', timelineId, 'memories'), orderBy('date', 'desc'));
     const unsub = onSnapshot(q, snap => {
+      settled = true;
+      clearTimeout(fallbackTimer);
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
       // ✅ Sort: primary = date desc, secondary = time desc (user-selected time if set, else createdAt)
@@ -51,8 +57,15 @@ export function useMemories(timelineId, role, onNoConfig, ownerId) {
 
       setMemories(docs);
       setIsLoading(false);
-    }, () => setIsLoading(false));
-    return () => unsub();
+    }, () => {
+      settled = true;
+      clearTimeout(fallbackTimer);
+      setIsLoading(false);
+    });
+    return () => {
+      clearTimeout(fallbackTimer);
+      unsub();
+    };
   }, [timelineId]);
 
   return { memories, config, setConfig, isLoading };

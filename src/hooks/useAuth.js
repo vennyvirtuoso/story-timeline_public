@@ -64,12 +64,20 @@ export function useAuth() {
       setDriveSetupNeeded(!ud.folderId && !ud.driveSetupSkipped);
       // ✅ REMOVED: sessionStorage.setItem('gisToken', ud.driveToken)
       // That was leaking the JSON token string into GIS flow, causing backend to get wrong token
-      const res  = await fetch(`${getBackendUrl()}/api/create-default-timeline`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: uid }),
-      });
-      const data = await res.json();
-      setTimelineId(data.success ? data.timelineId : uid);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      try {
+        const res = await fetch(`${getBackendUrl()}/api/create-default-timeline`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: uid }),
+          signal: controller.signal,
+        });
+        const data = await res.json();
+        setTimelineId(data.success ? data.timelineId : uid);
+      } finally {
+        clearTimeout(timeoutId);
+      }
       setOwnerId(uid);
       setRole('owner');
     } catch (e) {
