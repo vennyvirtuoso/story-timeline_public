@@ -34,6 +34,8 @@ import { WarmDustMotes } from './components/PageAnimations';
 import StorySlideshow from './components/StorySlideshow';
 import MemoryOrbit from './components/MemoryOrbit';
 import EditorialCursor from './components/EditorialCursor';
+import { PageCornerFiligree, ChapterDivider, StorybookRelics } from './components/StorybookOrnaments';
+import { getFairyTalePersona } from './utils/fairyTaleConfig';
 
 // ─── Isolated Click-Burst Layer (never triggers App re-renders) ────────────────
 const ClickBurstLayer = React.memo(({ themeId }) => {
@@ -146,73 +148,6 @@ const LeafShadows = () => (
   </div>
 );
 
-// ─── Cute Scrapbook Sticker Elements (Desktop margins only to prevent mobile clipping) ───
-const CuteButterfly = () => (
-  <div className="hidden lg:block absolute top-[14%] -right-6 z-20 pointer-events-auto cursor-pointer group animate-float-gentle" style={{ perspective: '100px' }} aria-hidden="true">
-    <svg className="w-8 h-8 text-pink-400/85 drop-shadow-[1px_2px_2.5px_rgba(0,0,0,0.12)] animate-butterfly" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 10C11.5 5 7 2 5 2C2.5 2 1 4 1 6.5C1 10.5 6 12 12 12.5C18 12 23 10.5 23 6.5C23 4 21.5 2 19 2C17 2 12.5 5 12 10Z"/>
-      <path d="M12 13.5C11.5 17.5 8 21 6 21C4.5 21 3.5 20 3.5 18.5C3.5 16 7 14.5 12 14C17 14.5 20.5 16 20.5 18.5C20.5 20 19.5 21 18 21C16 21 12.5 17.5 12 13.5Z" opacity="0.8"/>
-    </svg>
-    <span className="absolute bottom-full right-0 bg-white/95 border border-pink-100 text-[9px] text-pink-500 font-sans font-bold px-2 py-0.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none -translate-y-1">Flutter! 🦋</span>
-  </div>
-);
-
-const CuteDaisy = () => (
-  <div className="hidden lg:block absolute top-[40%] -left-5 z-20 pointer-events-auto cursor-pointer group animate-wiggle" aria-hidden="true">
-    <svg className="w-9 h-9 text-amber-400 drop-shadow-[1px_2px_2.5px_rgba(0,0,0,0.12)] hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="currentColor">
-      <circle cx="12" cy="12" r="3.5" fill="#f59e0b" />
-      {Array.from({ length: 8 }).map((_, i) => {
-        const angle = (i * 360) / 8;
-        return (
-          <circle
-            key={i}
-            cx="12"
-            cy="6"
-            r="2.5"
-            fill="#ffffff"
-            transform={`rotate(${angle} 12 12)`}
-            stroke="#fbbf24"
-            strokeWidth="0.5"
-          />
-        );
-      })}
-    </svg>
-    <span className="absolute bottom-full left-0 bg-white/95 border border-amber-100 text-[9px] text-amber-600 font-sans font-bold px-2 py-0.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none -translate-y-1">Grow together 🌼</span>
-  </div>
-);
-
-const CuteMixTape = () => (
-  <div className="hidden lg:block absolute bottom-[20%] -left-6 z-20 pointer-events-auto cursor-pointer group animate-float-gentle" style={{ animationDelay: '1s' }} aria-hidden="true">
-    <div className="w-12 h-8 bg-sky-200/95 border-2 border-sky-400/50 rounded-md p-1 flex flex-col justify-between shadow-[2px_3px_5px_rgba(0,0,0,0.08)] -rotate-[8deg] hover:rotate-0 hover:scale-110 transition-all">
-      <div className="w-full h-4 bg-sky-100/90 rounded-sm flex items-center justify-center gap-1 px-0.5">
-        <div className="w-2 h-2 rounded-full border border-sky-300 bg-sky-50 flex items-center justify-center"><div className="w-0.5 h-0.5 rounded-full bg-sky-400 animate-spin" style={{ animationDuration: '3s' }}/></div>
-        <div className="w-2 h-2 rounded-full border border-sky-300 bg-sky-50 flex items-center justify-center"><div className="w-0.5 h-0.5 rounded-full bg-sky-400 animate-spin" style={{ animationDuration: '3s' }}/></div>
-      </div>
-      <span className="text-[5.5px] font-sans font-extrabold text-sky-600/80 tracking-tighter text-center">OUR SONG 🎵</span>
-    </div>
-    <span className="absolute bottom-full left-0 bg-white/95 border border-sky-100 text-[9px] text-sky-500 font-sans font-bold px-2 py-0.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none -translate-y-1">Play! 📻</span>
-  </div>
-);
-
-const CuteLoveLetter = () => (
-  <div className="hidden lg:block absolute top-[64%] -right-6 z-20 pointer-events-auto cursor-pointer group animate-wiggle" style={{ animationDelay: '0.5s' }} aria-hidden="true">
-    <div className="w-10 h-7 bg-rose-50 border-2 border-rose-300/60 rounded-md relative flex items-center justify-center shadow-[2px_3px_5px_rgba(0,0,0,0.08)] rotate-[15deg] hover:rotate-0 hover:scale-110 transition-all">
-      <div className="absolute inset-0 border-t-[7px] border-t-rose-200/50 border-x-[18px] border-x-transparent border-b-transparent pointer-events-none"/>
-      <Heart className="text-rose-500 fill-rose-500" size={10} />
-    </div>
-    <span className="absolute bottom-full right-0 bg-white/95 border border-rose-100 text-[9px] text-rose-500 font-sans font-bold px-2 py-0.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none -translate-y-1">For You 💌</span>
-  </div>
-);
-
-const CuteSparkleStar = () => (
-  <div className="hidden lg:block absolute top-[5%] -left-5 z-20 pointer-events-auto cursor-pointer group animate-shimmer-slow" aria-hidden="true">
-    <svg className="w-7 h-7 text-yellow-400 hover:scale-125 transition-transform" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2L15 9L22 12L15 15L12 22L9 15L2 12L9 9Z"/>
-    </svg>
-    <span className="absolute bottom-full left-0 bg-white/95 border border-yellow-100 text-[9px] text-yellow-600 font-sans font-bold px-2 py-0.5 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none -translate-y-1">Dream ✨</span>
-  </div>
-);
-
 // ─── Refined Loading Card ──────────────────────────────────────────────────────
 const LoadingState = ({ title, subtitle, rotateDeg }) => (
   <div
@@ -280,6 +215,8 @@ export default function App() {
 
   const { memories, config, setConfig, isLoading } = useMemories(timelineId, role, () => setIsConfigModalOpen(true), ownerId);
   const theme = getTheme(config?.theme || 'love');
+  const memberType = config?.memberType || 'duo';
+  const persona = getFairyTalePersona(memberType);
 
   const { isPro, limits, refreshLimits, planCustomerId } = usePlan(ownerId, timelineId, isSharedAccess);
 
@@ -466,7 +403,7 @@ export default function App() {
         }}
       />
 
-      <JournalCover />
+      <JournalCover memberType={memberType} timelineTitle={slideshowTitle} />
       <FloatingElements theme={theme} />
       <div className="analog-film-grain" aria-hidden="true" />
       <EditorialCursor />
@@ -651,13 +588,10 @@ export default function App() {
             </div>
           </div>
         ) : (
-          /* 2. Physical notebook paper sheet (journal view) */
+          /* 2. Physical notebook paper sheet (illuminated storybook journal view) */
           <div className="relative max-w-4xl mx-auto w-full bg-[var(--paper-bg)] border border-[var(--paper-border)] shadow-theme-lg p-5 sm:p-10 md:p-12 rounded-3xl min-h-[78vh] my-2 transition-colors duration-300">
-            <CuteButterfly />
-            <CuteDaisy />
-            <CuteMixTape />
-            <CuteLoveLetter />
-            <CuteSparkleStar />
+            <PageCornerFiligree />
+            <StorybookRelics memberType={memberType} />
 
             {/* Spiral binder holes & rings at the top of the paper */}
             {theme.id !== 'monochrome' && (
@@ -677,30 +611,45 @@ export default function App() {
 
             {activeTab === 'timeline' && (
               memories.length === 0
-                ? <EmptyTimeline theme={theme} canEdit={canEdit} onAdd={handleOpenAdd} />
+                ? <EmptyTimeline theme={theme} canEdit={canEdit} onAdd={handleOpenAdd} memberType={memberType} />
                 : (
                   <div className="relative z-10 pl-2 sm:pl-6 md:pl-8 pb-12">
                     {!isPro && isOwner && <MemoryLimitBar count={memories.length} onUpgrade={() => setIsPricingOpen(true)} />}
-                    <div className="flex justify-center mb-10">
+                    <div className="flex justify-center mb-8">
                       <span className={`${theme.badge} px-5 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 font-sub uppercase tracking-wider`}>
-                        <Heart size={12} fill="currentColor" /> To be continued...
+                        <Heart size={12} fill="currentColor" /> {persona.continuation}
                       </span>
                     </div>
 
-                    {visibleMemories.map((ev, idx) => (
-                      <EventCard
-                        key={ev.id}
-                        event={ev}
-                        theme={theme}
-                        index={idx}
-                        layoutMode="journal"
-                        isHighlighted={highlightedId === ev.id}
-                        onDelete={canEdit ? form.handleDelete : null}
-                        onEdit={canEdit ? form.openEdit : null}
-                      />
-                    ))}
+                    {(() => {
+                      const uniqueYearsAsc = Array.from(
+                        new Set(visibleMemories.map((m) => (m.date || '').slice(0, 4)).filter(Boolean))
+                      ).sort();
 
-                    <DreamJar config={config} setConfig={setConfig} ownerId={ownerId} canEdit={canEdit} />
+                      return visibleMemories.map((ev, idx) => {
+                        const year = (ev.date || '').slice(0, 4);
+                        const prevYear = idx > 0 ? (visibleMemories[idx - 1].date || '').slice(0, 4) : null;
+                        const showChapter = Boolean(year) && year !== prevYear;
+                        const chapterNum = showChapter ? Math.max(1, uniqueYearsAsc.indexOf(year) + 1) : 1;
+
+                        return (
+                          <React.Fragment key={ev.id}>
+                            {showChapter && <ChapterDivider year={year} chapterNumber={chapterNum} />}
+                            <EventCard
+                              event={ev}
+                              theme={theme}
+                              index={idx}
+                              layoutMode="journal"
+                              isHighlighted={highlightedId === ev.id}
+                              onDelete={canEdit ? form.handleDelete : null}
+                              onEdit={canEdit ? form.openEdit : null}
+                            />
+                          </React.Fragment>
+                        );
+                      });
+                    })()}
+
+                    <DreamJar config={config} setConfig={setConfig} ownerId={ownerId} canEdit={canEdit} memberType={memberType} />
                   </div>
                 )
             )}

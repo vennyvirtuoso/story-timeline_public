@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Sparkles, Gift, Plus, X } from 'lucide-react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { getStorybookProfile } from '../utils/storybooks';
 
-const DreamJar = ({ config, setConfig, ownerId, canEdit }) => {
+const DreamJar = ({ config, setConfig, ownerId, canEdit, memberType }) => {
+  const persona = getStorybookProfile(memberType || config?.memberType || 'duo');
   const [isOpen, setIsOpen] = useState(false);
   const [newDream, setNewDream] = useState('');
   const [isAnimating, setIsAnimating] = useState(false);
@@ -104,7 +106,7 @@ const DreamJar = ({ config, setConfig, ownerId, canEdit }) => {
           })}
         </svg>
 
-        <span className="font-accent text-accent tracking-wide text-3xl font-bold -mt-1 block">Our Dream Jar</span>
+        <span className="font-accent text-accent tracking-wide text-3xl font-bold -mt-1 block">{persona.jarTitle}</span>
         <span className="text-[10px] font-sub font-bold uppercase tracking-[0.16em] text-dark/50 flex items-center gap-1">
           <Sparkles size={10} className="text-amber-500" />
           {dreams.length > 0 ? `${dreams.length} ${dreams.length === 1 ? 'dream' : 'dreams'} inside` : 'Tap to add dreams'}
@@ -129,7 +131,7 @@ const DreamJar = ({ config, setConfig, ownerId, canEdit }) => {
             {/* Header */}
             <div className="flex items-center justify-between pb-3.5 border-b border-border-theme">
               <h3 id="dream-jar-title" className="font-heading font-semibold text-primary text-xl flex items-center gap-2">
-                <Sparkles size={16} className="text-amber-500" /> Our Dream Jar
+                <Sparkles size={16} className="text-amber-500" /> {persona.jarTitle}
               </h3>
               <button
                 type="button"
@@ -148,7 +150,7 @@ const DreamJar = ({ config, setConfig, ownerId, canEdit }) => {
                   <Gift size={26} className="text-dark/25 mx-auto" />
                   <p className="text-xs font-sub font-bold uppercase tracking-wider text-dark/50">The Jar is Empty</p>
                   <p className="text-xs font-sans text-dark/60 max-w-[220px] mx-auto">
-                    Write down your future dreams, trips, and bucket list wishes together!
+                    {persona.jarEmptyHint}
                   </p>
                 </div>
               ) : (
@@ -184,7 +186,7 @@ const DreamJar = ({ config, setConfig, ownerId, canEdit }) => {
                 <input
                   value={newDream}
                   onChange={(e) => setNewDream(e.target.value)}
-                  placeholder="Share a future dream..."
+                  placeholder="Share a future wish..."
                   className="flex-1 px-4 py-2.5 border border-border-theme rounded-xl outline-none text-sm text-dark placeholder-dark/35 bg-surface focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-sans"
                   maxLength={120}
                 />

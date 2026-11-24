@@ -1,9 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Home, Compass, Moon } from 'lucide-react';
+import { getStorybookProfile } from '../utils/storybooks';
 
 const SESSION_KEY = 'safarnama_cover_opened';
 
-const JournalCover = () => {
+const CrestIcon = ({ memberType, size = 12, className = '' }) => {
+  if (memberType === 'family') return <Home size={size} className={className} />;
+  if (memberType === 'group') return <Compass size={size} className={className} />;
+  if (memberType === 'solo') return <Moon size={size} className={className} />;
+  return <Heart size={size} fill="currentColor" className={className} />;
+};
+
+const JournalCover = ({ memberType = 'duo', timelineTitle }) => {
+  const profile = getStorybookProfile(memberType);
   const [isOpen, setIsOpen] = useState(false);
   const [isFading, setIsFading] = useState(false);
   const [isDismissed, setIsDismissed] = useState(() => {
@@ -54,30 +63,29 @@ const JournalCover = () => {
       style={{ pointerEvents: isOpen ? 'none' : 'auto' }}
       role="dialog"
       aria-modal="true"
-      aria-label="Safarnama Journal Cover"
+      aria-label="Safarnama Storybook Cover"
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-100/20 via-transparent to-transparent pointer-events-none" />
 
       {/* The 3D Book Wrapper */}
       <div className={`book ${isOpen ? 'open' : ''}`}>
-        {/* Physical Stack of Pages Underneath */}
         <div className="book-page-stack-left" />
         <div className="book-page-stack-right" />
 
         {/* 1. Interior Pages */}
         <div className="book-pages">
-          {/* Left Page */}
+          {/* Left Page: Tailored Fairy-Tale Epigraph */}
           <div className="book-page book-page-left flex flex-col items-center justify-center p-6 sm:p-10 text-yellow-950 select-none text-center">
             <div className="space-y-4 max-w-[260px] z-10">
               <span className="font-accent text-4xl sm:text-5xl text-rose-600 block leading-none">
                 Chapter One
               </span>
               <h3 className="font-heading font-bold text-xl sm:text-2xl text-amber-900 tracking-wide mt-2">
-                Our Safe Space
+                {profile.coverHeading}
               </h3>
               <div className="h-[1.5px] bg-gradient-to-r from-transparent via-amber-700/35 to-transparent w-24 mx-auto my-2" />
               <p className="font-heading italic text-sm sm:text-base text-yellow-900/75 leading-relaxed">
-                &ldquo;In all the world, there is no heart for me like yours. In all the world, there is no love for you like mine.&rdquo;
+                &ldquo;{profile.coverQuote}&rdquo;
               </p>
               <div className="pt-2 text-[10px] tracking-[0.22em] text-amber-800/55 uppercase font-sub font-bold">
                 Est. Safarnama
@@ -85,21 +93,21 @@ const JournalCover = () => {
             </div>
           </div>
 
-          {/* Right Page */}
+          {/* Right Page: Tailored Opening State */}
           <div className="book-page book-page-right flex flex-col items-center justify-center p-6 sm:p-10 text-yellow-950 select-none text-center">
             <div className="space-y-4 max-w-[260px] z-10">
               <div className="relative flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 mx-auto">
                 <div className="absolute inset-0 bg-rose-200/50 rounded-full animate-ping opacity-75" />
-                <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-rose-600 rounded-full flex items-center justify-center shadow-lg">
-                  <Heart size={24} fill="white" color="white" className="animate-pulse" />
+                <div className="relative w-12 h-12 sm:w-14 sm:h-14 bg-rose-600 rounded-full flex items-center justify-center shadow-lg text-white">
+                  <CrestIcon memberType={memberType} size={22} className="animate-pulse" />
                 </div>
               </div>
 
               <h3 className="font-heading font-semibold text-lg sm:text-xl text-amber-900">
-                Opening our story...
+                {profile.coverLoadingTitle}
               </h3>
               <p className="font-heading italic text-sm text-yellow-900/65">
-                Gathering all our beautiful moments
+                {profile.coverLoadingSub}
               </p>
             </div>
           </div>
@@ -115,21 +123,21 @@ const JournalCover = () => {
           <div className="text-center space-y-4 max-w-[250px] sm:max-w-xs px-4 z-10 relative">
             <div className="space-y-1.5">
               <span className="font-sub text-[10px] uppercase tracking-[0.28em] text-amber-300/80 font-bold block">
-                A Love Timeline
+                {profile.coverEyebrow}
               </span>
-              <h2 className="font-heading font-bold text-4xl sm:text-5xl text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-200 to-amber-400 tracking-wide leading-none">
-                Safarnama
+              <h2 className="font-heading font-bold text-3xl sm:text-5xl text-transparent bg-clip-text bg-gradient-to-b from-amber-100 via-amber-200 to-amber-400 tracking-wide leading-tight break-words">
+                {timelineTitle || 'Safarnama'}
               </h2>
             </div>
 
-            <div className="flex items-center justify-center gap-2.5">
+            <div className="flex items-center justify-center gap-2.5 text-amber-300">
               <div className="h-px bg-gradient-to-r from-transparent to-amber-400/45 w-12" />
-              <Heart size={10} fill="#fcd34d" color="#fcd34d" />
+              <CrestIcon memberType={memberType} size={12} />
               <div className="h-px bg-gradient-to-l from-transparent to-amber-400/45 w-12" />
             </div>
 
             <p className="font-cursive text-2xl sm:text-3xl text-amber-200 font-bold leading-tight">
-              Our Memory Journal
+              {profile.coverSubtitle}
             </p>
 
             <button
@@ -140,7 +148,7 @@ const JournalCover = () => {
               }}
               className="mt-5 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-yellow-950 font-sub font-bold text-xs uppercase tracking-[0.16em] rounded-full shadow-[0_6px_24px_rgba(245,158,11,0.38)] transition-all duration-200 border border-amber-200/50 cursor-pointer"
             >
-              Open Journal <Heart size={12} fill="currentColor" />
+              Open Storybook <CrestIcon memberType={memberType} size={12} />
             </button>
           </div>
         </div>
@@ -149,7 +157,7 @@ const JournalCover = () => {
         <button
           type="button"
           onClick={handleOpen}
-          aria-label="Unlock and open journal"
+          aria-label="Unlock and open storybook"
           className={`book-latch ${isOpen ? 'unlocked' : ''}`}
         />
 

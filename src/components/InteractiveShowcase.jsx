@@ -5,11 +5,60 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const PRESET_WISHES = [
-  'Watch the Northern Lights',
-  'Midnight drive to the coast',
-  'Cook pasta together in Rome',
-];
+const AUDIENCE_TALES = {
+  duo: {
+    id: 'duo',
+    label: 'Couples',
+    emoji: '💕',
+    badge: '✈️ Trip Memory',
+    date: 'Nov 14, 2025',
+    time: '7:42 PM',
+    title: 'First Rain in Udaipur',
+    story:
+      'We ran under the old stone archway with two cups of cutting chai while Lake Pichola turned gold in the rain. Still my favorite evening of the whole year.',
+    jarTitle: 'Our Dream Jar',
+    presets: ['Watch the Northern Lights', 'Midnight drive to the coast', 'Cook pasta together in Rome'],
+  },
+  family: {
+    id: 'family',
+    label: 'Family',
+    emoji: '🏡',
+    badge: '🪔 Festival',
+    date: 'Oct 20, 2025',
+    time: '8:15 PM',
+    title: 'Diwali on the Terrace',
+    story:
+      'Three generations lighting earthen diyas under the October sky while Dadi told stories from her childhood. Every laugh echoed across the courtyard.',
+    jarTitle: 'Our Family Wish Jar',
+    presets: ['Summer cottage in the hills', 'Grandparents 50th reunion', 'Bake Sunday pies together'],
+  },
+  group: {
+    id: 'group',
+    label: 'Friends',
+    emoji: '🧭',
+    badge: '🚗 Road Trip',
+    date: 'Aug 03, 2025',
+    time: '2:10 AM',
+    title: '3 AM Maggi in Kasol',
+    story:
+      'Flat tire at midnight, zero signal, and somehow the funniest four hours of our lives. Proof that the best chapters are never on the itinerary.',
+    jarTitle: 'Our Bucket-List Jar',
+    presets: ['Spiti Valley bike trip', 'Rent a beach house for New Year', 'Reunion concert night'],
+  },
+  solo: {
+    id: 'solo',
+    label: 'Solo',
+    emoji: '🌙',
+    badge: '🌱 Reflection',
+    date: 'Sep 11, 2025',
+    time: '6:05 AM',
+    title: 'Sunrise Above the Clouds',
+    story:
+      'Climbed the ridge alone before dawn with a thermos of coffee. Watched the valley wake up in gold and realized how much quieter life feels when you pause.',
+    jarTitle: 'My Future Wishes',
+    presets: ['Solo train across Japan', 'Finish writing my first book', 'Learn pottery by the sea'],
+  },
+};
 
 const INITIAL_DEMO_WISHES = [
   'Stargaze in Spiti Valley',
@@ -53,12 +102,15 @@ const BENTO_FEATURES = [
 ];
 
 const InteractiveShowcase = ({ onStartClick }) => {
+  const [audienceId, setAudienceId] = useState('duo');
   const [flipped, setFlipped] = useState(false);
   const [themeIdx, setThemeIdx] = useState(0);
   const [demoWishes, setDemoWishes] = useState(INITIAL_DEMO_WISHES);
   const [wishInput, setWishInput] = useState('');
   const [dropKey, setDropKey] = useState(0);
   const sectionRef = useRef(null);
+
+  const activeTale = AUDIENCE_TALES[audienceId] || AUDIENCE_TALES.duo;
 
   // Long Take-inspired bidirectional scroll reveals
   useEffect(() => {
@@ -97,17 +149,40 @@ const InteractiveShowcase = ({ onStartClick }) => {
       aria-label="Explore Safarnama interactive preview"
       className="relative z-10 w-full max-w-6xl mx-auto px-5 sm:px-8 pt-10 pb-20 space-y-16"
     >
-      {/* Section Header */}
-      <div className="scroll-reveal-block text-center max-w-2xl mx-auto space-y-2.5">
+      {/* Section Header + Fairy-Tale Audience Selector */}
+      <div className="scroll-reveal-block text-center max-w-2xl mx-auto space-y-3">
         <span className="inline-flex items-center gap-1.5 text-[10px] font-sub font-bold uppercase tracking-[0.22em] text-accent">
-          <Sparkles size={12} /> Try It Right Here
+          <Sparkles size={12} /> Choose Your Fairy Tale
         </span>
         <h2 className="font-heading text-3xl sm:text-4xl font-semibold text-primary leading-tight">
-          Designed to feel like a real keepsake
+          A storybook crafted for every kind of bond
         </h2>
         <p className="text-sm text-dark/60 font-sans leading-relaxed">
-          Tap the polaroid to flip it over, or switch themes below to feel how your timeline transforms.
+          Pick a journey below, tap the Polaroid to flip it over, or switch themes to feel how your storybook transforms.
         </p>
+
+        {/* 4-Audience Fairy-Tale Pills */}
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+          {Object.values(AUDIENCE_TALES).map((t) => {
+            const selected = t.id === audienceId;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setAudienceId(t.id)}
+                aria-pressed={selected}
+                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-sub font-bold uppercase tracking-wider border transition-all duration-200 active:scale-95 ${
+                  selected
+                    ? 'bg-primary text-cream border-primary shadow-theme-sm'
+                    : 'bg-white/80 text-dark/70 border-border-theme hover:border-primary/40 hover:text-primary'
+                }`}
+              >
+                <span>{t.emoji}</span>
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Interactive Playground: Live 3D Flip Card + Theme Switcher */}
@@ -142,10 +217,10 @@ const InteractiveShowcase = ({ onStartClick }) => {
                   />
                   <div className="flex items-center justify-between mb-3">
                     <span className={`text-[9px] font-sub font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${activeTheme.pill}`}>
-                      ✈️ Trip Memory
+                      {activeTale.badge}
                     </span>
                     <span className="text-[10px] font-sub font-bold uppercase tracking-wider text-stone-400">
-                      Nov 14, 2025
+                      {activeTale.date}
                     </span>
                   </div>
 
@@ -171,7 +246,7 @@ const InteractiveShowcase = ({ onStartClick }) => {
 
                   <div className="mt-4 text-center">
                     <p className="font-cursive text-4xl leading-none font-bold" style={{ color: activeTheme.accent }}>
-                      First Rain in Udaipur
+                      {activeTale.title}
                     </p>
                     <span className="mt-3 inline-flex items-center gap-1.5 text-[10px] font-sub font-bold uppercase tracking-[0.16em] text-stone-400">
                       <RotateCw size={11} /> Tap to flip &amp; read note
@@ -194,15 +269,15 @@ const InteractiveShowcase = ({ onStartClick }) => {
                   <div>
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-[10px] font-sub font-bold uppercase tracking-widest opacity-60">
-                        Nov 14, 2025 · 7:42 PM
+                        {activeTale.date} · {activeTale.time}
                       </span>
                       <Heart size={14} className="text-rose-safarnama fill-rose-safarnama" />
                     </div>
                     <h3 className="font-heading text-2xl font-semibold mb-3" style={{ color: activeTheme.dark ? '#c4b5fd' : activeTheme.dot }}>
-                      First Rain in Udaipur
+                      {activeTale.title}
                     </h3>
-                    <p className="text-sm leading-relaxed opacity-80 font-sans">
-                      We ran under the old stone archway with two cups of cutting chai while Lake Pichola turned gold in the rain. Still my favorite evening of the whole year.
+                    <p className="text-sm leading-relaxed opacity-85 font-sans storybook-dropcap">
+                      {activeTale.story}
                     </p>
                   </div>
                   <div className="text-center pt-4 border-t border-current/10">
@@ -349,7 +424,7 @@ const InteractiveShowcase = ({ onStartClick }) => {
                 })}
               </svg>
             </div>
-            <p className="font-cursive text-3xl text-accent font-bold mt-1">Our Dream Jar</p>
+            <p className="font-cursive text-3xl text-accent font-bold mt-1">{activeTale.jarTitle}</p>
             <p className="text-[10px] font-sub font-bold uppercase tracking-[0.16em] text-dark/45">
               {demoWishes.length} {demoWishes.length === 1 ? 'wish' : 'wishes'} glowing inside
             </p>
@@ -398,7 +473,7 @@ const InteractiveShowcase = ({ onStartClick }) => {
 
             {/* Quick suggestion chips */}
             <div className="flex flex-wrap gap-2">
-              {PRESET_WISHES.map((preset) => (
+              {activeTale.presets.map((preset) => (
                 <button
                   key={preset}
                   type="button"

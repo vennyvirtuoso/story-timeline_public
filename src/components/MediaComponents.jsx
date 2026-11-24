@@ -573,7 +573,7 @@ export const EventCard = React.memo(({ event, onDelete, onEdit, theme, index = 0
                       <WavyUnderline />
                     </h4>
                     {event.description ? (
-                      <p className={`text-sm leading-relaxed whitespace-pre-line font-sans ${isDarkPaper ? 'text-purple-100/85' : 'text-stone-700'}`}>
+                      <p className={`text-sm leading-relaxed whitespace-pre-line font-sans ${layoutMode === 'journal' ? 'storybook-dropcap' : ''} ${isDarkPaper ? 'text-purple-100/85' : 'text-stone-700'}`}>
                         {event.description}
                       </p>
                     ) : (
@@ -681,7 +681,7 @@ export const EventCard = React.memo(({ event, onDelete, onEdit, theme, index = 0
               <WavyUnderline />
             </h3>
             {event.description && (
-              <p className={`text-sm leading-relaxed whitespace-pre-line font-sans mb-1 ${isDarkPaper ? 'text-purple-100/85' : 'text-stone-700'}`}>
+              <p className={`text-sm leading-relaxed whitespace-pre-line font-sans mb-1 ${layoutMode === 'journal' ? 'storybook-dropcap' : ''} ${isDarkPaper ? 'text-purple-100/85' : 'text-stone-700'}`}>
                 {event.description}
               </p>
             )}
