@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Heart, Plus, BookOpen, Pin } from 'lucide-react';
+import { Heart, Plus, BookOpen, Pin, ArrowUp } from 'lucide-react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase/config';
 import { useAuth }          from './hooks/useAuth';
@@ -253,9 +253,11 @@ export default function App() {
   const [activeTab,         setActiveTab]         = useState('timeline');
   const [isPricingOpen,     setIsPricingOpen]     = useState(false);
   const [layoutMode,        setLayoutMode]        = useState('journal'); // 'journal' | 'wall'
+  const [showBackToTop,     setShowBackToTop]     = useState(false);
 
   const fileRef  = useRef(null);
   const videoRef = useRef(null);
+  const mainRef  = useRef(null);
 
   const isViewer     = role === 'viewer';
   const isOwner      = role === 'owner';
@@ -394,7 +396,7 @@ export default function App() {
   return (
     <div
       data-theme={theme.id}
-      className="h-dvh w-full text-dark font-sans relative overflow-hidden flex flex-col transition-colors duration-300"
+      className="h-dvh w-full text-dark font-sans relative overflow-hidden flex flex-col transition-colors duration-300 app-scroll-host"
       style={{ background: 'var(--bg-gradient, var(--bg-color))' }}
     >
       {/* Subtle romantic vignette */}
@@ -434,10 +436,19 @@ export default function App() {
           onSignOut={handleSignOut}
           isPro={isPro}
         />
+        {/* Pure-CSS reading progress ribbon synced to <main> scroll */}
+        <div className="app-scroll-progress-bar" aria-hidden="true" />
       </div>
 
       {/* Smooth scrollable content */}
-      <main className="flex-1 overflow-y-auto smooth-scroll-pane relative z-10 px-3 py-6 md:px-6 md:py-8">
+      <main
+        ref={mainRef}
+        onScroll={(e) => {
+          const past = e.currentTarget.scrollTop > 420;
+          if (past !== showBackToTop) setShowBackToTop(past);
+        }}
+        className="flex-1 overflow-y-auto smooth-scroll-pane app-main-scroller relative z-10 px-3 py-6 md:px-6 md:py-8"
+      >
         {/* Layout Switcher (Journal View / Memory Wall) */}
         {activeTab === 'timeline' && memories.length > 0 && (
           <div className="flex justify-center mb-6 relative z-20">
@@ -601,6 +612,17 @@ export default function App() {
           setIsOpen={collab.setCollabPopoverOpen}
           isGenerating={collab.collabGenerating}
         />
+      )}
+
+      {showBackToTop && (
+        <button
+          type="button"
+          onClick={() => mainRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+          aria-label="Scroll back to top"
+          className="fixed bottom-24 right-5 sm:bottom-28 sm:right-8 bg-surface backdrop-blur-xl border border-border-theme text-primary p-3 rounded-full shadow-theme-md transition-all duration-200 hover:scale-105 hover:-translate-y-0.5 active:scale-95 z-40 animate-modal-enter"
+        >
+          <ArrowUp size={18} strokeWidth={2.2} />
+        </button>
       )}
 
       {canEdit && (

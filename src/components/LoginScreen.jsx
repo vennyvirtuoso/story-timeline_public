@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   BookOpen, Loader2, Ticket, Sparkles, ArrowLeft,
-  ChevronRight, Heart, Shield, Users, Camera, Lock
+  ChevronRight, ChevronDown, Heart, Shield, Users, Camera, Lock
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import FloatingElements from './FloatingElements';
@@ -9,6 +9,7 @@ import WelcomeModal from './WelcomeModal';
 import { getTheme } from '../utils/themes';
 import introArt from '../assets/safarnama-intro-art.jpg';
 import { PaperPlaneTrailAnim } from './PageAnimations';
+import InteractiveShowcase from './InteractiveShowcase';
 
 const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
   const [token, setToken] = useState(() => {
@@ -46,6 +47,8 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
       className="min-h-dvh w-full relative overflow-x-hidden flex flex-col justify-between editorial-grain"
       style={{ background: 'var(--bg-gradient)' }}
     >
+      {/* Pure-CSS reading progress ribbon */}
+      <div className="scroll-progress-bar" aria-hidden="true" />
       <WelcomeModal />
       <FloatingElements theme={defaultTheme} />
 
@@ -276,6 +279,19 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
 
         </div>
       </main>
+
+      {/* Smooth scroll invitation pill */}
+      <div className="relative z-10 flex justify-center pb-4">
+        <a
+          href="#explore-safarnama"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/75 backdrop-blur-md border border-border-theme shadow-theme-sm text-[10px] font-sub font-bold uppercase tracking-[0.18em] text-primary hover:bg-white transition-all hover:-translate-y-0.5"
+        >
+          Explore how it feels <ChevronDown size={13} className="animate-bounce-slow" />
+        </a>
+      </div>
+
+      {/* Interactive Explore Showcase */}
+      <InteractiveShowcase onStartClick={onGoogleLogin} />
 
       {/* Clean minimal footer */}
       <footer className="relative z-10 w-full text-center py-4 px-5 text-[10px] font-sub uppercase tracking-[0.16em] text-dark/45 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5">

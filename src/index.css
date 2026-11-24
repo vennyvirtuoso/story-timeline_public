@@ -636,6 +636,97 @@ input[type="time"] {
   }
 }
 
+/* ==========================================================================
+   SILKY EXPLORATION UX: PAGE TRANSITIONS, SCROLL PROGRESS & SPRING CARDS
+   ========================================================================== */
+@keyframes page-glide-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.page-glide-in {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: page-glide-in 0.36s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+/* Silky spring-lift interactive card */
+.spring-card {
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.25s ease;
+}
+
+.spring-card:hover {
+  transform: translate3d(0, -5px, 0);
+  box-shadow: var(--shadow-lg);
+  border-color: color-mix(in srgb, var(--primary-color) 28%, transparent);
+}
+
+/* Pure-CSS Scroll Progress Ribbon (Zero JS, Compositor-only Progressive Enhancement) */
+.scroll-progress-bar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    @keyframes grow-scroll-progress {
+      from {
+        transform: scaleX(0);
+      }
+      to {
+        transform: scaleX(1);
+      }
+    }
+
+    .scroll-progress-bar {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2.5px;
+      z-index: 60;
+      pointer-events: none;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--rose-color));
+      transform-origin: 0 50%;
+      animation: grow-scroll-progress auto linear;
+      animation-timeline: scroll(root block);
+    }
+
+    /* Named scroll-timeline for internal App <main> scroller */
+    .app-scroll-host {
+      timeline-scope: --safarnama-main-scroll;
+    }
+
+    .app-main-scroller {
+      scroll-timeline-name: --safarnama-main-scroll;
+      scroll-timeline-axis: block;
+    }
+
+    .app-scroll-progress-bar {
+      display: block;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      pointer-events: none;
+      background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--rose-color));
+      transform-origin: 0 50%;
+      animation: grow-scroll-progress auto linear;
+      animation-timeline: --safarnama-main-scroll;
+    }
+  }
+}
+
 /* Default to visible static states; opt in to motion when user has no reduced-motion preference */
 .animate-fadeIn {
   @media (prefers-reduced-motion: no-preference) {
