@@ -461,6 +461,7 @@ export const EventCard = React.memo(({ event, onDelete, onEdit, theme, index = 0
               ref={polaroidRef}
               onMouseMove={handlePolaroidMove}
               onMouseLeave={handlePolaroidLeave}
+              data-cursor="Flip"
               className={`polaroid-card polaroid-tilt group p-4 sm:p-5 pb-7 sm:pb-8 rounded-sm relative w-full cursor-pointer select-none overflow-visible ${isHighlighted ? 'memory-surprise-halo' : ''}`}
               style={{ '--base-rot': rotDeg }}
             >

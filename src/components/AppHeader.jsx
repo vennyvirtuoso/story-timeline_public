@@ -112,7 +112,8 @@ const AppHeader = ({
                   </p>
                 )}
                 {subtitle && <span className="text-dark/25 text-[10px]">•</span>}
-                <p className="text-[10px] sm:text-[11px] text-dark/50 font-sub uppercase tracking-[0.14em]">
+                <p className="text-[10px] sm:text-[11px] text-dark/50 font-sub uppercase tracking-[0.14em] inline-flex items-center gap-1.5">
+                  <span className="live-beacon-dot" aria-hidden="true" />
                   Since {formattedStartDate}
                 </p>
               </div>

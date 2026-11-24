@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Heart, Plus, BookOpen, Pin, ArrowUp, Sparkles } from 'lucide-react';
+import { Heart, Plus, BookOpen, Pin, ArrowUp, Sparkles, Orbit } from 'lucide-react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase/config';
 import { useAuth }          from './hooks/useAuth';
@@ -32,6 +32,8 @@ import JournalCover from './components/JournalCover';
 import DreamJar from './components/DreamJar';
 import { WarmDustMotes } from './components/PageAnimations';
 import StorySlideshow from './components/StorySlideshow';
+import MemoryOrbit from './components/MemoryOrbit';
+import EditorialCursor from './components/EditorialCursor';
 
 // ─── Isolated Click-Burst Layer (never triggers App re-renders) ────────────────
 const ClickBurstLayer = React.memo(({ themeId }) => {
@@ -253,7 +255,8 @@ export default function App() {
   const [isShareModalOpen,  setIsShareModalOpen]  = useState(false);
   const [activeTab,         setActiveTab]         = useState('timeline');
   const [isPricingOpen,     setIsPricingOpen]     = useState(false);
-  const [layoutMode,        setLayoutMode]        = useState('journal'); // 'journal' | 'wall'
+  const [layoutMode,        setLayoutMode]        = useState('journal'); // 'journal' | 'wall' | 'orbit'
+  const [selectedCategory,  setSelectedCategory]  = useState('all');
   const [showBackToTop,     setShowBackToTop]     = useState(false);
   const [isSlideshowOpen,   setIsSlideshowOpen]   = useState(false);
   const [highlightedId,     setHighlightedId]     = useState(null);
@@ -392,7 +395,18 @@ export default function App() {
     [memories]
   );
 
-  const visibleMemories = memories;
+  // Casa Nopal-inspired dynamic category pills (derived from user's own memories)
+  const availableCategories = useMemo(() => {
+    const types = Array.from(new Set(memories.map((m) => m.type || 'general')));
+    return types;
+  }, [memories]);
+
+  const activeCategory = availableCategories.includes(selectedCategory) ? selectedCategory : 'all';
+
+  const visibleMemories = useMemo(() => {
+    if (activeCategory === 'all') return memories;
+    return memories.filter((m) => (m.type || 'general') === activeCategory);
+  }, [memories, activeCategory]);
 
   const handleSurpriseMemory = () => {
     if (!visibleMemories.length) return;
@@ -454,6 +468,8 @@ export default function App() {
 
       <JournalCover />
       <FloatingElements theme={theme} />
+      <div className="analog-film-grain" aria-hidden="true" />
+      <EditorialCursor />
 
       {/* Sticky top — banners + header */}
       <div className="relative z-30 shrink-0">
@@ -486,54 +502,109 @@ export default function App() {
         }}
         className="flex-1 overflow-y-auto smooth-scroll-pane app-main-scroller relative z-10 px-3 py-6 md:px-6 md:py-8"
       >
-        {/* Layout Switcher (Journal View / Memory Wall) + Surprise Me */}
+        {/* Layout Switcher (Journal / Wall / Orbit) + Surprise Me */}
         {activeTab === 'timeline' && memories.length > 0 && (
-          <div className="flex flex-wrap items-center justify-center gap-2.5 mb-6 relative z-20">
-            <div className={`inline-flex p-1 rounded-full border border-border-theme shadow-theme-sm ${theme.isDark ? 'bg-white/[0.06]' : 'bg-white/80 backdrop-blur-md'}`}>
-              <button
-                type="button"
-                onClick={() => setLayoutMode('journal')}
-                aria-pressed={layoutMode === 'journal'}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-sub font-bold uppercase tracking-wider transition-all duration-200 ${
-                  layoutMode === 'journal'
-                    ? `${theme.tabActive} shadow-theme-sm`
-                    : 'text-dark/60 hover:text-dark'
-                }`}
-              >
-                <BookOpen size={13} /> Journal View
-              </button>
-              <button
-                type="button"
-                onClick={() => setLayoutMode('wall')}
-                aria-pressed={layoutMode === 'wall'}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-sub font-bold uppercase tracking-wider transition-all duration-200 ${
-                  layoutMode === 'wall'
-                    ? 'bg-amber-900 text-amber-50 shadow-theme-sm'
-                    : 'text-dark/60 hover:text-dark'
-                }`}
-              >
-                <Pin size={13} /> Memory Wall
-              </button>
+          <div className="flex flex-col items-center gap-3 mb-6 relative z-20">
+            <div className="flex flex-wrap items-center justify-center gap-2.5">
+              <div className={`inline-flex p-1 rounded-full border border-border-theme shadow-theme-sm ${theme.isDark ? 'bg-white/[0.06]' : 'bg-white/80 backdrop-blur-md'}`}>
+                <button
+                  type="button"
+                  onClick={() => setLayoutMode('journal')}
+                  aria-pressed={layoutMode === 'journal'}
+                  className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full text-xs font-sub font-bold uppercase tracking-wider transition-all duration-200 ${
+                    layoutMode === 'journal'
+                      ? `${theme.tabActive} shadow-theme-sm`
+                      : 'text-dark/60 hover:text-dark'
+                  }`}
+                >
+                  <BookOpen size={13} /> Journal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLayoutMode('wall')}
+                  aria-pressed={layoutMode === 'wall'}
+                  className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full text-xs font-sub font-bold uppercase tracking-wider transition-all duration-200 ${
+                    layoutMode === 'wall'
+                      ? 'bg-amber-900 text-amber-50 shadow-theme-sm'
+                      : 'text-dark/60 hover:text-dark'
+                  }`}
+                >
+                  <Pin size={13} /> Wall
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLayoutMode('orbit')}
+                  aria-pressed={layoutMode === 'orbit'}
+                  className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-full text-xs font-sub font-bold uppercase tracking-wider transition-all duration-200 ${
+                    layoutMode === 'orbit'
+                      ? `${theme.tabActive} shadow-theme-sm`
+                      : 'text-dark/60 hover:text-dark'
+                  }`}
+                >
+                  <Orbit size={13} /> Orbit
+                </button>
+              </div>
+
+              {visibleMemories.length > 1 && layoutMode !== 'orbit' && (
+                <button
+                  type="button"
+                  onClick={handleSurpriseMemory}
+                  className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-sub font-bold uppercase tracking-wider border border-accent/35 shadow-theme-sm transition-all duration-200 hover:-translate-y-0.5 active:scale-95 ${
+                    theme.isDark
+                      ? 'bg-white/10 text-amber-200 hover:bg-white/15'
+                      : 'bg-white/90 text-accent hover:bg-amber-50'
+                  }`}
+                >
+                  <Sparkles size={13} /> Surprise Me
+                </button>
+              )}
             </div>
 
-            {memories.length > 1 && (
-              <button
-                type="button"
-                onClick={handleSurpriseMemory}
-                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-sub font-bold uppercase tracking-wider border border-accent/35 shadow-theme-sm transition-all duration-200 hover:-translate-y-0.5 active:scale-95 ${
-                  theme.isDark
-                    ? 'bg-white/10 text-amber-200 hover:bg-white/15'
-                    : 'bg-white/90 text-accent hover:bg-amber-50'
-                }`}
-              >
-                <Sparkles size={13} /> Surprise Me
-              </button>
+            {/* Casa Nopal-inspired dynamic Category Filter Pill Bar */}
+            {availableCategories.length > 1 && (
+              <div className="flex flex-wrap items-center justify-center gap-1.5 max-w-3xl">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategory('all')}
+                  aria-pressed={activeCategory === 'all'}
+                  className={`px-3 py-1 rounded-full text-[10px] font-sub font-bold uppercase tracking-wider border transition-all ${
+                    activeCategory === 'all'
+                      ? 'bg-primary text-cream border-primary shadow-theme-sm'
+                      : 'bg-surface/80 text-dark/60 border-border-theme hover:text-primary'
+                  }`}
+                >
+                  All ({memories.length})
+                </button>
+                {availableCategories.map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat)}
+                    aria-pressed={activeCategory === cat}
+                    className={`px-3 py-1 rounded-full text-[10px] font-sub font-bold uppercase tracking-wider border transition-all ${
+                      activeCategory === cat
+                        ? 'bg-primary text-cream border-primary shadow-theme-sm'
+                        : 'bg-surface/80 text-dark/60 border-border-theme hover:text-primary'
+                    }`}
+                  >
+                    {cat.replace(/-/g, ' ')}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         )}
 
-        {/* 1. Animated Memory Wall Layout */}
-        {layoutMode === 'wall' && activeTab === 'timeline' && memories.length > 0 ? (
+        {/* 0. Orbita 3D Memory Orbit Stage */}
+        {layoutMode === 'orbit' && activeTab === 'timeline' && visibleMemories.length > 0 ? (
+          <MemoryOrbit
+            memories={visibleMemories}
+            theme={theme}
+            onEdit={canEdit ? form.openEdit : null}
+            onDelete={canEdit ? form.handleDelete : null}
+          />
+        ) : /* 1. Animated Memory Wall Layout */
+        layoutMode === 'wall' && activeTab === 'timeline' && visibleMemories.length > 0 ? (
           <div className="memory-wall-board relative max-w-5xl mx-auto w-full min-h-[78vh] my-2 p-5 sm:p-8 md:p-12 rounded-3xl select-none">
             <LeafShadows />
             <div className="sunlight-overlay" />

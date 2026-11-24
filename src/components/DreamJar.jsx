@@ -60,6 +60,7 @@ const DreamJar = ({ config, setConfig, ownerId, canEdit }) => {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
+        data-cursor="Open"
         className="group cursor-pointer flex flex-col items-center gap-1.5 relative transition-transform duration-300 hover:scale-105 bg-transparent border-0 p-2 rounded-3xl"
       >
         {/* Warm glow behind Jar */}

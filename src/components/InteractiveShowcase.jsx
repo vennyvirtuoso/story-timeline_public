@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   RotateCw, Heart, Sparkles, Users, Shield,
   BookOpen, ArrowUpRight, Pin, Cloud, Plus
@@ -58,6 +58,27 @@ const InteractiveShowcase = ({ onStartClick }) => {
   const [demoWishes, setDemoWishes] = useState(INITIAL_DEMO_WISHES);
   const [wishInput, setWishInput] = useState('');
   const [dropKey, setDropKey] = useState(0);
+  const sectionRef = useRef(null);
+
+  // Long Take-inspired bidirectional scroll reveals
+  useEffect(() => {
+    const root = sectionRef.current;
+    if (!root || typeof IntersectionObserver === 'undefined') return;
+    const blocks = root.querySelectorAll('.scroll-reveal-block');
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          entry.target.setAttribute('data-revealed', entry.isIntersecting ? 'true' : 'false');
+        });
+      },
+      { threshold: 0.14 }
+    );
+    blocks.forEach((b) => {
+      b.setAttribute('data-revealed', 'false');
+      io.observe(b);
+    });
+    return () => io.disconnect();
+  }, []);
 
   const handleDropWish = (text) => {
     const cleaned = (text ?? wishInput).trim();
@@ -71,12 +92,13 @@ const InteractiveShowcase = ({ onStartClick }) => {
 
   return (
     <section
+      ref={sectionRef}
       id="explore-safarnama"
       aria-label="Explore Safarnama interactive preview"
       className="relative z-10 w-full max-w-6xl mx-auto px-5 sm:px-8 pt-10 pb-20 space-y-16"
     >
       {/* Section Header */}
-      <div className="text-center max-w-2xl mx-auto space-y-2.5">
+      <div className="scroll-reveal-block text-center max-w-2xl mx-auto space-y-2.5">
         <span className="inline-flex items-center gap-1.5 text-[10px] font-sub font-bold uppercase tracking-[0.22em] text-accent">
           <Sparkles size={12} /> Try It Right Here
         </span>
@@ -256,7 +278,7 @@ const InteractiveShowcase = ({ onStartClick }) => {
       </div>
 
       {/* Try-It-Live Mini Dream Jar */}
-      <div className="bg-surface/90 backdrop-blur-xl border border-border-theme rounded-[30px] p-6 sm:p-9 shadow-theme-md">
+      <div className="scroll-reveal-block bg-surface/90 backdrop-blur-xl border border-border-theme rounded-[30px] p-6 sm:p-9 shadow-theme-md">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
           {/* Animated Glass Jar Visual */}
           <div className="md:col-span-5 flex flex-col items-center justify-center relative py-2">
@@ -405,7 +427,7 @@ const InteractiveShowcase = ({ onStartClick }) => {
       </div>
 
       {/* Bento Feature Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      <div className="scroll-reveal-block grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {BENTO_FEATURES.map((item) => (
           <div
             key={item.title}

@@ -117,12 +117,12 @@ const StorySlideshow = ({ isOpen, onClose, memories, title }) => {
 
         <div className="flex items-center justify-between max-w-5xl mx-auto">
           <div className="flex items-center gap-2.5 min-w-0">
-            <Heart size={14} className="text-rose-400 fill-rose-400 shrink-0" />
+            <span className="live-beacon-dot shrink-0" aria-hidden="true" />
             <span className="font-heading text-base sm:text-lg font-medium truncate text-amber-100">
               {title || 'Our Story'}
             </span>
-            <span className="text-[11px] font-sub uppercase tracking-[0.18em] text-white/50 shrink-0">
-              {safeIdx + 1} / {slides.length}
+            <span className="text-[11px] font-mono uppercase tracking-[0.22em] text-amber-200/60 shrink-0 border-l border-white/15 pl-2.5">
+              REEL {String(safeIdx + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
             </span>
           </div>
 

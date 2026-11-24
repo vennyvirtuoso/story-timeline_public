@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   BookOpen, Loader2, Ticket, Sparkles, ArrowLeft,
   ChevronRight, ChevronDown, Heart, Shield, Users, Camera, Lock
@@ -10,6 +10,8 @@ import { getTheme } from '../utils/themes';
 import introArt from '../assets/safarnama-intro-art.jpg';
 import { PaperPlaneTrailAnim } from './PageAnimations';
 import InteractiveShowcase from './InteractiveShowcase';
+import { DesktopPolaroidTrail, MobilePolaroidArc } from './HeroMotionTrail';
+import EditorialCursor from './EditorialCursor';
 
 const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
   const [token, setToken] = useState(() => {
@@ -21,6 +23,7 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
   });
   const [err, setErr] = useState('');
   const defaultTheme = getTheme('love');
+  const heroRef = useRef(null);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -47,8 +50,10 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
       className="min-h-dvh w-full relative overflow-x-hidden flex flex-col justify-between editorial-grain"
       style={{ background: 'var(--bg-gradient)' }}
     >
-      {/* Pure-CSS reading progress ribbon */}
+      {/* Pure-CSS reading progress ribbon + Understory analog film grain + Nova cursor */}
       <div className="scroll-progress-bar" aria-hidden="true" />
+      <div className="analog-film-grain" aria-hidden="true" />
+      <EditorialCursor />
       <WelcomeModal />
       <FloatingElements theme={defaultTheme} />
 
@@ -77,8 +82,9 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
       </header>
 
       {/* Main Split Editorial Showcase + Sign-In Card */}
-      <main className="relative z-10 w-full max-w-6xl mx-auto px-5 sm:px-8 py-8 sm:py-12 flex-1 flex items-center">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+      <main ref={heroRef} className="relative z-10 w-full max-w-6xl mx-auto px-5 sm:px-8 py-8 sm:py-12 flex-1 flex items-center">
+        <DesktopPolaroidTrail containerRef={heroRef} />
+        <div className="relative z-10 w-full grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
 
           {/* Left Column: Luxury Editorial Pitch & Visual Heirloom Preview */}
           <div className="lg:col-span-7 text-center lg:text-left space-y-6">
@@ -115,14 +121,21 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
                 />
               </div>
 
-              {/* Subtle floating companion badge */}
-              <div className="hidden sm:inline-flex items-center gap-2 bg-white/85 backdrop-blur-md border border-border-theme shadow-theme-md rounded-full px-3.5 py-1.5 absolute bottom-3 right-2 text-[11px] font-sub font-semibold text-dark/75">
-                <Users size={13} className="text-accent shrink-0" />
-                <span>Co-authored with your favorite people</span>
+              {/* Understory-inspired Specimen Leader-Line Callout Pins */}
+              <div className="hidden sm:flex items-center gap-2 bg-[#fffdf7]/95 backdrop-blur-md border border-border-theme shadow-theme-sm rounded-lg px-2.5 py-1.5 absolute top-3 left-1 pointer-events-none">
+                <span className="live-beacon-dot" />
+                <div className="text-left leading-none">
+                  <span className="block font-mono text-[8px] uppercase tracking-[0.2em] text-dark/45">01 · Keepsake</span>
+                  <span className="block font-heading italic font-semibold text-xs text-primary mt-0.5">3D Polaroid Flip</span>
+                </div>
               </div>
-              <div className="hidden sm:inline-flex items-center gap-1.5 bg-white/85 backdrop-blur-md border border-border-theme shadow-theme-sm rounded-full px-3 py-1 absolute top-4 left-2 text-[10px] font-sub font-bold uppercase tracking-wider text-primary">
-                <Heart size={11} className="text-rose-safarnama fill-rose-safarnama" />
-                <span>Your Living Keepsake</span>
+
+              <div className="hidden sm:flex items-center gap-2 bg-[#fffdf7]/95 backdrop-blur-md border border-border-theme shadow-theme-md rounded-lg px-2.5 py-1.5 absolute bottom-3 right-1 pointer-events-none">
+                <span className="w-2 h-2 rounded-full bg-accent" />
+                <div className="text-left leading-none">
+                  <span className="block font-mono text-[8px] uppercase tracking-[0.2em] text-dark/45">02 · Co-Authored</span>
+                  <span className="block font-heading italic font-semibold text-xs text-primary mt-0.5">Dream Jar &amp; Drive</span>
+                </div>
               </div>
             </div>
 
@@ -279,6 +292,9 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
 
         </div>
       </main>
+
+      {/* Mobile curved Polaroid arc marquee (Motion Trail Hero mobile mode) */}
+      <MobilePolaroidArc />
 
       {/* Smooth scroll invitation pill */}
       <div className="relative z-10 flex justify-center pb-4">
