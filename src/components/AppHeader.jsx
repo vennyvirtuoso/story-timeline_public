@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image as ImageIcon, Clock, Settings, Share2, LogOut, Heart, Users, User, Home, Crown } from 'lucide-react';
+import { Image as ImageIcon, Clock, Settings, Share2, LogOut, Heart, Users, User, Home, Crown, Play } from 'lucide-react';
 import { getTheme } from '../utils/themes';
 import { useDuration } from '../hooks/useDuration';
 
@@ -64,6 +64,8 @@ const AppHeader = ({
   activeTab,
   setActiveTab,
   galleryCount,
+  memoriesCount = 0,
+  onPlayStory,
   isSharedAccess,
   onShare,
   onSettings,
@@ -202,6 +204,17 @@ const AppHeader = ({
               );
             })}
           </div>
+
+          {memoriesCount > 0 && onPlayStory && (
+            <button
+              type="button"
+              onClick={onPlayStory}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-accent/15 hover:bg-accent/25 text-accent border border-accent/30 text-[11px] font-sub font-bold uppercase tracking-wider shadow-theme-sm transition-all duration-150 hover:-translate-y-0.5 active:scale-95 shrink-0"
+            >
+              <Play size={11} fill="currentColor" />
+              <span>Play Story</span>
+            </button>
+          )}
         </nav>
       </div>
     </header>

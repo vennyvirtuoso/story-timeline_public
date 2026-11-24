@@ -727,6 +727,117 @@ input[type="time"] {
   }
 }
 
+/* ==========================================================================
+   INTERACTIVE DELIGHTS: DREAM JAR DROP, CINEMA ZOOM, SURPRISE HALO & TILT
+   ========================================================================== */
+@keyframes slip-drop-in {
+  0% {
+    transform: translate3d(0, -56px, 0) rotate(-18deg) scale(1.1);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  75% {
+    transform: translate3d(4px, 14px, 0) rotate(12deg) scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 22px, 0) rotate(6deg) scale(0.85);
+    opacity: 0;
+  }
+}
+
+@keyframes jar-sparkle-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1.18);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+@keyframes cinema-ken-burns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.07);
+  }
+}
+
+@keyframes surprise-halo-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55), 0 0 28px rgba(245, 158, 11, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(245, 158, 11, 0.12), 0 0 42px rgba(245, 158, 11, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 16px rgba(245, 158, 11, 0), 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.anim-slip-drop {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: slip-drop-in 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+}
+
+.anim-jar-sparkle {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: jar-sparkle-pop 0.85s ease-out forwards;
+  }
+}
+
+.anim-cinema-zoom {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: cinema-ken-burns 6.5s ease-out forwards;
+  }
+}
+
+.memory-surprise-halo {
+  border-radius: 1rem;
+  animation: surprise-halo-pulse 1.2s ease-out 2;
+}
+
+/* Tactile Polaroid 3D Pointer Tilt & Glossy Sheen (zero React re-renders) */
+.polaroid-tilt {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --sheen-x: 50%;
+  --sheen-y: 50%;
+  --sheen-opacity: 0;
+  transform: rotate(var(--base-rot, 0deg)) rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  will-change: transform;
+}
+
+.polaroid-tilt:hover {
+  transform: rotate(0deg) translateY(-6px) scale(1.015) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) !important;
+}
+
+.polaroid-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15;
+  opacity: var(--sheen-opacity, 0);
+  transition: opacity 0.28s ease;
+  background: radial-gradient(
+    circle 220px at var(--sheen-x, 50%) var(--sheen-y, 50%),
+    rgba(255, 255, 255, 0.36) 0%,
+    rgba(255, 255, 255, 0.08) 45%,
+    transparent 75%
+  );
+  mix-blend-mode: overlay;
+}
+
 /* Default to visible static states; opt in to motion when user has no reduced-motion preference */
 .animate-fadeIn {
   @media (prefers-reduced-motion: no-preference) {

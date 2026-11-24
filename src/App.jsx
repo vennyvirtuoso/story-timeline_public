@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Heart, Plus, BookOpen, Pin, ArrowUp } from 'lucide-react';
+import { Heart, Plus, BookOpen, Pin, ArrowUp, Sparkles } from 'lucide-react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase/config';
 import { useAuth }          from './hooks/useAuth';
@@ -31,6 +31,7 @@ import { Capacitor } from '@capacitor/core';
 import JournalCover from './components/JournalCover';
 import DreamJar from './components/DreamJar';
 import { WarmDustMotes } from './components/PageAnimations';
+import StorySlideshow from './components/StorySlideshow';
 
 // ─── Isolated Click-Burst Layer (never triggers App re-renders) ────────────────
 const ClickBurstLayer = React.memo(({ themeId }) => {
@@ -254,10 +255,20 @@ export default function App() {
   const [isPricingOpen,     setIsPricingOpen]     = useState(false);
   const [layoutMode,        setLayoutMode]        = useState('journal'); // 'journal' | 'wall'
   const [showBackToTop,     setShowBackToTop]     = useState(false);
+  const [isSlideshowOpen,   setIsSlideshowOpen]   = useState(false);
+  const [highlightedId,     setHighlightedId]     = useState(null);
 
-  const fileRef  = useRef(null);
-  const videoRef = useRef(null);
-  const mainRef  = useRef(null);
+  const fileRef           = useRef(null);
+  const videoRef          = useRef(null);
+  const mainRef           = useRef(null);
+  const highlightTimerRef = useRef(null);
+  const lastSurpriseIdRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    };
+  }, []);
 
   const isViewer     = role === 'viewer';
   const isOwner      = role === 'owner';
@@ -383,6 +394,30 @@ export default function App() {
 
   const visibleMemories = memories;
 
+  const handleSurpriseMemory = () => {
+    if (!visibleMemories.length) return;
+    const pool =
+      visibleMemories.length > 1
+        ? visibleMemories.filter((m) => m.id !== lastSurpriseIdRef.current)
+        : visibleMemories;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    if (!pick) return;
+    lastSurpriseIdRef.current = pick.id;
+    setHighlightedId(pick.id);
+
+    const targetEl = document.getElementById(`memory-${pick.id}`);
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current);
+    highlightTimerRef.current = setTimeout(() => setHighlightedId(null), 2400);
+  };
+
+  const slideshowTitle =
+    config?.timelineName ||
+    (config?.partner1 && config?.partner2 ? `${config.partner1} & ${config.partner2}` : config?.partner1) ||
+    'Our Safarnama';
+
   // --- Loading / auth guards ---
   if (authLoading) return <LoadingState title="Safarnama" subtitle="Initializing..." rotateDeg="-1.2deg" />;
   if (!user && !isSharedAccess) return (
@@ -430,6 +465,8 @@ export default function App() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           galleryCount={galleryImages.length}
+          memoriesCount={memories.length}
+          onPlayStory={() => setIsSlideshowOpen(true)}
           isSharedAccess={isSharedAccess}
           onShare={() => setIsShareModalOpen(true)}
           onSettings={() => setIsConfigModalOpen(true)}
@@ -449,9 +486,9 @@ export default function App() {
         }}
         className="flex-1 overflow-y-auto smooth-scroll-pane app-main-scroller relative z-10 px-3 py-6 md:px-6 md:py-8"
       >
-        {/* Layout Switcher (Journal View / Memory Wall) */}
+        {/* Layout Switcher (Journal View / Memory Wall) + Surprise Me */}
         {activeTab === 'timeline' && memories.length > 0 && (
-          <div className="flex justify-center mb-6 relative z-20">
+          <div className="flex flex-wrap items-center justify-center gap-2.5 mb-6 relative z-20">
             <div className={`inline-flex p-1 rounded-full border border-border-theme shadow-theme-sm ${theme.isDark ? 'bg-white/[0.06]' : 'bg-white/80 backdrop-blur-md'}`}>
               <button
                 type="button"
@@ -478,6 +515,20 @@ export default function App() {
                 <Pin size={13} /> Memory Wall
               </button>
             </div>
+
+            {memories.length > 1 && (
+              <button
+                type="button"
+                onClick={handleSurpriseMemory}
+                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-sub font-bold uppercase tracking-wider border border-accent/35 shadow-theme-sm transition-all duration-200 hover:-translate-y-0.5 active:scale-95 ${
+                  theme.isDark
+                    ? 'bg-white/10 text-amber-200 hover:bg-white/15'
+                    : 'bg-white/90 text-accent hover:bg-amber-50'
+                }`}
+              >
+                <Sparkles size={13} /> Surprise Me
+              </button>
+            )}
           </div>
         )}
 
@@ -508,6 +559,7 @@ export default function App() {
                   theme={theme}
                   index={idx}
                   layoutMode="wall"
+                  isHighlighted={highlightedId === ev.id}
                   onDelete={canEdit ? form.handleDelete : null}
                   onEdit={canEdit ? form.openEdit : null}
                 />
@@ -571,6 +623,7 @@ export default function App() {
                         theme={theme}
                         index={idx}
                         layoutMode="journal"
+                        isHighlighted={highlightedId === ev.id}
                         onDelete={canEdit ? form.handleDelete : null}
                         onEdit={canEdit ? form.openEdit : null}
                       />
@@ -695,6 +748,13 @@ export default function App() {
         user={user}
         theme={theme}
         onSuccess={async () => { await refreshLimits(); }}
+      />
+
+      <StorySlideshow
+        isOpen={isSlideshowOpen}
+        onClose={() => setIsSlideshowOpen(false)}
+        memories={visibleMemories}
+        title={slideshowTitle}
       />
 
       <ClickBurstLayer themeId={theme.id} />

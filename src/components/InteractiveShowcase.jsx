@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
 import {
   RotateCw, Heart, Sparkles, Users, Shield,
-  BookOpen, ArrowUpRight, Pin, Cloud
+  BookOpen, ArrowUpRight, Pin, Cloud, Plus
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+
+const PRESET_WISHES = [
+  'Watch the Northern Lights',
+  'Midnight drive to the coast',
+  'Cook pasta together in Rome',
+];
+
+const INITIAL_DEMO_WISHES = [
+  'Stargaze in Spiti Valley',
+  'Build a cozy reading corner',
+];
 
 const DEMO_THEMES = [
   { id: 'love',       name: 'Classic',  dot: '#244f43', accent: '#a97132', bg: '#fffdf9', text: '#1c1917', pill: 'bg-rose-50 text-rose-600' },
@@ -44,6 +55,18 @@ const BENTO_FEATURES = [
 const InteractiveShowcase = ({ onStartClick }) => {
   const [flipped, setFlipped] = useState(false);
   const [themeIdx, setThemeIdx] = useState(0);
+  const [demoWishes, setDemoWishes] = useState(INITIAL_DEMO_WISHES);
+  const [wishInput, setWishInput] = useState('');
+  const [dropKey, setDropKey] = useState(0);
+
+  const handleDropWish = (text) => {
+    const cleaned = (text ?? wishInput).trim();
+    if (!cleaned) return;
+    setDemoWishes((prev) => [cleaned, ...prev].slice(0, 8));
+    setWishInput('');
+    setDropKey((k) => k + 1);
+  };
+
   const activeTheme = DEMO_THEMES[themeIdx];
 
   return (
@@ -227,6 +250,155 @@ const InteractiveShowcase = ({ onStartClick }) => {
               >
                 Read our story <ArrowUpRight size={13} />
               </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Try-It-Live Mini Dream Jar */}
+      <div className="bg-surface/90 backdrop-blur-xl border border-border-theme rounded-[30px] p-6 sm:p-9 shadow-theme-md">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          {/* Animated Glass Jar Visual */}
+          <div className="md:col-span-5 flex flex-col items-center justify-center relative py-2">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute inset-0 bg-amber-300/20 blur-2xl rounded-full" aria-hidden="true" />
+
+              {/* Sparkle burst on drop */}
+              {dropKey > 0 && (
+                <div
+                  key={`spark-${dropKey}`}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -top-2 inset-x-0 flex justify-center z-20 anim-jar-sparkle"
+                >
+                  <Sparkles size={28} className="text-amber-500" />
+                </div>
+              )}
+
+              {/* Dropping folded wish slip */}
+              {dropKey > 0 && (
+                <div
+                  key={`slip-${dropKey}`}
+                  aria-hidden="true"
+                  className="pointer-events-none absolute top-10 z-20 anim-slip-drop"
+                >
+                  <div className="w-7 h-3.5 rounded-sm bg-amber-50 border border-amber-500/70 shadow-sm flex items-center justify-center">
+                    <div className="w-4 h-px bg-rose-400/80" />
+                  </div>
+                </div>
+              )}
+
+              <svg viewBox="0 0 110 140" width="124" height="154" className="relative z-10 drop-shadow-[0_10px_20px_rgba(28,25,23,0.12)]" aria-hidden="true">
+                {/* Brass cap */}
+                <rect x="37" y="14" width="36" height="10" rx="3" fill="#b45309" stroke="#78350f" strokeWidth="1.5" />
+                <line x1="41" y1="19" x2="69" y2="19" stroke="#fcd34d" strokeWidth="1.5" />
+                {/* Neck */}
+                <path d="M43 24 L67 24 L69 35 L41 35 Z" fill="rgba(255,255,255,0.35)" stroke="var(--border-color)" strokeWidth="1.2" />
+                {/* Glass body */}
+                <path
+                  d="M41 35 C27 46 24 58 24 86 C24 118 35 128 55 128 C75 128 86 118 86 86 C86 58 83 46 69 35 Z"
+                  fill="rgba(255,255,255,0.35)"
+                  stroke="var(--border-color)"
+                  strokeWidth="2"
+                />
+                {/* Glass glare */}
+                <path d="M32 62 C32 52 36 44 45 40" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" />
+                {/* Hanging tag + heart */}
+                <path d="M47 47 L63 47 L67 57 L55 67 L43 57 Z" fill="#fffbeb" stroke="var(--border-color)" strokeWidth="1" />
+                <path
+                  d="M55 60.2 L54.1 59.4 C51.4 57 49.7 55.5 49.7 53.6 C49.7 52.1 50.9 51 52.4 51 C53.3 51 54.2 51.4 55 52.2 C55.8 51.4 56.7 51 57.6 51 C59.1 51 60.3 52.1 60.3 53.6 C60.3 55.5 58.6 57 55.9 59.4 Z"
+                  fill="#e11d48"
+                />
+                {/* Folded wish slips inside */}
+                {demoWishes.slice(0, 6).map((_, i) => {
+                  const coords = [
+                    [42, 112, -20, '#fffbeb'],
+                    [62, 110, 18, '#fff1f2'],
+                    [52, 100, -8, '#ecfdf5'],
+                    [68, 98, 24, '#fef3c7'],
+                    [39, 98, -14, '#f0f9ff'],
+                    [55, 88, 9, '#fffbeb'],
+                  ][i];
+                  return (
+                    <g key={i} transform={`translate(${coords[0]}, ${coords[1]}) rotate(${coords[2]})`}>
+                      <rect x="-10" y="-4.5" width="20" height="9" rx="1.5" fill={coords[3]} stroke="#b45309" strokeWidth="0.6" />
+                      <line x1="-6" y1="0" x2="6" y2="0" stroke="#e11d48" strokeWidth="0.6" opacity="0.65" />
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+            <p className="font-cursive text-3xl text-accent font-bold mt-1">Our Dream Jar</p>
+            <p className="text-[10px] font-sub font-bold uppercase tracking-[0.16em] text-dark/45">
+              {demoWishes.length} {demoWishes.length === 1 ? 'wish' : 'wishes'} glowing inside
+            </p>
+          </div>
+
+          {/* Interactive Drop-a-Wish Controls */}
+          <div className="md:col-span-7 space-y-4">
+            <div>
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-sub font-bold uppercase tracking-[0.18em] text-accent">
+                <Sparkles size={11} /> Try The Dream Jar Live
+              </span>
+              <h3 className="font-heading text-2xl sm:text-3xl font-semibold text-primary mt-1">
+                Drop a future wish into the jar
+              </h3>
+              <p className="text-xs sm:text-sm text-dark/60 mt-1 leading-relaxed">
+                Type a bucket-list dream below (or tap a suggestion) and watch it float into the jar.
+              </p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleDropWish();
+              }}
+              className="flex flex-col sm:flex-row gap-2.5"
+            >
+              <label htmlFor="demo-dream-input" className="sr-only">
+                Type a sample dream
+              </label>
+              <input
+                id="demo-dream-input"
+                value={wishInput}
+                onChange={(e) => setWishInput(e.target.value)}
+                placeholder="e.g., Watch the Northern Lights together..."
+                maxLength={90}
+                className="flex-1 px-4 py-3 rounded-2xl border border-border-theme bg-white/85 text-sm text-dark placeholder-dark/35 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-sans"
+              />
+              <button
+                type="submit"
+                disabled={!wishInput.trim()}
+                className="inline-flex items-center justify-center gap-1.5 px-5 py-3 bg-primary hover:bg-primary-hover text-cream rounded-2xl text-xs font-sub font-bold uppercase tracking-[0.12em] shadow-theme-sm transition-all active:scale-95 disabled:opacity-50 shrink-0"
+              >
+                <Plus size={14} /> Drop in Jar
+              </button>
+            </form>
+
+            {/* Quick suggestion chips */}
+            <div className="flex flex-wrap gap-2">
+              {PRESET_WISHES.map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => handleDropWish(preset)}
+                  className="text-[11px] font-sans text-dark/70 hover:text-primary bg-cream/90 hover:bg-cream-dark border border-border-theme px-3 py-1.5 rounded-full transition-colors"
+                >
+                  + {preset}
+                </button>
+              ))}
+            </div>
+
+            {/* Recent wishes preview pills */}
+            <div className="pt-2 space-y-1.5 max-h-32 overflow-y-auto scrollbar-thin">
+              {demoWishes.slice(0, 4).map((w, i) => (
+                <div
+                  key={`${w}-${i}`}
+                  className="flex items-center gap-2.5 bg-white/75 border border-border-theme/70 rounded-xl px-3.5 py-2 text-xs text-dark/80 font-heading italic text-base"
+                >
+                  <Heart size={11} className="text-rose-safarnama fill-rose-safarnama shrink-0" />
+                  <span className="truncate">{w}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

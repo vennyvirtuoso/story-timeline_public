@@ -336,9 +336,40 @@ export const PushPin = ({ washiStyle, paperclipColor, index }) => {
   );
 };
 
-export const EventCard = React.memo(({ event, onDelete, onEdit, theme, index = 0, layoutMode = 'journal' }) => {
+export const EventCard = React.memo(({ event, onDelete, onEdit, theme, index = 0, layoutMode = 'journal', isHighlighted = false }) => {
   const t = theme || {};
   const [isFlipped, setIsFlipped] = useState(false);
+  const polaroidRef = useRef(null);
+
+  const handlePolaroidMove = (e) => {
+    const el = polaroidRef.current;
+    if (!el) return;
+    if (
+      typeof window !== 'undefined' &&
+      (window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+        !window.matchMedia('(hover: hover) and (pointer: fine)').matches)
+    ) {
+      return;
+    }
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    const tiltY = ((px - 0.5) * 7).toFixed(2);
+    const tiltX = ((0.5 - py) * 7).toFixed(2);
+    el.style.setProperty('--tilt-x', `${tiltX}deg`);
+    el.style.setProperty('--tilt-y', `${tiltY}deg`);
+    el.style.setProperty('--sheen-x', `${(px * 100).toFixed(1)}%`);
+    el.style.setProperty('--sheen-y', `${(py * 100).toFixed(1)}%`);
+    el.style.setProperty('--sheen-opacity', '1');
+  };
+
+  const handlePolaroidLeave = () => {
+    const el = polaroidRef.current;
+    if (!el) return;
+    el.style.setProperty('--tilt-x', '0deg');
+    el.style.setProperty('--tilt-y', '0deg');
+    el.style.setProperty('--sheen-opacity', '0');
+  };
 
   const typeConfig = {
     milestone:       { icon: <Star className="text-amber-500" size={13} fill="currentColor" />,  label: 'Milestone',     color: 'text-amber-700 bg-amber-50 border border-amber-200/60' },
@@ -402,6 +433,7 @@ export const EventCard = React.memo(({ event, onDelete, onEdit, theme, index = 0
     /* 3D Flip Card for photo memories */
     return (
       <article
+        id={`memory-${event.id}`}
         className={`card-perspective relative w-full mb-12 last:mb-0 animate-card-enter ${layoutMode === 'wall' ? 'mb-0 pl-0' : 'pl-9 md:pl-12'}`}
         style={{ animationDelay: enterDelay }}
       >
@@ -426,9 +458,13 @@ export const EventCard = React.memo(({ event, onDelete, onEdit, theme, index = 0
           {/* Front Side: Polaroid Archival Frame */}
           <div className="card-front">
             <div
-              className="polaroid-card group p-4 sm:p-5 pb-7 sm:pb-8 rounded-sm relative w-full cursor-pointer select-none"
-              style={{ transform: `rotate(${rotDeg})` }}
+              ref={polaroidRef}
+              onMouseMove={handlePolaroidMove}
+              onMouseLeave={handlePolaroidLeave}
+              className={`polaroid-card polaroid-tilt group p-4 sm:p-5 pb-7 sm:pb-8 rounded-sm relative w-full cursor-pointer select-none overflow-visible ${isHighlighted ? 'memory-surprise-halo' : ''}`}
+              style={{ '--base-rot': rotDeg }}
             >
+              <div className="polaroid-sheen rounded-sm" aria-hidden="true" />
               {layoutMode === 'wall' && <PushPin washiStyle={event.washiStyle} paperclipColor={event.paperclipColor} index={index} />}
               <WashiTape styleName={event.washiStyle} />
 
@@ -572,6 +608,7 @@ export const EventCard = React.memo(({ event, onDelete, onEdit, theme, index = 0
   /* Flat Card layout for text-only memories */
   return (
     <article
+      id={`memory-${event.id}`}
       className={`relative group mb-12 last:mb-0 animate-card-enter ${layoutMode === 'wall' ? 'mb-0 pl-0' : 'pl-9 md:pl-12'}`}
       style={{ animationDelay: enterDelay }}
     >
@@ -587,7 +624,7 @@ export const EventCard = React.memo(({ event, onDelete, onEdit, theme, index = 0
       )}
 
       <div
-        className={`${isDarkPaper ? 'dark-ticket-wrapper' : 'ticket-wrapper'}`}
+        className={`${isDarkPaper ? 'dark-ticket-wrapper' : 'ticket-wrapper'} ${isHighlighted ? 'memory-surprise-halo' : ''}`}
         style={{ transform: `rotate(${rotDeg})` }}
       >
         <div
