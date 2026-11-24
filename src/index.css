@@ -895,36 +895,54 @@ input[type="time"] {
    ENGINEERED SINGLE-MEMORY PRINT / PDF KEEPSAKE TYPESETTING
    ========================================================================== */
 @page {
+  size: auto;
   margin: 12mm;
 }
 
+.print-portal-host {
+  display: none;
+}
+
 @media print {
-  body.printing-memory-card * {
-    visibility: hidden !important;
-  }
-
-  body.printing-memory-card .printable-keepsake-sheet,
-  body.printing-memory-card .printable-keepsake-sheet * {
-    visibility: visible !important;
-  }
-
+  html,
   body.printing-memory-card {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
     background: #ffffff !important;
     overflow: visible !important;
-    height: auto !important;
+  }
+
+  /* Completely remove the app tree from print flow so zero extra pages are generated */
+  body.printing-memory-card > #root {
+    display: none !important;
+  }
+
+  body.printing-memory-card > .print-portal-host {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   body.printing-memory-card .printable-keepsake-sheet {
-    position: fixed !important;
-    inset: 0 !important;
+    position: relative !important;
     width: 100% !important;
-    max-width: 100% !important;
+    max-width: 175mm !important;
     margin: 0 auto !important;
     box-shadow: none !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  body.printing-memory-card .printable-keepsake-sheet img {
+    max-height: 110mm !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 }
 
