@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BookOpen, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { LostCompassAnim } from '../components/PageAnimations';
 
 export default function NotFound() {
   return (
@@ -9,9 +10,7 @@ export default function NotFound() {
       style={{ background: 'var(--bg-gradient)' }}
     >
       <div className="bg-surface backdrop-blur-xl border border-border-theme rounded-[28px] shadow-theme-lg p-10 max-w-sm w-full">
-        <div className="w-16 h-16 rounded-full bg-primary/10 border border-border-theme flex items-center justify-center mx-auto mb-5 text-primary">
-          <BookOpen size={28} />
-        </div>
+        <LostCompassAnim />
         <p className="font-cursive text-3xl text-accent mb-1">Lost Page</p>
         <h1 className="font-heading text-3xl font-semibold text-primary mb-2">Page Not Found</h1>
         <p className="text-dark/60 text-sm mb-7 font-sans leading-relaxed">

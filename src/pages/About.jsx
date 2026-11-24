@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Shield, Lock, Users, Heart } from 'lucide-react';
+import { StoryTimelineAnim } from '../components/PageAnimations';
 
 export default function About() {
   return (
@@ -19,9 +20,10 @@ export default function About() {
         <h1 className="text-2xl sm:text-3xl font-heading font-semibold text-primary mb-1">
           About Safarnama
         </h1>
-        <h5 className="font-cursive text-xl sm:text-2xl text-accent mb-8">
+        <h5 className="font-cursive text-xl sm:text-2xl text-accent mb-2">
           A private space for the journeys that matter most
         </h5>
+        <StoryTimelineAnim />
 
         {/* Product Description */}
         <section className="mb-8 space-y-6">
@@ -142,15 +144,15 @@ export default function About() {
                 icon: Heart,
                 text: 'Safarnama does not sell user data or personal content'
               }
-            ].map(({ icon: Icon, text }) => (
+            ].map((item) => (
               <li
-                key={text}
+                key={item.text}
                 className="flex items-start gap-3.5 text-sm text-dark/70 font-sans"
               >
                 <div className="mt-0.5 p-1.5 rounded-full bg-primary/10 shrink-0 text-primary">
-                  <Icon size={12} />
+                  <item.icon size={12} />
                 </div>
-                {text}
+                {item.text}
               </li>
             ))}
           </ul>

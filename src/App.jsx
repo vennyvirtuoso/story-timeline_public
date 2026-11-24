@@ -30,6 +30,7 @@ import { Link }             from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import JournalCover from './components/JournalCover';
 import DreamJar from './components/DreamJar';
+import { WarmDustMotes } from './components/PageAnimations';
 
 // ─── Isolated Click-Burst Layer (never triggers App re-renders) ────────────────
 const ClickBurstLayer = React.memo(({ themeId }) => {
@@ -131,7 +132,7 @@ const ClickBurstLayer = React.memo(({ themeId }) => {
 
 ClickBurstLayer.displayName = 'ClickBurstLayer';
 
-// ─── Memory Wall Shadow & Light Motes Components ───────────────────────────────
+// ─── Memory Wall Shadow Component ──────────────────────────────────────────────
 const LeafShadows = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none z-10 select-none rounded-3xl" aria-hidden="true">
     <svg className="absolute w-[160%] h-[160%] -top-1/3 -left-1/3 opacity-[0.14] mix-blend-multiply blur-xl animate-leaf-sway" viewBox="0 0 800 600">
@@ -141,95 +142,6 @@ const LeafShadows = () => (
     </svg>
   </div>
 );
-
-const LightMotesCanvas = React.memo(() => {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const prefersReduced =
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReduced) return;
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animationFrameId;
-    let width = (canvas.width = canvas.offsetWidth);
-    let height = (canvas.height = canvas.offsetHeight);
-
-    const particles = Array.from({ length: 16 }).map(() => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      r: Math.random() * 3.5 + 2,
-      vx: (Math.random() - 0.5) * 0.35,
-      vy: (Math.random() - 0.5) * 0.35 - 0.08,
-      alpha: Math.random() * 0.45 + 0.1,
-      fadeSpeed: Math.random() * 0.004 + 0.002,
-      fading: Math.random() > 0.5,
-    }));
-
-    const resize = () => {
-      if (!canvas) return;
-      width = canvas.width = canvas.offsetWidth;
-      height = canvas.height = canvas.offsetHeight;
-    };
-    window.addEventListener('resize', resize);
-
-    const render = () => {
-      if (!canvas) return;
-      if (!document.hidden) {
-        ctx.clearRect(0, 0, width, height);
-        particles.forEach((p) => {
-          p.x += p.vx;
-          p.y += p.vy;
-
-          if (p.x < 0) p.x = width;
-          if (p.x > width) p.x = 0;
-          if (p.y < 0) p.y = height;
-          if (p.y > height) p.y = 0;
-
-          if (p.fading) {
-            p.alpha -= p.fadeSpeed;
-            if (p.alpha <= 0.08) p.fading = false;
-          } else {
-            p.alpha += p.fadeSpeed;
-            if (p.alpha >= 0.55) p.fading = true;
-          }
-
-          ctx.beginPath();
-          const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 2.5);
-          grad.addColorStop(0, `rgba(253, 224, 71, ${p.alpha})`);
-          grad.addColorStop(0.45, `rgba(251, 191, 36, ${p.alpha * 0.45})`);
-          grad.addColorStop(1, 'rgba(251, 191, 36, 0)');
-          ctx.fillStyle = grad;
-          ctx.arc(p.x, p.y, p.r * 2.5, 0, Math.PI * 2);
-          ctx.fill();
-        });
-      }
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    render();
-
-    return () => {
-      window.removeEventListener('resize', resize);
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden="true"
-      className="absolute inset-0 w-full h-full pointer-events-none z-10 rounded-3xl"
-    />
-  );
-});
-
-LightMotesCanvas.displayName = 'LightMotesCanvas';
 
 // ─── Cute Scrapbook Sticker Elements (Desktop margins only to prevent mobile clipping) ───
 const CuteButterfly = () => (
@@ -563,7 +475,7 @@ export default function App() {
           <div className="memory-wall-board relative max-w-5xl mx-auto w-full min-h-[78vh] my-2 p-5 sm:p-8 md:p-12 rounded-3xl select-none">
             <LeafShadows />
             <div className="sunlight-overlay" />
-            <LightMotesCanvas />
+            <WarmDustMotes />
 
             {!isPro && isOwner && (
               <div className="relative z-20 max-w-xl mx-auto mb-8">

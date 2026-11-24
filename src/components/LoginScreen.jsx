@@ -8,6 +8,7 @@ import FloatingElements from './FloatingElements';
 import WelcomeModal from './WelcomeModal';
 import { getTheme } from '../utils/themes';
 import introArt from '../assets/safarnama-intro-art.jpg';
+import { PaperPlaneTrailAnim } from './PageAnimations';
 
 const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
   const [token, setToken] = useState(() => {
@@ -78,9 +79,12 @@ const LoginScreen = ({ onGoogleLogin, onShareTokenLogin, isLoading }) => {
 
           {/* Left Column: Luxury Editorial Pitch & Visual Heirloom Preview */}
           <div className="lg:col-span-7 text-center lg:text-left space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/75 backdrop-blur-md border border-border-theme shadow-theme-sm text-[10px] font-sub font-bold uppercase tracking-[0.18em] text-accent">
-              <Sparkles size={12} className="text-rose-safarnama" />
-              Private Digital Heirloom Journal
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/75 backdrop-blur-md border border-border-theme shadow-theme-sm text-[10px] font-sub font-bold uppercase tracking-[0.18em] text-accent">
+                <Sparkles size={12} className="text-rose-safarnama" />
+                Private Digital Heirloom Journal
+              </div>
+              <PaperPlaneTrailAnim />
             </div>
 
             <div className="space-y-3">

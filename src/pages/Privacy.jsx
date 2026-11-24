@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
+import { VaultSealAnim } from '../components/PageAnimations';
 
 export default function Privacy() {
   return (
@@ -11,7 +12,12 @@ export default function Privacy() {
           <BookOpen size={14}/> Safarnama
         </Link>
         
-        <h1 className="text-2xl sm:text-3xl font-heading font-semibold text-primary mb-2">Privacy Policy</h1>
+        <div className="flex items-center justify-between gap-4 mb-2">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-heading font-semibold text-primary">Privacy Policy</h1>
+          </div>
+          <VaultSealAnim />
+        </div>
         <div className="text-dark/40 text-[10px] font-sub uppercase tracking-wider mb-8 flex flex-wrap items-center gap-x-2 gap-y-1">
           <span>Last Updated: January 2026</span>
           <span className="text-dark/20">•</span>

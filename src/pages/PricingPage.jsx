@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, Crown, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { HeirloomCrownAnim } from '../components/PageAnimations';
 
 const FEATURES_FREE = [
   '2 timelines',
@@ -17,9 +18,7 @@ const FEATURES_PRO = [
   'Priority support'
 ];
 
-export default function Pricing({ theme }) {
-  const t = theme || {};
-
+export default function Pricing() {
   return (
     <div className="min-h-screen bg-cream px-4 py-16 text-dark font-sans">
       <div className="max-w-5xl mx-auto bg-white/60 p-6 sm:p-12 rounded-3xl border border-border-theme shadow-theme-md">
@@ -31,6 +30,7 @@ export default function Pricing({ theme }) {
 
         {/* Heading */}
         <div className="text-center mb-14">
+          <HeirloomCrownAnim />
           <h1 className="text-3xl sm:text-4xl font-heading font-semibold text-primary mb-3">
             Simple pricing for your memories
           </h1>
@@ -72,6 +72,10 @@ export default function Pricing({ theme }) {
 
           {/* PRO PLAN */}
           <div className="border-2 border-primary rounded-2xl p-6 bg-white shadow-theme-md relative flex flex-col justify-between">
+            {/* Subtle low-memory shimmer sheen (inner overflow-hidden so PRO badge isn't clipped) */}
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-2xl">
+              <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-amber-200/25 to-transparent anim-card-sheen" />
+            </div>
             <div className="absolute -top-3 left-5 bg-primary text-cream px-3 py-1 rounded-full text-[9px] font-sub font-bold uppercase tracking-widest flex items-center gap-1.5 shadow-theme-sm">
               <Crown size={10} fill="currentColor"/>
               PRO

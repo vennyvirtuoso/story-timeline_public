@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
+import { DriveSyncAnim } from '../components/PageAnimations';
 
 export default function GoogleApiDisclosure() {
   return (
@@ -12,7 +13,10 @@ export default function GoogleApiDisclosure() {
         </Link>
         
         <h1 className="text-2xl sm:text-3xl font-heading font-semibold text-primary mb-2">Google API Services Disclosure</h1>
-        <p className="text-dark/40 text-[10px] font-sub uppercase tracking-wider mb-10">Last Updated: January 2026</p>
+        <p className="text-dark/40 text-[10px] font-sub uppercase tracking-wider mb-6">Last Updated: January 2026</p>
+        <div className="mb-8 flex justify-center sm:justify-start">
+          <DriveSyncAnim />
+        </div>
 
         <div className="text-dark/70 leading-relaxed space-y-6">
           <section>

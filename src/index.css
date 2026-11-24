@@ -453,6 +453,189 @@ input[type="time"] {
   }
 }
 
+/* ─── Product-Tailored Low-Memory Page Animations (GPU Transform / Opacity / SVG Dash) ─── */
+@keyframes paper-plane-glide {
+  0% {
+    transform: translate3d(-10px, 8px, 0) rotate(-6deg);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translate3d(12px, -8px, 0) rotate(5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(-10px, 8px, 0) rotate(-6deg);
+    opacity: 0.75;
+  }
+}
+
+@keyframes ink-draw {
+  0% {
+    stroke-dashoffset: 180;
+    opacity: 0.35;
+  }
+  50% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -180;
+    opacity: 0.35;
+  }
+}
+
+@keyframes quill-write {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(-6deg);
+  }
+  33% {
+    transform: translate3d(10px, -3px, 0) rotate(2deg);
+  }
+  66% {
+    transform: translate3d(20px, 2px, 0) rotate(-4deg);
+  }
+}
+
+@keyframes seal-breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.15;
+  }
+}
+
+@keyframes sync-packet {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.75);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(68px, 0, 0) scale(0.75);
+    opacity: 0;
+  }
+}
+
+@keyframes compass-sway {
+  0%, 100% {
+    transform: rotate(-28deg);
+  }
+  50% {
+    transform: rotate(32deg);
+  }
+}
+
+@keyframes page-drift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(-4deg);
+  }
+  50% {
+    transform: translate3d(6px, -7px, 0) rotate(5deg);
+  }
+}
+
+@keyframes trust-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes dust-mote {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(0.85);
+    opacity: 0.18;
+  }
+  50% {
+    transform: translate3d(10px, -16px, 0) scale(1.15);
+    opacity: 0.55;
+  }
+}
+
+@keyframes card-sheen {
+  0% {
+    transform: translateX(-140%) skewX(-18deg);
+  }
+  45%, 100% {
+    transform: translateX(260%) skewX(-18deg);
+  }
+}
+
+/* Reduced-motion-safe animation utility classes */
+.anim-plane-glide {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: paper-plane-glide 6s ease-in-out infinite;
+  }
+}
+
+.anim-ink-draw {
+  stroke-dasharray: 180;
+  @media (prefers-reduced-motion: no-preference) {
+    animation: ink-draw 5.5s ease-in-out infinite;
+  }
+}
+
+.anim-quill-write {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: quill-write 4.2s ease-in-out infinite;
+  }
+}
+
+.anim-seal-breathe {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: seal-breathe 3.4s ease-in-out infinite;
+  }
+}
+
+.anim-sync-packet {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: sync-packet 2.6s ease-in-out infinite;
+  }
+}
+
+.anim-compass-sway {
+  transform-origin: center;
+  @media (prefers-reduced-motion: no-preference) {
+    animation: compass-sway 4.5s ease-in-out infinite;
+  }
+}
+
+.anim-page-drift {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: page-drift 5.2s ease-in-out infinite;
+  }
+}
+
+.anim-trust-spin {
+  transform-origin: center;
+  @media (prefers-reduced-motion: no-preference) {
+    animation: trust-spin 16s linear infinite;
+  }
+}
+
+.anim-dust-mote {
+  will-change: transform, opacity;
+  @media (prefers-reduced-motion: no-preference) {
+    animation: dust-mote 7s ease-in-out infinite;
+  }
+}
+
+.anim-card-sheen {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: card-sheen 5.5s ease-in-out infinite;
+  }
+}
+
 /* Default to visible static states; opt in to motion when user has no reduced-motion preference */
 .animate-fadeIn {
   @media (prefers-reduced-motion: no-preference) {
