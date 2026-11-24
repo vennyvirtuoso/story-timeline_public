@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Heart, Plus, BookOpen, Pin, ArrowUp, Sparkles, Flame } from 'lucide-react';
+import { Heart, Plus, BookOpen, Pin, ArrowUp, Sparkles } from 'lucide-react';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase/config';
 import { useAuth }          from './hooks/useAuth';
@@ -32,7 +32,6 @@ import JournalCover from './components/JournalCover';
 import DreamJar from './components/DreamJar';
 import { WarmDustMotes } from './components/PageAnimations';
 import StorySlideshow from './components/StorySlideshow';
-import PrintableMemoryModal from './components/PrintableMemoryModal';
 
 // ─── Isolated Click-Burst Layer (never triggers App re-renders) ────────────────
 const ClickBurstLayer = React.memo(({ themeId }) => {
@@ -258,26 +257,6 @@ export default function App() {
   const [showBackToTop,     setShowBackToTop]     = useState(false);
   const [isSlideshowOpen,   setIsSlideshowOpen]   = useState(false);
   const [highlightedId,     setHighlightedId]     = useState(null);
-  const [printingMemory,    setPrintingMemory]    = useState(null);
-  const [candlelightMode,   setCandlelightMode]   = useState(() => {
-    try {
-      return localStorage.getItem('safarnama_candlelight') === '1';
-    } catch {
-      return false;
-    }
-  });
-
-  const toggleCandlelight = () => {
-    setCandlelightMode((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem('safarnama_candlelight', next ? '1' : '0');
-      } catch {
-        // ignore storage restrictions
-      }
-      return next;
-    });
-  };
 
   const fileRef           = useRef(null);
   const videoRef          = useRef(null);
@@ -298,10 +277,6 @@ export default function App() {
 
   const { memories, config, setConfig, isLoading } = useMemories(timelineId, role, () => setIsConfigModalOpen(true), ownerId);
   const theme = getTheme(config?.theme || 'love');
-  const effectiveTheme = useMemo(
-    () => (candlelightMode ? { ...theme, isDark: true } : theme),
-    [theme, candlelightMode]
-  );
 
   const { isPro, limits, refreshLimits, planCustomerId } = usePlan(ownerId, timelineId, isSharedAccess);
 
@@ -456,11 +431,9 @@ export default function App() {
   return (
     <div
       data-theme={theme.id}
-      className={`h-dvh w-full text-dark font-sans relative overflow-hidden flex flex-col transition-colors duration-500 app-scroll-host ${candlelightMode ? 'candlelight-active' : ''}`}
+      className="h-dvh w-full text-dark font-sans relative overflow-hidden flex flex-col transition-colors duration-300 app-scroll-host"
       style={{ background: 'var(--bg-gradient, var(--bg-color))' }}
     >
-      {/* Warm reading-lamp vignette when Midnight Candlelight Mode is active */}
-      {candlelightMode && <div className="candlelight-vignette" aria-hidden="true" />}
       {/* Subtle romantic vignette */}
       <div
         aria-hidden="true"
@@ -548,7 +521,7 @@ export default function App() {
                 type="button"
                 onClick={handleSurpriseMemory}
                 className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-sub font-bold uppercase tracking-wider border border-accent/35 shadow-theme-sm transition-all duration-200 hover:-translate-y-0.5 active:scale-95 ${
-                  effectiveTheme.isDark
+                  theme.isDark
                     ? 'bg-white/10 text-amber-200 hover:bg-white/15'
                     : 'bg-white/90 text-accent hover:bg-amber-50'
                 }`}
@@ -556,23 +529,6 @@ export default function App() {
                 <Sparkles size={13} /> Surprise Me
               </button>
             )}
-
-            <button
-              type="button"
-              onClick={toggleCandlelight}
-              aria-pressed={candlelightMode}
-              title={candlelightMode ? 'Exit Candlelight Reading Mode' : 'Midnight Candlelight Reading Mode'}
-              className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-sub font-bold uppercase tracking-wider border shadow-theme-sm transition-all duration-200 hover:-translate-y-0.5 active:scale-95 ${
-                candlelightMode
-                  ? 'bg-amber-500/20 text-amber-200 border-amber-400/50 shadow-[0_0_18px_rgba(245,158,11,0.28)]'
-                  : effectiveTheme.isDark
-                  ? 'bg-white/10 text-dark/75 border-border-theme hover:bg-white/15'
-                  : 'bg-white/90 text-dark/70 border-border-theme hover:text-amber-700 hover:border-amber-300/60'
-              }`}
-            >
-              <Flame size={13} className={candlelightMode ? 'text-amber-300 fill-amber-300/40' : ''} />
-              <span className="hidden sm:inline">{candlelightMode ? 'Candlelight On' : 'Candlelight'}</span>
-            </button>
           </div>
         )}
 
@@ -604,7 +560,6 @@ export default function App() {
                   index={idx}
                   layoutMode="wall"
                   isHighlighted={highlightedId === ev.id}
-                  onPrint={setPrintingMemory}
                   onDelete={canEdit ? form.handleDelete : null}
                   onEdit={canEdit ? form.openEdit : null}
                 />
@@ -665,11 +620,10 @@ export default function App() {
                       <EventCard
                         key={ev.id}
                         event={ev}
-                        theme={effectiveTheme}
+                        theme={theme}
                         index={idx}
                         layoutMode="journal"
                         isHighlighted={highlightedId === ev.id}
-                        onPrint={setPrintingMemory}
                         onDelete={canEdit ? form.handleDelete : null}
                         onEdit={canEdit ? form.openEdit : null}
                       />
@@ -801,12 +755,6 @@ export default function App() {
         onClose={() => setIsSlideshowOpen(false)}
         memories={visibleMemories}
         title={slideshowTitle}
-      />
-
-      <PrintableMemoryModal
-        memory={printingMemory}
-        onClose={() => setPrintingMemory(null)}
-        timelineTitle={slideshowTitle}
       />
 
       <ClickBurstLayer themeId={theme.id} />

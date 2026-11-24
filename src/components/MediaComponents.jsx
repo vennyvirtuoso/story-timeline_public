@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import {
   Heart, Calendar, MapPin, Star, Clock, Edit2, Trash2,
-  ChevronLeft, ChevronRight, Users, RotateCw, Printer
+  ChevronLeft, ChevronRight, Users, RotateCw
 } from 'lucide-react';
 
 // ─── ImageSlider ──────────────────────────────────────────────────────────────
@@ -336,7 +336,7 @@ export const PushPin = ({ washiStyle, paperclipColor, index }) => {
   );
 };
 
-export const EventCard = React.memo(({ event, onDelete, onEdit, onPrint, theme, index = 0, layoutMode = 'journal', isHighlighted = false }) => {
+export const EventCard = React.memo(({ event, onDelete, onEdit, theme, index = 0, layoutMode = 'journal', isHighlighted = false }) => {
   const t = theme || {};
   const [isFlipped, setIsFlipped] = useState(false);
   const polaroidRef = useRef(null);
@@ -476,19 +476,8 @@ export const EventCard = React.memo(({ event, onDelete, onEdit, onPrint, theme, 
                   <span className="text-[10px] font-sub font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border border-stone-200 bg-stone-50 text-amber-800">
                     {d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                   </span>
-                  {(onPrint || onEdit || onDelete) && (
+                  {(onEdit || onDelete) && (
                     <div className="flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
-                      {onPrint && (
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); onPrint(event); }}
-                          aria-label={`Print ${event.title} as keepsake`}
-                          title="Print keepsake card"
-                          className="text-stone-400 hover:text-amber-700 p-1.5 hover:bg-amber-50 rounded-full transition-colors"
-                        >
-                          <Printer size={13} />
-                        </button>
-                      )}
                       {onEdit && (
                         <button
                           type="button"
@@ -551,19 +540,8 @@ export const EventCard = React.memo(({ event, onDelete, onEdit, onPrint, theme, 
                     <span className={`text-[10px] font-sub font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${t.dateBadge || 'text-accent bg-cream border-border-theme'}`}>
                       {d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                     </span>
-                    {(onPrint || onEdit || onDelete) && (
+                    {(onEdit || onDelete) && (
                       <div className="flex gap-0.5 shrink-0">
-                        {onPrint && (
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); onPrint(event); }}
-                            aria-label={`Print ${event.title} as keepsake`}
-                            title="Print keepsake card"
-                            className="opacity-60 hover:opacity-100 hover:text-amber-600 p-1.5 rounded-full transition-colors"
-                          >
-                            <Printer size={13} />
-                          </button>
-                        )}
                         {onEdit && (
                           <button
                             type="button"
@@ -670,19 +648,8 @@ export const EventCard = React.memo(({ event, onDelete, onEdit, onPrint, theme, 
                 </span>
               )}
             </div>
-            {(onPrint || onEdit || onDelete) && (
+            {(onEdit || onDelete) && (
               <div className="flex gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
-                {onPrint && (
-                  <button
-                    type="button"
-                    onClick={() => onPrint(event)}
-                    aria-label={`Print ${event.title} as keepsake`}
-                    title="Print keepsake card"
-                    className="opacity-60 hover:opacity-100 hover:text-amber-600 p-1.5 rounded-full transition-colors"
-                  >
-                    <Printer size={13} />
-                  </button>
-                )}
                 {onEdit && (
                   <button
                     type="button"
