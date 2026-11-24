@@ -17,7 +17,7 @@ const ThemePicker = ({ value, onChange }) => (
     <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
       {THEMES.map(t => (
         <button key={t.id} type="button" onClick={() => onChange(t.id)}
-          className={`relative flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl border transition-all duration-200 ${value === t.id ? 'border-primary bg-white shadow-theme-md scale-102' : 'border-border-theme hover:bg-cream-dark/30'}`}>
+          className={`relative flex flex-col items-center gap-1 p-2 sm:p-3 rounded-xl border transition-all duration-200 ${value === t.id ? 'border-primary bg-surface shadow-theme-md scale-[1.02]' : 'border-border-theme hover:bg-cream-dark/30'}`}>
           <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br ${swatchGradients[t.id]} shadow-theme-sm`}/>
           <span className="text-[9px] sm:text-[10px] font-sub font-bold text-dark/70 uppercase tracking-wider leading-tight text-center mt-0.5 sm:mt-1 truncate w-full">{t.name}</span>
           {value === t.id && (

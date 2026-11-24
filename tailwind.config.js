@@ -12,6 +12,7 @@ export default {
           accent: 'var(--accent-color)',
           cream: 'var(--bg-color)',
           'cream-dark': 'var(--bg-color-dark)',
+          surface: 'var(--surface-bg)',
           dark: 'var(--text-color)',
           'rose-safarnama': 'var(--rose-color)',
           'border-theme': 'var(--border-color)',

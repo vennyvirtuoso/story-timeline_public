@@ -72,17 +72,9 @@ const MemoryModal = ({
   isSaving, isUploadingImage, isUploadingVideo, folderId,  // ✅ replaced isUploading
   fileRef, videoRef,
   theme, memberType,
-  isCollabRole,        // ✅ add this prop
-  onConnectDrive,      // ✅ add this prop
+  isCollabRole,
+  onConnectDrive,
 }) => {
-  const t = theme || {};
-  const accentBg     = t.accentBg     || 'bg-rose-100';
-  const accentText   = t.accentText   || 'text-rose-500';
-  const accentBorder = t.accentBorder || 'border-rose-200';
-  const accentHover  = t.accentHover  || 'hover:bg-rose-50';
-  const accentHoverBtn = t.accentHoverBtn || 'hover:bg-rose-200';
-  const btnPrimary   = t.btnPrimary   || 'from-rose-400 to-pink-500 hover:from-rose-500 hover:to-pink-600 shadow-rose-200';
-
   const typeOptions = EVENT_TYPES[memberType || 'duo'] || EVENT_TYPES.duo;
 
   return (
@@ -206,12 +198,12 @@ const MemoryModal = ({
         </div>
 
         {/* Scrapbook Visual Customizer */}
-        <div className="mb-5 bg-cream/30 p-4.5 rounded-2xl border border-border-theme/80 backdrop-blur-[0.5px]">
+        <div className="mb-5 bg-surface p-4 rounded-2xl border border-border-theme">
           <span className="block text-[10px] font-sub font-bold text-dark/70 uppercase tracking-widest mb-3.5 flex items-center gap-1.5">
             🎨 Scrapbook Decorations
           </span>
 
-          <div className="space-y-4.5">
+          <div className="space-y-4">
             {/* Washi Tape Selector */}
             <div>
               <label className="block text-[10px] font-sub font-bold text-dark/50 mb-2 uppercase tracking-wider">
